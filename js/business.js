@@ -796,8 +796,54 @@
     storyTick();
     save();
     toast(t.name + ' открыт');
+    if (type === 'pvz' && !B.story.flags.opgIntro) {
+      B.story.flags.opgIntro = true;
+      save();
+      setTimeout(opgScene, 700);
+    }
     if (LV.current && LV.current.id === 'job' && jobHost) renderJob();
   };
+
+  function opgScene() {
+    showCutscene({
+      kicker: 'Улица · первый день',
+      scene: 'city',
+      slides: [
+        { who: 'Незнакомец', ini: '?', color: '#dc2626', text: 'Слышь. Точку открыл? Значит, теперь ты с района.' },
+        { who: 'Тима', ini: 'Т', color: '#dc2626', text: 'Я Тима. Работаю с бизнесом: пять тысяч — и никто тебя не трогает. Пока.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: '...' }
+      ],
+      choices: [
+        { label: 'Заплатить 5 000 ₽', primary: true, action: opgPay },
+        { label: 'Отказать', action: opgRefuse }
+      ]
+    });
+  }
+
+  function opgPay() {
+    if (B.cash < 5000) {
+      B.story.flags.opg = 'debt';
+      B.events.unshift({ t: 'opg', text: 'ОПГ: денег не нашлось', time: nowTime() });
+      save();
+      toast('Не хватает 5 000 ₽');
+      setTimeout(function () { addSms('Тима', 'Денег нет? Ладно. Должок растёт.'); }, 1200);
+      return;
+    }
+    B.cash -= 5000;
+    B.story.flags.opg = 'paid';
+    B.events.unshift({ t: 'opg', text: 'ОПГ: дань 5 000 ₽', time: nowTime() });
+    save();
+    toast('Заплачено 5 000 ₽');
+    setTimeout(function () { addSms('Тима', 'Красавчик. Пока не трогаем. Но если что — я рядом.'); }, 1200);
+  }
+
+  function opgRefuse() {
+    B.story.flags.opg = 'refused';
+    B.events.unshift({ t: 'opg', text: 'ОПГ: отказ платить', time: nowTime() });
+    B.stats.rating = Math.max(3, Math.round(((Number(B.stats.rating) || 4.8) - 0.1) * 100) / 100);
+    save();
+    setTimeout(function () { addSms('Неизвестный', 'Ну смотри, бизнесмен. Мы вернёмся.'); }, 1200);
+  }
 
   function arrivalScene(dest) {
     var sp = SPOTS[dest] || {};

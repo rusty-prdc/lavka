@@ -2112,6 +2112,7 @@
     var e = webEntry();
     var marked = e.kind === 'site' && (S.webFav || []).indexOf(e.site) >= 0;
     return '<div class="web-top"><div class="web-controls">' +
+      '<button class="web-navbtn web-exit" type="button" data-back aria-label="Закрыть браузер"><i class="fa-solid fa-xmark"></i></button>' +
       '<button class="web-navbtn" type="button" onclick="Web.back()" ' + (webIndex <= 0 ? 'disabled' : '') + ' aria-label="Назад"><i class="fa-solid fa-chevron-left"></i></button>' +
       '<button class="web-navbtn" type="button" onclick="Web.forward()" ' + (webIndex >= webHistory.length - 1 ? 'disabled' : '') + ' aria-label="Вперёд"><i class="fa-solid fa-chevron-right"></i></button>' +
       '<div class="web-url"><i class="fa-solid fa-lock"></i><input id="web-url" value="' + LV.esc(webAddress(e)) + '" onkeydown="if(event.key===\'Enter\')Web.go()" aria-label="Адрес сайта" spellcheck="false"></div>' +
