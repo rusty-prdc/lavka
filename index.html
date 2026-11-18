@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Лавка">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#10b981">
+<title>Лавка</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
+<link rel="stylesheet" href="vendor/fonts/inter.css">
+<link rel="stylesheet" href="css/lavka.css?v=20261156">
+<link rel="stylesheet" href="css/sites-extra.css?v=20261156">
+<link rel="stylesheet" href="css/business.css?v=20261156">
+</head>
+<body>
+<div class="stage">
+  <div class="phone" id="phone">
+    <div class="island"></div>
+
+    <div class="statusbar" id="statusbar">
+      <span class="sb-time" id="sb-time">9:41</span>
+      <span class="sb-right">
+        <svg class="sb-i" viewBox="0 0 18 12" aria-hidden="true" style="width:15px;height:10px;fill:currentColor"><rect x="0" y="8" width="3" height="4"/><rect x="5" y="6" width="3" height="6"/><rect x="10" y="3" width="3" height="9"/><rect x="15" y="0" width="3" height="12"/></svg>
+        <svg class="sb-i" viewBox="0 0 16 12" aria-hidden="true" style="width:15px;height:10px;fill:currentColor"><path d="M8 11.3 5.9 9.2a3 3 0 0 1 4.2 0L8 11.3Zm-3.4-3.4a5.4 5.4 0 0 1 6.8 0L10 9.3a3.2 3.2 0 0 0-4 0L4.6 7.9ZM2 5.3a8.8 8.8 0 0 1 12 0l-1.4 1.4a6.8 6.8 0 0 0-9.2 0L2 5.3Z"/></svg>
+        <svg class="sb-i" viewBox="0 0 24 12" aria-hidden="true" style="width:17px;height:10px;fill:none;stroke:currentColor"><rect x="0.8" y="1.2" width="18.4" height="9.6" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="2.6" y="3" width="12.6" height="6" rx="1" style="fill:currentColor"/><rect x="20.6" y="3.8" width="2.2" height="4.4" rx="1" style="fill:currentColor"/></svg>
+      </span>
+    </div>
+
+    <div class="screen" id="screen">
+      <section class="home" id="home">
+        <div class="home-head">
+          <div class="home-user">
+            <div class="home-avatar" id="home-avatar">Г</div>
+            <div>
+              <p class="home-hi">Добрый день</p>
+              <p class="home-name" id="home-name">Гость</p>
+            </div>
+          </div>
+          <button class="home-xid" id="home-xid" type="button" onclick="XID.open()" aria-label="XPRODC ID">X-00000000</button>
+        </div>
+
+        <div class="clock-widget">
+          <p class="cw-time" id="home-time">9:41</p>
+          <p class="cw-sub" id="home-sub">Лавка · маркетплейс</p>
+        </div>
+
+        <div class="apps-vp">
+          <div class="apps-track" id="apps-track"></div>
+        </div>
+
+        <div class="dots" id="home-dots"></div>
+
+        <div class="dock" id="dock"></div>
+      </section>
+
+      <section class="appview" id="appview">
+        <div class="app-body" id="app-body"></div>
+      </section>
+    </div>
+
+    <div class="home-indicator"></div>
+
+    <div class="tutorial hidden" id="tutorial">
+      <div class="tut-spot" id="tut-spot"></div>
+      <div class="tut-card" id="tut-card">
+        <p class="tut-step" id="tut-step">1 / 5</p>
+        <p class="tut-title" id="tut-title"></p>
+        <p class="tut-text" id="tut-text"></p>
+        <div class="tut-actions">
+          <button class="tut-skip" id="tut-skip" type="button">Пропустить</button>
+          <button class="tut-next" id="tut-next" type="button">Далее</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/app.js?v=20261156"></script>
+<script src="js/market.js?v=20261156"></script>
+<script src="js/citymap.js?v=20261156"></script>
+<script src="js/apps.js?v=20261156"></script>
+<script src="js/sites-extra.js?v=20261156"></script>
+<script src="js/business.js?v=20261156"></script>
+</body>
+</html>
