@@ -807,7 +807,7 @@
   function opgScene() {
     showCutscene({
       kicker: 'Улица · первый день',
-      scene: 'city',
+      scene: 'street',
       slides: [
         { who: 'Незнакомец', ini: '?', color: '#dc2626', text: 'Слышь. Точку открыл? Значит, теперь ты с района.' },
         { who: 'Тима', ini: 'Т', color: '#dc2626', text: 'Я Тима. Работаю с бизнесом: пять тысяч — и никто тебя не трогает. Пока.' },
@@ -1011,18 +1011,34 @@
     if (!(cutOpts && cutOpts.choices && cutOpts.choices.length)) cutClose();
   }
 
+  function cutSceneHTML(scene) {
+    if (scene !== 'street') return '';
+    var houses = [[6, 34, 56], [26, 30, 74], [46, 26, 48], [62, 34, 66], [82, 16, 40]].map(function (h, i) {
+      return '<i class="st-b st-b' + (i + 1) + '" style="left:' + h[0] + '%;width:' + h[1] + '%;height:' + h[2] + '%"></i>';
+    }).join('');
+    var fig = function (cls) {
+      return '<div class="st-fig ' + cls + '"><span class="st-head"></span><span class="st-body"></span>' +
+        '<span class="st-leg l"></span><span class="st-leg r"></span></div>';
+    };
+    return '<div class="st-sky"><span class="st-moon"></span></div>' +
+      '<div class="st-city">' + houses + '</div>' +
+      '<div class="st-lamp"><b></b><i></i></div>' +
+      '<div class="st-road"><em></em><em></em><em></em></div>' +
+      fig('st-fig1') + fig('st-fig2');
+  }
+
   function showCutscene(opts) {
-    cutClose();
     var host = document.getElementById('phone');
     if (!host) return;
-    cutOpts = opts;
-    cutSlides = opts.slides || [];
+    cutClose();
+    cutOpts = opts || {};
+    cutSlides = cutOpts.slides || [];
     cutIndex = 0;
     cutEl = document.createElement('div');
     cutEl.className = 'cut';
-    cutEl.innerHTML =
-      '<div class="cut-top"><span class="cut-kicker"></span><button class="cut-skip" type="button">Пропустить</button></div>' +
-      '<div class="cut-stage ' + (opts.scene || 'office') + '"><div class="cut-window"></div><div class="cut-portrait" id="cut-avatar">?</div><div class="cut-name" id="cut-name"></div></div>' +
+    cutEl.innerHTML = '<div class="cut-top"><span class="cut-kicker">' + esc(cutOpts.kicker || 'Сцена') + '</span>' +
+      '<button class="cut-skip" type="button" onclick="Biz.cutClose()">Пропустить</button></div>' +
+      '<div class="cut-stage ' + (opts.scene || 'office') + '">' + cutSceneHTML(opts.scene) + '<div class="cut-window"></div><div class="cut-portrait" id="cut-avatar">?</div><div class="cut-name" id="cut-name"></div></div>' +
       '<div class="cut-body"><b class="cut-who" id="cut-who"></b><p class="cut-text" id="cut-text"></p><div class="cut-actions" id="cut-actions"></div><div class="cut-hint">нажмите «Далее», чтобы продолжить</div></div>';
     cutEl.querySelector('.cut-kicker').textContent = opts.kicker || '';
     host.appendChild(cutEl);
