@@ -1941,24 +1941,32 @@
       pages: {
         index: function () {
           var ev = [
-            ['12', 'ноя', 'Ночь маркетплейсов', 'Клуб «Склад» · 20:00', 'от 800 ₽'],
-            ['15', 'ноя', 'Городской форум бизнеса', 'БЦ «Сити» · 11:00', 'по регистрации'],
-            ['19', 'ноя', 'Кинопоказ «Ночная смена»', 'Кинозал «Луч» · 21:30', 'от 400 ₽'],
-            ['23', 'ноя', 'Рынок локальных брендов', 'Парк, главная аллея · 12:00', 'вход свободный']
+            ['12', 'ноя', 'Ночь маркетплейсов', 'Клуб «Склад»', '20:00', 'от 800 ₽', 'linear-gradient(150deg,#7c3aed,#c026d3)', 'fa-music'],
+            ['15', 'ноя', 'Форум бизнеса', 'БЦ «Сити»', '11:00', 'вход по билету', 'linear-gradient(150deg,#0ea5e9,#0f766e)', 'fa-briefcase'],
+            ['19', 'ноя', 'Кинопоказ «Ночная смена»', 'Кинозал «Луч»', '21:30', 'от 400 ₽', 'linear-gradient(150deg,#ef4444,#7c2d12)', 'fa-film'],
+            ['23', 'ноя', 'Рынок локальных брендов', 'Парк, аллея', '12:00', 'бесплатно', 'linear-gradient(150deg,#22c55e,#15803d)', 'fa-bag-shopping']
           ];
-          return '<div class="wa-list">' + ev.map(function (e) {
-            return '<div class="wa-event"><span class="wa-date"><b>' + e[0] + '</b><em>' + e[1] + '</em></span>' +
-              '<div class="wa-info"><b>' + e[2] + '</b><span>' + e[3] + '</span></div><span class="wa-price">' + e[4] + '</span></div>';
-          }).join('') + '</div>';
+          return '<div class="af-chips"><button class="af-chip on" type="button">Все</button><button class="af-chip" type="button">Сегодня</button><button class="af-chip" type="button">Музыка</button><button class="af-chip" type="button">Кино</button></div>' +
+            '<div class="af-grid">' + ev.map(function (e) {
+              return '<button class="af-card" type="button" onclick="LV.toast(\'Билеты появятся в продаже\')">' +
+                '<span class="af-poster" style="background:' + e[6] + '"><i class="fa-solid ' + e[7] + '"></i>' +
+                '<em class="af-date"><b>' + e[0] + '</b><small>' + e[1] + '</small></em></span>' +
+                '<span class="af-name">' + e[2] + '</span>' +
+                '<span class="af-meta">' + e[3] + ' · ' + e[4] + '</span>' +
+                '<span class="af-price">' + e[5] + '</span></button>';
+            }).join('') + '</div>';
         },
         weekend: function () {
-          return '<div class="web-h">На выходные</div><div class="wa-list">' +
-            '<div class="wa-event"><span class="wa-date"><b>16</b><em>ноя</em></span><div class="wa-info"><b>Экскурсия по Промзоне</b><span>Сбор у завода · 10:00</span></div><span class="wa-price">300 ₽</span></div>' +
-            '<div class="wa-event"><span class="wa-date"><b>17</b><em>ноя</em></span><div class="wa-info"><b>Кухня улиц</b><span>Набережная · 13:00</span></div><span class="wa-price">бесплатно</span></div>' +
+          return '<div class="af-hero"><b>2 дня · 5 событий</b><span>Подборка на субботу и воскресенье</span></div>' +
+            '<div class="af-list">' +
+            '<button class="af-row" type="button"><span class="af-time">10:00</span><div><b>Экскурсия по Промзоне</b><span>Сбор у завода · 300 ₽</span></div><i class="fa-solid fa-chevron-right"></i></button>' +
+            '<button class="af-row" type="button"><span class="af-time">13:00</span><div><b>Кухня улиц</b><span>Набережная · бесплатно</span></div><i class="fa-solid fa-chevron-right"></i></button>' +
+            '<button class="af-row" type="button"><span class="af-time">18:00</span><div><b>Квартирник «Пульс»</b><span>Лофт на Ленина · 600 ₽</span></div><i class="fa-solid fa-chevron-right"></i></button>' +
             '</div>';
         },
         about: function () {
-          return '<div class="web-h">Об Афише</div><p class="web-text">Собираем события города: концерты, форумы, рынки и кинопоказы. Обновляем каждую неделю.</p>';
+          return '<div class="af-about"><h3>Афиша города</h3><p>Собираем события каждую неделю: концерты, форумы, рынки и кинопоказы. Без накрученных отзывов.</p>' +
+            '<div class="af-stats"><div><b>48</b><span>событий в месяц</span></div><div><b>12</b><span>площадок</span></div><div><b>0 ₽</b><span>за просмотр</span></div></div></div>';
         }
       }
     },
@@ -1970,23 +1978,26 @@
       pages: {
         index: function () {
           var flats = [
-            ['2 комнаты · 54 м²', 'Центр, Ленина 12', '48 000 ₽/мес', '4/9 эт.'],
-            ['Студия · 28 м²', 'Спальный, Мира 3', '26 000 ₽/мес', '2/12 эт.'],
-            ['Помещение · 80 м²', 'Вокзал, Привокзальная 1', '62 000 ₽/мес', '1 эт.'],
-            ['3 комнаты · 78 м²', 'Парк, Озёрная 7', '71 000 ₽/мес', '7/10 эт.']
+            ['2 комнаты, 54 м²', 'Центр, Ленина 12', '48 000 ₽', '9 эт.', '4/9', 'linear-gradient(150deg,#0f766e,#134e4a)'],
+            ['Студия, 28 м²', 'Спальный, Мира 3', '26 000 ₽', 'студия', '2/12', 'linear-gradient(150deg,#0ea5e9,#1e3a8a)'],
+            ['Помещение, 80 м²', 'Вокзал, Привокзальная 1', '62 000 ₽', 'своб. план.', '1/1', 'linear-gradient(150deg,#a855f7,#4c1d95)']
           ];
-          return '<div class="wd-grid">' + flats.map(function (f) {
-            return '<div class="wd-flat"><div class="wd-photo"><i class="fa-solid fa-building"></i></div>' +
-              '<div class="wd-body"><b>' + f[0] + '</b><span>' + f[1] + '</span><div class="wd-foot"><b>' + f[2] + '</b><span>' + f[3] + '</span></div></div></div>';
-          }).join('') + '</div>';
+          return '<div class="dm-tabs"><button class="dm-tab on" type="button">Аренда</button><button class="dm-tab" type="button">Продажа</button><button class="dm-tab" type="button">Помещения</button></div>' +
+            '<div class="dm-list">' + flats.map(function (f) {
+              return '<button class="dm-card" type="button" onclick="LV.toast(\'Показ по записи\')">' +
+                '<span class="dm-photo" style="background:' + f[5] + '"><i class="fa-solid fa-building"></i><em>' + f[2] + '</em></span>' +
+                '<span class="dm-body"><b>' + f[0] + '</b><span class="dm-addr">' + f[1] + '</span>' +
+                '<span class="dm-specs"><span>' + f[3] + '</span><span>этаж ' + f[4] + '</span><span>без комиссии</span></span></span></button>';
+            }).join('') + '</div>';
         },
         map: function () {
-          return '<div class="web-h">На карте</div><div class="wd-map"><i class="fa-solid fa-location-dot"></i><span>12 объектов в центре</span></div>' +
-            '<p class="web-muted">Слой аренды доступен в приложении «Карты».</p>' +
-            '<button class="btn btn-block" type="button" onclick="Web.toApp(\'maps\')">Открыть карты</button>';
+          return '<div class="dm-map"><span class="dm-pin p1"></span><span class="dm-pin p2"></span><span class="dm-pin p3"></span>' +
+            '<div class="dm-map-card"><b>12 объектов</b><span>в радиусе 2 км от центра</span></div></div>' +
+            '<button class="btn btn-block" type="button" onclick="Web.toApp(\'maps\')">Открыть слой аренды в Картах</button>';
         },
         about: function () {
-          return '<div class="web-h">О Домах</div><p class="web-text">Проверенные объявления от собственников и агентств. Без комиссии за просмотр.</p>';
+          return '<div class="af-about"><h3>Дома</h3><p>Проверенные объявления от собственников и агентств. Показ — по записи, без комиссии за просмотр.</p>' +
+            '<div class="af-stats"><div><b>340</b><span>объектов</span></div><div><b>24 ч</b><span>ответ</span></div><div><b>0%</b><span>комиссия</span></div></div></div>';
         }
       }
     },
@@ -1997,25 +2008,33 @@
       nav: [['index', 'Каталог'], ['order', 'Заказ'], ['about', 'О сервисе']],
       pages: {
         index: function () {
+          var cats = [['Простуда', 'fa-thermometer-half'], ['Витамины', 'fa-leaf'], ['Аптечка', 'fa-kit-medical'], ['Уход', 'fa-pump-soap']];
           var meds = [
-            ['Аспирин 500 мг', '20 таблеток', '180 ₽', ''],
-            ['Витамин C', '60 таблеток', '420 ₽', ''],
-            ['Пластыри', '10 шт', '95 ₽', ''],
-            ['Антибиотик широкого спектра', 'по рецепту', '640 ₽', 'рецепт']
+            ['Аспирин 500 мг', '20 таблеток · №1', 180, false],
+            ['Витамин C', '60 таблеток · №3', 420, false],
+            ['Пластыри бактерицидные', '10 шт · №2', 95, false],
+            ['Антибиотик широкого спектра', '14 капсул · №5', 640, true]
           ];
-          return '<div class="wx-list">' + meds.map(function (m) {
-            return '<div class="wx-item"><div class="wx-item-main"><b>' + m[0] + '</b><span>' + m[1] + '</span></div>' +
-              (m[3] ? '<span class="wx-flag">' + m[3] + '</span>' : '') + '<span class="wx-price">' + m[2] + '</span></div>';
-          }).join('') + '</div>' +
-            '<div class="wx-note"><i class="fa-solid fa-circle-info"></i><div><b>Рецептурные препараты</b><span>Отпускаются только при предъявлении рецепта врача.</span></div></div>';
+          return '<div class="ap-search"><i class="fa-solid fa-magnifying-glass"></i><span>Найти лекарство или симптом</span></div>' +
+            '<div class="ap-cats">' + cats.map(function (c) {
+              return '<button class="ap-cat" type="button" onclick="LV.toast(\'' + c[0] + ': скоро\')"><i class="fa-solid ' + c[1] + '"></i><span>' + c[0] + '</span></button>';
+            }).join('') + '</div>' +
+            '<div class="ap-list">' + meds.map(function (m) {
+              return '<div class="ap-item"><span class="ap-cross"><i class="fa-solid fa-plus"></i></span>' +
+                '<div class="ap-info"><b>' + m[0] + '</b><span>' + m[1] + '</span>' + (m[3] ? '<em class="ap-rx">по рецепту</em>' : '') + '</div>' +
+                '<div class="ap-right"><b>' + LV.fmt(m[2]) + '</b></div></div>';
+            }).join('') + '</div>';
         },
         order: function () {
-          return '<div class="web-h">Заказ</div><div class="wx-item"><div class="wx-item-main"><b>Аспирин 500 мг</b><span>20 таблеток · аптека на Ленина</span></div><span class="wx-price">180 ₽</span></div>' +
-            '<p class="web-muted">Готовность — 15 минут. Оплата при получении.</p>' +
-            '<button class="btn btn-primary btn-block" type="button" onclick="Web.toast(\'Заказ оформлен\')">Забрать в аптеке</button>';
+          return '<div class="ap-order"><span class="ap-cross big"><i class="fa-solid fa-check"></i></span>' +
+            '<b>Заказ №A-2041</b><p>Аспирин 500 мг · 1 упаковка</p>' +
+            '<div class="ap-track"><span class="done"></span><span class="done"></span><span></span></div>' +
+            '<small>Готов к выдаче в аптеке на Ленина, 12</small></div>' +
+            '<button class="btn btn-primary btn-block" type="button" onclick="LV.toast(\'Покажите номер на кассе\')">Показать номер</button>';
         },
         about: function () {
-          return '<div class="web-h">Об Аптеке</div><p class="web-text">Сеть городских аптек: 34 точки, доставка от 2 часов. Все препараты сертифицированы.</p>';
+          return '<div class="af-about"><h3>Аптека</h3><p>Сеть городских аптек: 34 точки, доставка от 2 часов. Рецептурные препараты — только при предъявлении рецепта.</p>' +
+            '<div class="af-stats"><div><b>34</b><span>точки</span></div><div><b>15 мин</b><span>сборка</span></div><div><b>2 ч</b><span>доставка</span></div></div></div>';
         }
       }
     }
@@ -2520,5 +2539,6 @@
     desc: 'Управление телевизором и техникой умного дома прямо с телефона.'
   }));
 })();
+
 
 
