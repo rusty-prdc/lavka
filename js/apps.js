@@ -1,4 +1,4 @@
-/* Лавка — приложения телефона */
+﻿/* Лавка — приложения телефона */
 (function () {
   'use strict';
 
@@ -731,7 +731,7 @@
   // ПОГОДА
   // =====================================================
   LV.registerApp({
-    id: 'weather', hidden: true, name: 'Погода', icon: 'fa-cloud-sun', bg: 'linear-gradient(140deg,#0ea5e9,#0369a1)',
+    id: 'weather', name: 'Погода', icon: 'fa-cloud-sun', bg: 'linear-gradient(140deg,#0ea5e9,#0369a1)',
     page: 0,
     mount: function (body) {
       var hours = [
@@ -1577,7 +1577,7 @@
       }
     },
     {
-      id: 'xprodc', hidden: true, name: 'XPRODC Daily', host: 'xprodc.net', cat: 'news',
+      id: 'xprodc', name: 'XPRODC Daily', host: 'xprodc.net', cat: 'news',
       icon: 'fa-bolt', color: '#059669',
       slogan: 'Экосистема XPRODC — новости и обновления',
       nav: [['index', 'Обновления'], ['id', 'XPRODC ID'], ['apps', 'Приложения']],
@@ -1614,7 +1614,7 @@
       }
     },
     {
-      id: 'techno', hidden: true, name: 'ТехноМир', host: 'techno.lavka.net', cat: 'shop',
+      id: 'techno', name: 'ТехноМир', host: 'techno.lavka.net', cat: 'shop',
       icon: 'fa-microchip', color: '#6366f1',
       slogan: 'Гаджеты, которые работают',
       nav: [['index', 'Главная'], ['catalog', 'Каталог'], ['p1', 'Хит']],
@@ -1651,7 +1651,7 @@
       }
     },
     {
-      id: 'dom', hidden: true, name: 'Дом и Сад', host: 'dom.lavka.net', cat: 'shop',
+      id: 'dom', name: 'Дом и Сад', host: 'dom.lavka.net', cat: 'shop',
       icon: 'fa-couch', color: '#65a30d',
       slogan: 'Уют начинается здесь',
       nav: [['index', 'Главная'], ['catalog', 'Каталог']],
@@ -1676,7 +1676,7 @@
       }
     },
     {
-      id: 'kruzhok', hidden: true, name: 'Кружок', host: 'kruzhok.net', cat: 'social',
+      id: 'kruzhok', name: 'Кружок', host: 'kruzhok.net', cat: 'social',
       icon: 'fa-users', color: '#8b5cf6',
       slogan: 'Люди, покупки и разговоры',
       nav: [['index', 'Лента'], ['trending', 'Тренды']],
@@ -1696,7 +1696,7 @@
       }
     },
     {
-      id: 'connect', hidden: true, name: 'Connect', host: 'connect.xprodc.net', cat: 'social',
+      id: 'connect', name: 'Connect', host: 'connect.xprodc.net', cat: 'social',
       icon: 'fa-user-group', color: '#0ea5e9',
       slogan: 'Профессиональная сеть XPRODC',
       nav: [['index', 'Люди']],
@@ -1737,7 +1737,7 @@
       }
     },
     {
-      id: 'coin', hidden: true, name: 'КриптоЛавка', host: 'coin.lavka.net', cat: 'money',
+      id: 'coin', name: 'КриптоЛавка', host: 'coin.lavka.net', cat: 'money',
       icon: 'fa-coins', color: '#f59e0b',
       slogan: 'Курсы и цифровые активы',
       nav: [['index', 'Курсы']],
@@ -1757,7 +1757,7 @@
       }
     },
     {
-      id: 'kino', hidden: true, name: 'Кинозал', host: 'kino.lavka.net', cat: 'fun',
+      id: 'kino', name: 'Кинозал', host: 'kino.lavka.net', cat: 'fun',
       icon: 'fa-film', color: '#ef4444',
       slogan: 'Фильмы и сериалы без рекламы',
       nav: [['index', 'Афиша'], ['m1', 'Новинка']],
@@ -1788,7 +1788,7 @@
       }
     },
     {
-      id: 'igromir', hidden: true, name: 'ИгроМир', host: 'games.lavka.net', cat: 'fun',
+      id: 'igromir', name: 'ИгроМир', host: 'games.lavka.net', cat: 'fun',
       icon: 'fa-gamepad', color: '#2563eb',
       slogan: 'Игры для любого настроения',
       nav: [['index', 'Каталог'], ['g1', 'Хит']],
@@ -1896,6 +1896,132 @@
     }
   ];
 
+  var WEB_LOGOS = {
+    'fa-bag-shopping': '<path d="M5 8h14l-1.2 11.2a1 1 0 0 1-1 .8H7.2a1 1 0 0 1-1-.8L5 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+    'fa-newspaper': '<rect x="3.5" y="5" width="17" height="14" rx="2"/><path d="M7 9h6M7 12.5h10M7 16h7"/>',
+    'fa-bolt': '<path d="M13 3 5 14h6l-1 7 8-11h-6l1-7Z"/>',
+    'fa-microchip': '<rect x="7" y="7" width="10" height="10" rx="2"/><path d="M4 10h3M4 14h3M17 10h3M17 14h3M10 4v3M14 4v3M10 17v3M14 17v3"/>',
+    'fa-couch': '<path d="M4 12V9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v3"/><path d="M3 12a1.5 1.5 0 0 1 3 0v3h12v-3a1.5 1.5 0 0 1 3 0v5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-5Z"/>',
+    'fa-users': '<circle cx="9" cy="9" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 8.5a2.5 2.5 0 1 1 0 5"/><path d="M15.5 14.5A4.5 4.5 0 0 1 20.5 19"/>',
+    'fa-user-group': '<circle cx="8" cy="8" r="2.6"/><circle cx="16" cy="9" r="2.2"/><path d="M3 19c0-2.8 2.2-5 5-5s5 2.2 5 5"/><path d="M14 19c0-2.2 1.6-4 4-4"/>',
+    'fa-building-columns': '<path d="M4 20h16"/><path d="M6 20V10M10 20V10M14 20V10M18 20V10"/><path d="M3 10 12 4l9 6"/>',
+    'fa-coins': '<ellipse cx="9" cy="7" rx="5" ry="2.5"/><path d="M4 7v5c0 1.4 2.2 2.5 5 2.5s5-1.1 5-2.5V7"/><path d="M10 16.5c.9.6 2.2 1 3.5 1 2.8 0 5-1.1 5-2.5v-5"/>',
+    'fa-film': '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M16 5v14M3 9h5M3 15h5M16 9h5M16 15h5"/>',
+    'fa-gamepad': '<path d="M8 9h8a5 5 0 0 1 4.8 6.4l-.5 1.6a2.4 2.4 0 0 1-4.1 1L14.5 16h-5l-1.7 2a2.4 2.4 0 0 1-4.1-1l-.5-1.6A5 5 0 0 1 8 9Z"/><path d="M8 12v3M6.5 13.5h3"/><circle cx="16" cy="12.5" r=".9"/><circle cx="18" cy="14.5" r=".9"/>',
+    'fa-cloud-sun': '<circle cx="9" cy="9" r="3"/><path d="M9 3.5v1.5M4 9H2.5M9 14.5V16M14 9h1.5"/><path d="M8 19h8.5a3.5 3.5 0 0 0 .3-7 4.5 4.5 0 0 0-8.6.6"/>',
+    'fa-map-location-dot': '<path d="M12 21s7-5.3 7-11a7 7 0 1 0-14 0c0 5.7 7 11 7 11Z"/><circle cx="12" cy="10" r="2.6"/>',
+    'fa-envelope': '<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="m4 7 8 6 8-6"/>',
+    'fa-heart-pulse': '<path d="M12 20s-7-4.3-7-9.5A4 4 0 0 1 12 8a4 4 0 0 1 7 2.5c0 5.2-7 9.5-7 9.5Z"/><path d="M7 12h3l1.5-2.5L14 14l1.2-2H17"/>',
+    'fa-tags': '<path d="M4 5h7l9 9-6 6-9-9V5Z"/><circle cx="8" cy="9" r="1.4"/><path d="m13 12 4 4"/>',
+    'fa-utensils': '<path d="M7 3v7a2 2 0 0 0 4 0V3"/><path d="M9 10v11"/><path d="M16 3c2 1.5 2 4 2 6s-.5 3-2 4v8"/>',
+    'fa-comments': '<path d="M4 6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H9l-5 4v-4a2 2 0 0 1-2-2V6Z"/><path d="M8 9h8M8 12h5"/>',
+    'fa-ticket': '<path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4Z"/><path d="M9 5v14"/>',
+    'fa-briefcase': '<rect x="3" y="7.5" width="18" height="11" rx="2"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5"/><path d="M3 12h18"/>',
+    'fa-building': '<path d="M5 21V4h9v17"/><path d="M14 9h5v12"/><path d="M8 8h3M8 12h3M8 16h3M16 12h1M16 16h1"/>',
+    'fa-capsules': '<rect x="3" y="9" width="18" height="6" rx="3" transform="rotate(-45 12 12)"/><path d="M9 15 15 9"/>',
+    'fa-music': '<path d="M9 18V6l10-2v12"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="16" r="2.5"/>',
+    'fa-futbol': '<circle cx="12" cy="12" r="8.5"/><path d="m12 7 3.5 2.5-1.3 4h-4.4L8.5 9.5 12 7Z"/>',
+    'fa-burger': '<path d="M4 10a8 8 0 0 1 16 0"/><path d="M3.5 10h17"/><path d="M4 14h16"/><path d="M4 17.5a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2"/>',
+    'fa-plane': '<path d="M3 13.5 21 5l-4.5 8.5L21 19l-6-2-4 3v-4.5L3 13.5Z"/>',
+    'fa-book-open': '<path d="M12 6.5C10 5 7 4.5 4 5v13c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V5c-3-.5-6 0-8 1.5Z"/><path d="M12 6.5v13"/>',
+    'fa-landmark': '<path d="M3 20h18"/><path d="M5 20v-8M9 20v-8M15 20v-8M19 20v-8"/><path d="M12 3 3 8h18L12 3Z"/>',
+    __default: '<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 2.5 14.4 0 17M12 3.5c-2.5 2.6-2.5 14.4 0 17"/>'
+  };
+  function siteLogoHTML(s) {
+    var g = WEB_LOGOS[s && s.icon] || WEB_LOGOS.__default;
+    return '<svg class="web-logo-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + g + '</svg>';
+  }
+
+  var EXTRA_SITES = [
+    {
+      id: 'afisha', name: 'Афиша', host: 'afisha.net', cat: 'fun',
+      icon: 'fa-ticket', color: '#a855f7',
+      slogan: 'Куда пойти в городе',
+      nav: [['index', 'События'], ['weekend', 'Выходные'], ['about', 'О проекте']],
+      pages: {
+        index: function () {
+          var ev = [
+            ['12', 'ноя', 'Ночь маркетплейсов', 'Клуб «Склад» · 20:00', 'от 800 ₽'],
+            ['15', 'ноя', 'Городской форум бизнеса', 'БЦ «Сити» · 11:00', 'по регистрации'],
+            ['19', 'ноя', 'Кинопоказ «Ночная смена»', 'Кинозал «Луч» · 21:30', 'от 400 ₽'],
+            ['23', 'ноя', 'Рынок локальных брендов', 'Парк, главная аллея · 12:00', 'вход свободный']
+          ];
+          return '<div class="wa-list">' + ev.map(function (e) {
+            return '<div class="wa-event"><span class="wa-date"><b>' + e[0] + '</b><em>' + e[1] + '</em></span>' +
+              '<div class="wa-info"><b>' + e[2] + '</b><span>' + e[3] + '</span></div><span class="wa-price">' + e[4] + '</span></div>';
+          }).join('') + '</div>';
+        },
+        weekend: function () {
+          return '<div class="web-h">На выходные</div><div class="wa-list">' +
+            '<div class="wa-event"><span class="wa-date"><b>16</b><em>ноя</em></span><div class="wa-info"><b>Экскурсия по Промзоне</b><span>Сбор у завода · 10:00</span></div><span class="wa-price">300 ₽</span></div>' +
+            '<div class="wa-event"><span class="wa-date"><b>17</b><em>ноя</em></span><div class="wa-info"><b>Кухня улиц</b><span>Набережная · 13:00</span></div><span class="wa-price">бесплатно</span></div>' +
+            '</div>';
+        },
+        about: function () {
+          return '<div class="web-h">Об Афише</div><p class="web-text">Собираем события города: концерты, форумы, рынки и кинопоказы. Обновляем каждую неделю.</p>';
+        }
+      }
+    },
+    {
+      id: 'doma', name: 'Дома', host: 'doma.net', cat: 'service',
+      icon: 'fa-building', color: '#14b8a6',
+      slogan: 'Квартиры и помещения в аренду',
+      nav: [['index', 'Объекты'], ['map', 'На карте'], ['about', 'О сервисе']],
+      pages: {
+        index: function () {
+          var flats = [
+            ['2 комнаты · 54 м²', 'Центр, Ленина 12', '48 000 ₽/мес', '4/9 эт.'],
+            ['Студия · 28 м²', 'Спальный, Мира 3', '26 000 ₽/мес', '2/12 эт.'],
+            ['Помещение · 80 м²', 'Вокзал, Привокзальная 1', '62 000 ₽/мес', '1 эт.'],
+            ['3 комнаты · 78 м²', 'Парк, Озёрная 7', '71 000 ₽/мес', '7/10 эт.']
+          ];
+          return '<div class="wd-grid">' + flats.map(function (f) {
+            return '<div class="wd-flat"><div class="wd-photo"><i class="fa-solid fa-building"></i></div>' +
+              '<div class="wd-body"><b>' + f[0] + '</b><span>' + f[1] + '</span><div class="wd-foot"><b>' + f[2] + '</b><span>' + f[3] + '</span></div></div></div>';
+          }).join('') + '</div>';
+        },
+        map: function () {
+          return '<div class="web-h">На карте</div><div class="wd-map"><i class="fa-solid fa-location-dot"></i><span>12 объектов в центре</span></div>' +
+            '<p class="web-muted">Слой аренды доступен в приложении «Карты».</p>' +
+            '<button class="btn btn-block" type="button" onclick="Web.toApp(\'maps\')">Открыть карты</button>';
+        },
+        about: function () {
+          return '<div class="web-h">О Домах</div><p class="web-text">Проверенные объявления от собственников и агентств. Без комиссии за просмотр.</p>';
+        }
+      }
+    },
+    {
+      id: 'apteka', name: 'Аптека', host: 'apteka.net', cat: 'shop',
+      icon: 'fa-capsules', color: '#22c55e',
+      slogan: 'Лекарства и здоровье рядом',
+      nav: [['index', 'Каталог'], ['order', 'Заказ'], ['about', 'О сервисе']],
+      pages: {
+        index: function () {
+          var meds = [
+            ['Аспирин 500 мг', '20 таблеток', '180 ₽', ''],
+            ['Витамин C', '60 таблеток', '420 ₽', ''],
+            ['Пластыри', '10 шт', '95 ₽', ''],
+            ['Антибиотик широкого спектра', 'по рецепту', '640 ₽', 'рецепт']
+          ];
+          return '<div class="wx-list">' + meds.map(function (m) {
+            return '<div class="wx-item"><div class="wx-item-main"><b>' + m[0] + '</b><span>' + m[1] + '</span></div>' +
+              (m[3] ? '<span class="wx-flag">' + m[3] + '</span>' : '') + '<span class="wx-price">' + m[2] + '</span></div>';
+          }).join('') + '</div>' +
+            '<div class="wx-note"><i class="fa-solid fa-circle-info"></i><div><b>Рецептурные препараты</b><span>Отпускаются только при предъявлении рецепта врача.</span></div></div>';
+        },
+        order: function () {
+          return '<div class="web-h">Заказ</div><div class="wx-item"><div class="wx-item-main"><b>Аспирин 500 мг</b><span>20 таблеток · аптека на Ленина</span></div><span class="wx-price">180 ₽</span></div>' +
+            '<p class="web-muted">Готовность — 15 минут. Оплата при получении.</p>' +
+            '<button class="btn btn-primary btn-block" type="button" onclick="Web.toast(\'Заказ оформлен\')">Забрать в аптеке</button>';
+        },
+        about: function () {
+          return '<div class="web-h">Об Аптеке</div><p class="web-text">Сеть городских аптек: 34 точки, доставка от 2 часов. Все препараты сертифицированы.</p>';
+        }
+      }
+    }
+  ];
+  WEB_SITES.push.apply(WEB_SITES, EXTRA_SITES);
+
   var webBody = null;
   var webHistory = [{ kind: 'start' }];
   var webIndex = 0;
@@ -1971,8 +2097,9 @@
   }
 
   function webSiteCard(s) {
+    if (!s) return '';
     return '<button class="web-site-card" type="button" onclick="Web.open(\'' + s.id + '\')">' +
-      '<span class="web-site-ic" style="background:' + s.color + '"><i class="fa-solid ' + s.icon + '"></i></span>' +
+      '<span class="web-site-ic" style="background:' + s.color + '">' + siteLogoHTML(s) + '</span>' +
       '<span class="web-site-info"><b>' + LV.esc(s.name) + '</b><span>' + LV.esc(s.host) + '</span></span>' +
       '<i class="fa-solid fa-chevron-right web-chev"></i></button>';
   }
@@ -2030,13 +2157,72 @@
       webSitesIn(id).map(webSiteCard).join('');
   }
 
-  function webSearchPage(q) {
-    var query = String(q || '').toLowerCase().trim();
-    var found = WEB_SITES.filter(function (s) {
-      if (s.hidden) return false;
-      var cat = webCat(s.cat);
-      return (s.name + ' ' + s.host + ' ' + s.slogan + ' ' + (cat ? cat.name : '')).toLowerCase().indexOf(query) >= 0;
+  function webStrip(html) {
+    return String(html || '').replace(/<[^>]*>/g, ' ').replace(/&[a-z]+;/gi, ' ').replace(/\s+/g, ' ').trim();
+  }
+  function webSiteIndex(s) {
+    if (s.__idx) return s.__idx;
+    var parts = [s.name, s.host, s.slogan || '', (webCat(s.cat) || {}).name || ''];
+    var secs = [];
+    (s.nav || []).forEach(function (n) { secs.push({ page: n[0], title: n[1], text: n[1] }); });
+    Object.keys(s.pages || {}).forEach(function (k) {
+      if (k === 'index') return;
+      var title = k;
+      (s.nav || []).some(function (n) { if (n[0] === k) { title = n[1]; return true; } return false; });
+      var txt = '';
+      try { txt = webStrip(s.pages[k]() || ''); } catch (e) { txt = ''; }
+      secs.push({ page: k, title: title, text: txt });
     });
+    s.__idx = (parts.join(' ') + ' ' + secs.map(function (x) { return x.text; }).join(' ')).toLowerCase();
+    s.__secs = secs;
+    return s.__idx;
+  }
+  function webHighlight(text, q) {
+    var t = LV.esc(text), qq = String(q || '').trim();
+    if (!qq) return t;
+    var re = new RegExp('(' + qq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ')', 'ig');
+    return t.replace(re, '<mark>$1</mark>');
+  }
+  function webStem(w) {
+    if (w.length < 5) return w;
+    return w.replace(/(ами|ями|ого|его|ому|ему|ыми|ими|ая|яя|ое|ее|ые|ие|ов|ев|ам|ям|ах|ях|ой|ей|ую|юю|ом|ем|ы|и|а|я|о|е|у|ю|ь)$/, '') || w;
+  }
+  function webScoreSite(s, words) {
+    var name = s.name.toLowerCase(), host = s.host.toLowerCase();
+    var slog = (s.slogan || '').toLowerCase(), idx = webSiteIndex(s);
+    var score = 0;
+    for (var i = 0; i < words.length; i++) {
+      var w = words[i], stem = webStem(w), part = 0;
+      if (name === w || name.indexOf(w) === 0) part = 60;
+      else if (name.indexOf(w) >= 0) part = 35;
+      else if (name.indexOf(stem) >= 0) part = 30;
+      else if (host.indexOf(w) >= 0) part = 22;
+      else if (slog.indexOf(w) >= 0 || slog.indexOf(stem) >= 0) part = 15;
+      else if (idx.indexOf(w) >= 0) part = 8;
+      else if (idx.indexOf(stem) >= 0) part = 6;
+      if (!part) return 0;
+      score += part;
+    }
+    return score;
+  }
+  function webMatchNote(s, query) {
+    var qq = query.toLowerCase(), stem = webStem(qq);
+    var secs = s.__secs || [];
+    for (var i = 0; i < secs.length; i++) {
+      var t = secs[i].text.toLowerCase();
+      if (t.indexOf(qq) >= 0 || t.indexOf(stem) >= 0) return 'нашлось в разделе «' + secs[i].title + '»';
+    }
+    return '';
+  }
+
+  function webSearchPage(q) {
+    var query = String(q || '').toLowerCase().replace(/\s+/g, ' ').trim();
+    var words = query.split(' ').filter(Boolean);
+    var found = words.length ? WEB_SITES.map(function (s) {
+      return { s: s, sc: webScoreSite(s, words) };
+    }).filter(function (x) { return x.sc > 0; }).sort(function (a, b) {
+      return b.sc - a.sc || a.s.name.localeCompare(b.s.name);
+    }) : [];
     var letters = [['L', '#4285F4'], ['a', '#EA4335'], ['c', '#FBBC05'], ['k', '#4285F4'], ['u', '#34A853'], ['u', '#EA4335'], ['n', '#4285F4']];
     var logo = '<div class="web-g-logo small">' + letters.map(function (l) { return '<span style="color:' + l[1] + '">' + l[0] + '</span>'; }).join('') + '<em>.com</em></div>';
     var head = '<div class="web-res-head">' + logo +
@@ -2044,15 +2230,21 @@
       '<input id="web-res-search" value="' + LV.esc(q || '') + '" onkeydown="if(event.key===\'Enter\')Web.searchFromResults()">' +
       '<button type="button" onclick="Web.searchFromResults()" aria-label="Найти"><i class="fa-solid fa-magnifying-glass"></i></button></div></div>';
     if (!found.length) {
-      return head + '<div class="web-404"><i class="fa-solid fa-magnifying-glass"></i><h3>Ничего не найдено</h3><p>По запросу «' + LV.esc(q) + '» нет результатов.</p>' +
-        '<button class="btn btn-primary" type="button" onclick="Web.home()">На стартовую</button></div>';
+      return head + '<div class="web-404"><i class="fa-solid fa-magnifying-glass"></i><h3>Ничего не найдено</h3><p>По запросу «' + LV.esc(q) + '» сайтов нет. Попробуйте другое слово или откройте категорию.</p>' +
+        '<button class="btn btn-primary" type="button" onclick="Web.home()">На стартовую</button></div>' +
+        '<div class="web-h">Популярное</div>' + ['lavka', 'pulse', 'edok', 'bankfake'].map(function (id) { return webSiteCard(webSite(id)); }).join('');
     }
-    return head + '<p class="web-res-count">Найдено ' + found.length + ' по запросу «' + LV.esc(q) + '»</p>' +
-      found.map(function (s) {
-        return '<button class="web-result" type="button" onclick="Web.open(\'' + s.id + '\')">' +
-          '<span class="web-result-host">' + LV.esc(s.host) + '</span>' +
-          '<b>' + LV.esc(s.name) + '</b>' +
-          '<span class="web-result-text">' + LV.esc(s.slogan) + '</span></button>';
+    return head + '<p class="web-res-count">Найдено ' + found.length + ' · запрос «' + LV.esc(q) + '»</p>' +
+      found.map(function (x) {
+        var s = x.s, cat = webCat(s.cat);
+        var note = webMatchNote(s, query);
+        return '<button class="web-res-item" type="button" onclick="Web.open(\'' + s.id + '\')">' +
+          '<span class="web-site-ic small" style="background:' + s.color + '">' + siteLogoHTML(s) + '</span>' +
+          '<span class="web-res-main">' +
+          '<span class="web-res-host">' + LV.esc(s.host) + (cat ? ' · ' + LV.esc(cat.name) : '') + '</span>' +
+          '<b>' + webHighlight(s.name, q) + '</b>' +
+          '<span class="web-res-text">' + LV.esc(s.slogan) + (note ? ' · ' + note : '') + '</span>' +
+          '</span></button>';
       }).join('');
   }
 
@@ -2079,7 +2271,7 @@
     }).join('');
     return '<div class="web-site">' +
       '<div class="web-site-head" style="background:' + site.color + '">' +
-      '<div class="web-site-brand"><span class="web-site-logo"><i class="fa-solid ' + site.icon + '"></i></span>' +
+      '<div class="web-site-brand"><span class="web-site-logo">' + siteLogoHTML(site) + '</span>' +
       '<div><b>' + LV.esc(site.name) + '</b><span>' + LV.esc(site.host) + '</span></div></div>' +
       '<p>' + LV.esc(site.slogan) + '</p></div>' +
       '<div class="web-site-nav">' + nav + '</div>' +
@@ -2171,9 +2363,9 @@
     },
     cat: function (id) { webPush({ kind: 'cat', cat: id }); },
     favs: function () { webPush({ kind: 'favs' }); },
-    searchFromResults: function () {
+    searchFromResults: function (arg) {
       var i = document.getElementById('web-res-search');
-      var q = i ? i.value.trim() : '';
+      var q = (typeof arg === 'string' && arg.trim()) ? arg.trim() : (i ? i.value.trim() : '');
       if (q) webPush({ kind: 'search', q: q });
     },
     cats: function () { webPush({ kind: 'cats' }); },
@@ -2207,9 +2399,9 @@
       }
       webPush({ kind: 'search', q: raw });
     },
-    search: function () {
+    search: function (arg) {
       var i = document.getElementById('web-search');
-      var q = i ? i.value.trim() : '';
+      var q = (typeof arg === 'string' && arg.trim()) ? arg.trim() : (i ? i.value.trim() : '');
       if (!q) { LV.toast('Введите запрос'); return; }
       webPush({ kind: 'search', q: q });
     },
@@ -2328,3 +2520,5 @@
     desc: 'Управление телевизором и техникой умного дома прямо с телефона.'
   }));
 })();
+
+

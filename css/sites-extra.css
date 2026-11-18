@@ -411,3 +411,103 @@
 .gsp-doc b { display: block; font-size: 9px; }
 .gsp-doc span { display: block; font-size: 7px; color: #94a3b8; }
 .gsp-doc button { background: #eff6ff; color: #1d4ed8; border: 0; border-radius: 7px; font-size: 7.5px; padding: 5px 8px; }
+
+/* ============================================================
+   ЛОГОТИПЫ САЙТОВ И НОВЫЕ САЙТЫ
+   ============================================================ */
+.web-logo-svg { width: 22px; height: 22px; display: block; }
+.web-site-logo .web-logo-svg { width: 24px; height: 24px; }
+.web-site-ic.small { width: 34px; height: 34px; border-radius: 10px; }
+.web-site-ic.small .web-logo-svg { width: 19px; height: 19px; }
+mark { background: #fde68a; color: inherit; border-radius: 3px; padding: 0 1px; }
+
+.web-res-item { display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left;
+  background: none; border: 0; border-bottom: 1px solid var(--line); padding: 10px 14px; font-family: inherit; }
+.web-res-main { flex: 1; min-width: 0; }
+.web-res-host { display: block; font-size: 9px; color: var(--muted); }
+.web-res-main b { display: block; font-size: 13px; color: #1a56db; margin-top: 1px; }
+.web-res-text { display: block; font-size: 10px; color: var(--sub); line-height: 1.4; margin-top: 2px; }
+
+.wx-list { display: flex; flex-direction: column; gap: 6px; }
+.wx-item { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.wx-item-main { flex: 1; min-width: 0; }
+.wx-item-main b { display: block; font-size: 11.5px; }
+.wx-item-main span { display: block; font-size: 9px; color: var(--muted); margin-top: 2px; }
+.wx-price { font-size: 12px; font-weight: 800; color: var(--text); white-space: nowrap; }
+.wx-flag { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em;
+  color: #b91c1c; background: #fee2e2; border-radius: 6px; padding: 3px 6px; }
+
+.wx-feed { display: flex; flex-direction: column; gap: 8px; }
+.wx-post { display: flex; gap: 9px; background: var(--card); border: 1px solid var(--line); border-radius: 13px; padding: 11px; }
+.wx-ava { width: 34px; height: 34px; border-radius: 50%; color: #fff; font-weight: 800; font-size: 13px; display: grid; place-items: center; flex: 0 0 34px; }
+.wx-post-body { flex: 1; min-width: 0; }
+.wx-post-top { display: flex; justify-content: space-between; align-items: baseline; }
+.wx-post-top b { font-size: 11.5px; }
+.wx-post-top span { font-size: 8.5px; color: var(--muted); }
+.wx-post-body p { font-size: 10.5px; line-height: 1.45; color: var(--sub); margin-top: 4px; }
+.wx-post-acts { display: flex; gap: 12px; margin-top: 7px; font-size: 9px; color: var(--muted); }
+
+.wx-row { display: flex; align-items: center; gap: 9px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.wx-row-ic { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-size: 11px; flex: 0 0 30px; }
+.wx-row b { display: block; font-size: 11px; }
+.wx-row span { display: block; font-size: 9px; color: var(--muted); }
+
+.wx-form { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+.wx-form label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.wx-form input { background: var(--chip); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; font: inherit; font-size: 11px; color: var(--text); }
+.wx-note { display: flex; gap: 9px; align-items: flex-start; background: var(--green-soft); border-radius: 12px; padding: 10px; margin-top: 10px; color: var(--green-d); }
+.wx-note b { display: block; font-size: 10px; }
+.wx-note span { display: block; font-size: 9px; line-height: 1.4; margin-top: 2px; }
+
+.wx-thread { display: flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.wx-thread-main { flex: 1; min-width: 0; }
+.wx-thread-main b { display: block; font-size: 11px; line-height: 1.35; }
+.wx-thread-main span { display: block; font-size: 8.5px; color: var(--muted); margin-top: 2px; }
+.wx-thread-nums { text-align: center; min-width: 38px; }
+.wx-thread-nums b { display: block; font-size: 12px; }
+.wx-thread-nums span { display: block; font-size: 7.5px; color: var(--muted); }
+
+.wx-job { display: flex; justify-content: space-between; gap: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
+.wx-job b { display: block; font-size: 11.5px; }
+.wx-job span { display: block; font-size: 9px; color: var(--muted); margin-top: 2px; }
+.wx-job-right { text-align: right; }
+.wx-job-right b { color: var(--green-d); }
+
+.we-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.we-card { background: var(--card); border: 1px solid var(--line); border-radius: 13px; padding: 10px; }
+.we-logo { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; color: #fff; font-size: 12px; margin-bottom: 7px; }
+.we-card > b { display: block; font-size: 10.5px; line-height: 1.3; }
+.we-meta { display: block; font-size: 8.5px; color: var(--muted); margin-top: 3px; }
+.we-foot { display: flex; justify-content: space-between; align-items: center; margin-top: 7px; }
+.we-eta { font-size: 8.5px; font-weight: 800; color: var(--green-d); background: var(--green-soft); border-radius: 7px; padding: 3px 6px; }
+.we-price { font-size: 9px; color: var(--muted); }
+.we-track { display: flex; gap: 6px; margin-bottom: 10px; }
+.we-step { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: 11px; padding: 9px; text-align: center; opacity: .55; }
+.we-step.done { opacity: 1; border-color: var(--green-d); }
+.we-step i { display: block; width: 8px; height: 8px; border-radius: 50%; background: var(--muted); margin: 0 auto 5px; }
+.we-step.done i { background: var(--green-d); }
+.we-step b { display: block; font-size: 9.5px; }
+.we-step span { display: block; font-size: 8px; color: var(--muted); margin-top: 1px; }
+
+.wa-list { display: flex; flex-direction: column; gap: 7px; }
+.wa-event { display: flex; align-items: center; gap: 9px; background: var(--card); border: 1px solid var(--line); border-radius: 13px; padding: 9px; }
+.wa-date { width: 42px; flex: 0 0 42px; text-align: center; background: #f3e8ff; border-radius: 10px; padding: 5px 0; }
+.wa-date b { display: block; font-size: 15px; color: #7e22ce; font-weight: 900; line-height: 1; }
+.wa-date em { display: block; font-style: normal; font-size: 8px; text-transform: uppercase; color: #a855f7; margin-top: 2px; }
+.wa-info { flex: 1; min-width: 0; }
+.wa-info b { display: block; font-size: 11px; line-height: 1.3; }
+.wa-info span { display: block; font-size: 8.5px; color: var(--muted); margin-top: 2px; }
+.wa-price { font-size: 9px; font-weight: 800; color: #7e22ce; white-space: nowrap; }
+
+.wd-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.wd-flat { display: flex; gap: 9px; background: var(--card); border: 1px solid var(--line); border-radius: 13px; padding: 9px; }
+.wd-photo { width: 64px; height: 56px; flex: 0 0 64px; border-radius: 10px; background: linear-gradient(140deg,#0f766e,#134e4a); display: grid; place-items: center; color: #99f6e4; font-size: 18px; }
+.wd-body { flex: 1; min-width: 0; }
+.wd-body > b { display: block; font-size: 11px; }
+.wd-body > span { display: block; font-size: 8.5px; color: var(--muted); margin-top: 2px; }
+.wd-foot { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; }
+.wd-foot b { font-size: 11px; color: var(--green-d); }
+.wd-foot span { font-size: 8.5px; color: var(--muted); }
+.wd-map { height: 150px; border-radius: 14px; background: linear-gradient(160deg,#0f766e,#0b3b32); display: grid; place-items: center; align-content: center; gap: 6px; color: #d1fae5; }
+.wd-map i { font-size: 24px; }
+.wd-map span { font-size: 10px; font-weight: 700; }
