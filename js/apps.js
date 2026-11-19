@@ -1340,7 +1340,11 @@
   var storeBody = null;
 
   function storeApps() {
-    return LV.apps.filter(function (a) { return a.installable; });
+    var lvl = (window.LV && LV.state && LV.state.biz) ? LV.state.biz.level : 0;
+    return LV.apps.filter(function (a) {
+      if (a.id === 'production' && lvl >= 10) return true;
+      return a.installable;
+    });
   }
   function appSize(a) {
     var h = LV.hash(a.id);

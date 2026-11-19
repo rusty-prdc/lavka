@@ -217,13 +217,13 @@
     save();
   }
 
-  function unlockProduction() {
+  function unlockProduction(quiet) {
     B.story.flags.prodUnlocked = true;
     var def = LV.apps.filter(function (a) { return a.id === 'production'; })[0];
     if (def) def.installable = true;
     if (LV.current && LV.current.id === 'store' && window.Store) Store.refresh();
     save();
-    toast('Открыто приложение «Производство»');
+    if (!quiet) toast('Открыто приложение «Производство»');
   }
 
   // ============================================================
@@ -3670,7 +3670,7 @@
   }
 
   if (B.auto && B.auto.on && B.auto.left > 0) startAuto();
-  if (B.level >= 10 && !B.story.flags.prodUnlocked) unlockProduction();
+  if (B.level >= 10) unlockProduction(true);
 
   LV.save();
 })();
