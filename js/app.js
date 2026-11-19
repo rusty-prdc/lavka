@@ -700,6 +700,7 @@
       var u = window.BizUnreadSms();
       return u ? String(u) : '';
     }
+    if (id === 'online') return 'β';
     if (id === 'store') {
       var avail = APPS.filter(function (a) { return a.installable && !isInstalled(a.id); }).length;
       return avail ? String(avail) : '';

@@ -2703,9 +2703,46 @@
     installable: true,
     desc: 'Управление телевизором и техникой умного дома прямо с телефона.'
   }));
+
+  // ===== Lavka Online — будущий онлайн-город =====
+  LV.registerApp({
+    id: 'online', name: 'Lavka Online', icon: 'fa-globe', bg: 'linear-gradient(150deg,#7c3aed,#0b1220)',
+    page: 0,
+    mount: function (body) {
+      var joined = !!(LV.state.onlineWait);
+      var steps = [
+        ['Общий город', 'другие игроки ходят по той же карте', 'в коде'],
+        ['Совместные смены', 'работаете вдвоём и делите выручку', 'прототип'],
+        ['Гонки и ограбления', 'дерзко, но по правилам города', 'идея'],
+        ['Твоя сеть напоказ', 'другие видят точки, уровень и рейтинг', 'план']
+      ].map(function (s) {
+        return '<div class="onl-step"><div><b>' + s[0] + '</b><small>' + s[1] + '</small></div><i>' + s[2] + '</i></div>';
+      }).join('');
+      body.innerHTML = LV.appbar({ title: 'Lavka Online', sub: 'онлайн-город · скоро' }) +
+        '<div class="app-scroll pb onl-body">' +
+        '<div class="onl-hero"><span class="onl-chip">В РАЗРАБОТКЕ</span>' +
+        '<div class="onl-logo">LAVKA<b>ONLINE</b></div>' +
+        '<p class="onl-tag">Город, где играют все. Общий онлайн-мир поверх твоей сети.</p></div>' +
+        '<div class="onl-stats"><div><b>12 480</b><span>в листе ожидания</span></div>' +
+        '<div><b>0</b><span>сейчас онлайн</span></div></div>' +
+        '<div class="onl-head">Что будет внутри</div>' +
+        '<div class="onl-road">' + steps + '</div>' +
+        '<button class="onl-join' + (joined ? ' on' : '') + '" type="button" onclick="Online.join()">' +
+        (joined ? 'Вы в листе ожидания' : 'Записаться в бету') + '</button>' +
+        '<p class="onl-note">Приложение появится после релиза сети. Дату объявим в Лавке и Телеграме.</p>' +
+        '</div>';
+    }
+  });
+
+  window.Online = {
+    join: function () {
+      var S = LV.state;
+      if (S.onlineWait) { LV.toast('Вы уже в листе ожидания'); return; }
+      S.onlineWait = true;
+      try { LV.save(); } catch (e) {}
+      if (window.Sfx) Sfx.play('reward');
+      LV.toast('Вы в листе ожидания Lavka Online');
+      LV.openApp('online');
+    }
+  };
 })();
-
-
-
-
-

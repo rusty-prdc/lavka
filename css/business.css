@@ -985,3 +985,32 @@ body.dark .ads-on { background: rgba(16, 185, 129, .16); }
 @keyframes lvRing { 0% { transform: scale(.3); opacity: .9; } 100% { transform: scale(2.6); opacity: 0; } }
 @keyframes lvTxt { 0% { transform: scale(.6); opacity: 0; } 25% { transform: scale(1.12); opacity: 1; }
   100% { transform: scale(1); opacity: 0; } }
+
+/* ===== Lavka Online (тизер) ===== */
+.onl-body { background: radial-gradient(120% 80% at 50% 0%, #241046 0%, #0b1220 55%, #070b14 100%); color: #e2e8f0; }
+.onl-hero { padding: 18px 16px 10px; }
+.onl-chip { display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .12em; padding: 5px 9px;
+  border-radius: 8px; color: #c4b5fd; background: rgba(124, 58, 237, .22); border: 1px solid rgba(167, 139, 250, .35); }
+.onl-logo { margin-top: 12px; font-size: 40px; line-height: .92; font-weight: 900; letter-spacing: -.03em; color: #fff; }
+.onl-logo b { display: block; font-size: 40px; font-weight: 900; background: linear-gradient(90deg, #a78bfa, #f472b6);
+  -webkit-background-clip: text; background-clip: text; color: transparent; }
+.onl-tag { margin-top: 10px; font-size: 12.5px; line-height: 1.5; color: #94a3b8; }
+.onl-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 6px 16px 0; }
+.onl-stats div { background: rgba(148, 163, 184, .08); border: 1px solid rgba(148, 163, 184, .16);
+  border-radius: 14px; padding: 11px 12px; }
+.onl-stats b { display: block; font-size: 20px; font-weight: 900; color: #fff; }
+.onl-stats span { font-size: 10.5px; color: #94a3b8; }
+.onl-head { padding: 18px 16px 8px; font-size: 12px; font-weight: 800; letter-spacing: .08em;
+  text-transform: uppercase; color: #7c8aa0; }
+.onl-road { display: flex; flex-direction: column; gap: 8px; padding: 0 16px; }
+.onl-step { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: rgba(15, 23, 42, .7); border: 1px solid rgba(148, 163, 184, .14); border-radius: 14px; padding: 12px; }
+.onl-step b { display: block; font-size: 12.5px; color: #e2e8f0; }
+.onl-step small { display: block; font-size: 10.5px; color: #7c8aa0; margin-top: 2px; line-height: 1.35; }
+.onl-step i { font-style: normal; font-size: 9.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+  color: #a78bfa; background: rgba(124, 58, 237, .18); border-radius: 7px; padding: 4px 7px; white-space: nowrap; }
+.onl-join { display: block; width: calc(100% - 32px); margin: 18px 16px 0; height: 50px; border: 0; border-radius: 15px;
+  font-size: 14px; font-weight: 800; color: #0b1220; background: linear-gradient(135deg, #a78bfa, #f472b6); }
+.onl-join.on { background: rgba(167, 139, 250, .18); color: #c4b5fd; border: 1px solid rgba(167, 139, 250, .4); }
+.onl-join:active { transform: scale(.98); }
+.onl-note { padding: 12px 18px 26px; font-size: 10.5px; line-height: 1.5; color: #64748b; text-align: center; }
