@@ -1,4 +1,4 @@
-/* Лавка — маркетплейс */
+﻿/* Лавка — маркетплейс */
 (function () {
   'use strict';
 
@@ -632,7 +632,7 @@
     var left = '<button class="ab-btn" type="button" data-mback aria-label="' + (stack.length > 1 ? 'Назад' : 'Закрыть') + '">' +
       '<i class="fa-solid fa-chevron-left"></i></button>';
     if (showBrand) {
-      left += '<div class="mkt-brand"><span class="mkt-logo">Л</span><div class="mkt-brand-txt"><b>Лавка</b><span>маркетплейс</span></div></div>';
+      left += '<div class="mkt-brand"><span class="mkt-logo">Л</span><div class="mkt-brand-txt"><b>Лавка</b><span>магазин</span></div></div>';
     } else {
       left += '<div class="ab-title">' + LV.esc(titleFor(cur)) + '</div>';
     }
@@ -1039,3 +1039,4 @@
     if (dx > 90 && Math.abs(dx) > Math.abs(dy) * 2 && touchX < 60) back();
   }, { passive: true });
 })();
+

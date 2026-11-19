@@ -1,4 +1,4 @@
-/* Lavka Business — Job, Производство, Телефон, Карта города и сюжет */
+﻿/* Lavka Business — Job, Производство, Телефон, Карта города и сюжет */
 (function () {
   'use strict';
 
@@ -3082,7 +3082,7 @@
     }).join('');
     var have = Number(f.goods[pick.id]) || 0;
     showSheet('<div class="bj-sheet-grab"></div><h3>Выставить в Лавку</h3>' +
-      '<p class="bj-sheet-sub">Товар появится в маркетплейсе. Покупатели увидят его в разделе «Мой завод».</p>' +
+      '<p class="bj-sheet-sub">Товар появится в магазине. Покупатели увидят его в разделе «Мой завод».</p>' +
       '<label class="pr-field"><span>Товар</span><select class="field" id="lst-line" onchange="Biz.listingFill()">' + opts + '</select></label>' +
       '<label class="pr-field"><span>Цена за штуку, ₽</span><input class="field" id="lst-price" type="number" value="' + pick.price + '" min="100" step="10"></label>' +
       '<label class="pr-field"><span id="lst-have">Количество · на складе ' + have + ' шт</span>' +
@@ -3674,3 +3674,4 @@
 
   LV.save();
 })();
+

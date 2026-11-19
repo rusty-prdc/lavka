@@ -276,7 +276,7 @@
         '<div class="set-group-title">О телефоне</div>' +
         '<div class="set-group">' +
         '<div class="set-row"><span class="set-ico" style="background:#0f172a"><i class="fa-solid fa-mobile-screen"></i></span><div class="set-lbl"><b>Lavka Phone 15</b><span>6.1" · 256 ГБ · X ID ' + LV.esc(S.user.xid) + '</span></div><span class="set-val">v1.0</span></div>' +
-        '<div class="set-row"><span class="set-ico" style="background:#10b981"><i class="fa-solid fa-bag-shopping"></i></span><div class="set-lbl"><b>Лавка</b><span>Маркетплейс · 2100 товаров</span></div><span class="set-val">1.0</span></div>' +
+        '<div class="set-row"><span class="set-ico" style="background:#10b981"><i class="fa-solid fa-bag-shopping"></i></span><div class="set-lbl"><b>Лавка</b><span>Магазин · 2100 товаров</span></div><span class="set-val">1.0</span></div>' +
         '<button class="set-row" type="button" onclick="XID.open()"><span class="set-ico" style="background:#6366f1"><i class="fa-solid fa-fingerprint"></i></span><div class="set-lbl"><b>XPRODC ID</b><span>' + (S.user.xid ? LV.esc(S.user.xid) : 'Единый аккаунт экосистемы') + '</span></div><span class="set-val" style="color:' + (S.user.xid ? 'var(--green-d)' : '#ef4444') + '">' + (S.user.xid ? 'подключён' : 'войти') + '</span></button>' +
         '</div>' +
         '<p class="center tiny muted" style="margin:6px 0 10px">Сделано в стиле BankFake<br>Лавка · 2026</p>' +
@@ -1440,7 +1440,7 @@
     {
       id: 'lavka', name: 'Лавка', host: 'lackuun.com', cat: 'shop',
       icon: 'fa-bag-shopping', color: '#10b981',
-      slogan: 'Маркетплейс, где всё рядом',
+      slogan: 'Магазин, где всё рядом',
       nav: [['index', 'Главная'], ['catalog', 'Каталог'], ['deals', 'Акции'], ['about', 'О нас']],
       pages: {
         index: function () {
@@ -1485,7 +1485,7 @@
         },
         about: function () {
           return '<div class="web-h">О Лавке</div>' +
-            '<p class="web-text">Лавка — маркетплейс полного цикла: 21 категория, 2100 товаров, собственная доставка и оплата по XPRODC ID.</p>' +
+            '<p class="web-text">Лавка — магазин полного цикла: 21 категория, 2100 товаров, собственная доставка и оплата по XPRODC ID.</p>' +
             '<div class="web-stats"><div><b>2100</b><span>товаров</span></div><div><b>21</b><span>категория</span></div><div><b>1 день</b><span>доставка</span></div></div>' +
             '<p class="web-text">Мы работаем с локальными продавцами и проверяем каждый отзыв. Возврат — 14 дней без вопросов.</p>' +
             '<p class="web-muted">Москва, Тверская, 12 · support@lackuun.com</p>';
@@ -2704,6 +2704,8 @@
     desc: 'Управление телевизором и техникой умного дома прямо с телефона.'
   }));
 })();
+
+
 
 
 

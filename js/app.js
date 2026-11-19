@@ -1,4 +1,4 @@
-/* Лавка — ядро: состояние, домашний экран, приложения, обучение */
+﻿/* Лавка — ядро: состояние, домашний экран, приложения, обучение */
 (function () {
   'use strict';
 
@@ -803,7 +803,7 @@
     var hs = document.getElementById('home-sub');
     if (sb) sb.textContent = t;
     if (ht) ht.textContent = t;
-    if (hs) hs.innerHTML = d.getDate() + ' ' + MONTHS[d.getMonth()] + ' · <b>Лавка</b> · маркетплейс';
+    if (hs) hs.innerHTML = d.getDate() + ' ' + MONTHS[d.getMonth()] + ' · <b>Лавка</b> · бизнес-игра';
   }
 
   // ---------- app lifecycle ----------
@@ -864,13 +864,13 @@
   var TUT = [
     {
       title: 'Привет, это «Лавка»',
-      text: 'Твой телефон с маркетплейсом. Здесь 2100 товаров, 21 категория, доставка и оформление заказов — всё как в жизни.',
+      text: 'Твой телефон для бизнеса. Здесь 2100 товаров, 21 категория, доставка и оформление заказов — всё как в жизни.',
       target: null,
       btn: 'Показать',
       prepare: function () { closeApp(); setPage(0); updateHomeUser(); }
     },
     {
-      title: 'Маркетплейс',
+      title: 'Магазин',
       text: 'Главное приложение — «Лавка». Внутри каталог, поиск, корзина и заказы. Нажми «Далее», чтобы открыть.',
       target: '[data-app="market"]',
       prepare: function () { closeApp(); setPage(0); }
@@ -1185,3 +1185,4 @@
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
   else boot();
 })();
+
