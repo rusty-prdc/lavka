@@ -3670,6 +3670,7 @@
   }
 
   if (B.auto && B.auto.on && B.auto.left > 0) startAuto();
+  if (B.level >= 10 && !B.story.flags.prodUnlocked) unlockProduction();
 
   LV.save();
 })();
