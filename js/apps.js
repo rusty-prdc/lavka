@@ -2706,7 +2706,7 @@
 
   // ===== Lavka Online — будущий онлайн-город =====
   LV.registerApp({
-    id: 'online', name: 'Lavka Online', icon: 'fa-globe', bg: 'linear-gradient(150deg,#7c3aed,#0b1220)',
+    id: 'online', name: 'Lavka Online', icon: 'fa-globe', bg: 'linear-gradient(150deg,#10b981,#0b1220)',
     img: 'img/lavka-online-192.png',
     page: 0,
     mount: function (body) {
@@ -2724,8 +2724,6 @@
         '<div class="onl-hero"><span class="onl-chip">В РАЗРАБОТКЕ</span>' +
         '<div class="onl-brand"><img src="img/lavka-online-512.png" alt=""><div class="onl-logo">LAVKA<b>ONLINE</b></div></div>' +
         '<p class="onl-tag">Город, где играют все. Общий онлайн-мир поверх твоей сети.</p></div>' +
-        '<div class="onl-stats"><div><b>12 480</b><span>в листе ожидания</span></div>' +
-        '<div><b>0</b><span>сейчас онлайн</span></div></div>' +
         '<div class="onl-head">Что будет внутри</div>' +
         '<div class="onl-road">' + steps + '</div>' +
         '<button class="onl-join' + (joined ? ' on' : '') + '" type="button" onclick="Online.join()">' +
