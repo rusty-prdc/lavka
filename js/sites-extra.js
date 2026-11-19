@@ -548,5 +548,141 @@
     }
   });
 
-})();
+  /* ============================================================
+     LAVKA ONLINE — анонс онлайн-города
+     ============================================================ */
+  var LO_PROMISES = [
+    ['fa-map', 'Общая карта', 'Один город на всех: районы, точки, транспорт и пробки.'],
+    ['fa-users', 'Живые игроки', 'Встречи, сделки и работа в паре — не в чате, а на улице.'],
+    ['fa-people-group', 'Совместные смены', 'Берёте смену вдвоём и делите выручку и рейтинг.'],
+    ['fa-store', 'Твоя сеть на карте', 'Другие видят твои точки, уровень и вывеску.'],
+    ['fa-arrows-rotate', 'Сезоны', 'Каждые три месяца карта меняется: новые районы и события.'],
+    ['fa-right-left', 'Перенос прогресса', 'Сеть из офлайна переедет в онлайн без потерь.']
+  ];
 
+  function loMapSVG() {
+    var roadsA = '<path d="M0 100h480M0 208h480M126 0v300M364 0v300" stroke="#1e293b" stroke-width="11" fill="none"/>';
+    var roadsB = '<path d="M0 50h480M0 154h480M0 262h480M63 0v300M240 0v300M428 0v300" stroke="#243247" stroke-width="3" fill="none"/>';
+    var river = '<path d="M0 242c72-34 111 9 174-21s110-54 171-32 92 6 135-17v128H0z" fill="#0ea5e9" opacity=".16"/>';
+    var park = '<circle cx="160" cy="72" r="38" fill="#16a34a" opacity=".16"/><circle cx="334" cy="178" r="46" fill="#16a34a" opacity=".13"/>';
+    var pts = [
+      [160, 72, '#10b981', 'Центр'],
+      [82, 158, '#ffffff', 'ПВЗ'],
+      [248, 112, '#10b981', 'Кофейня'],
+      [390, 72, '#ffffff', 'ТРЦ'],
+      [315, 225, '#0ea5e9', 'Порт']
+    ];
+    var marks = pts.map(function (p) {
+      return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="13" fill="' + p[2] + '" opacity=".16"/>' +
+        '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="6" fill="' + p[2] + '"/>';
+    }).join('');
+    var labels = pts.map(function (p) {
+      return '<text x="' + (p[0] + 10) + '" y="' + (p[1] + 5) + '" fill="#cbd5e1" font-size="13" font-family="Inter,Segoe UI,Arial">' + p[3] + '</text>';
+    }).join('');
+    return '<svg class="lo-map" viewBox="0 0 480 300" role="img" aria-label="Карта онлайн-города">' +
+      '<rect width="480" height="300" fill="#0b1220"/>' + river + park + roadsA + roadsB + marks + labels + '</svg>';
+  }
+
+  function loPromiseCards() {
+    return LO_PROMISES.map(function (p) {
+      return '<div class="lo-card"><i class="fa-solid ' + p[0] + '"></i><b>' + p[1] + '</b><span>' + p[2] + '</span></div>';
+    }).join('');
+  }
+
+  W.sites.push({
+    id: 'lavkaonline', name: 'Lavka Online', host: 'online.lavka', cat: 'service', custom: true,
+    icon: 'fa-globe', color: '#10b981',
+    slogan: 'Город, где играют все · выход в декабре 2026',
+    nav: [['index', 'Главная'], ['map', 'Карта'], ['road', 'Планы']],
+    chrome: function (body, page) {
+      page = page || 'index';
+      var tabs = [['index', 'Главная'], ['map', 'Карта'], ['road', 'Планы']].map(function (t) {
+        return '<button class="lo-tab' + (t[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'lavkaonline\',\'' + t[0] + '\')">' + t[1] + '</button>';
+      }).join('');
+      return '<div class="lo">' +
+        '<header class="lo-top">' +
+        '<button class="lo-logo" type="button" onclick="Web.sitePage(\'lavkaonline\',\'index\')">' +
+        '<img src="img/lavka-online-192.png" alt=""><span>LAVKA<b>ONLINE</b></span></button>' +
+        '<nav class="lo-nav">' + tabs + '</nav>' +
+        '<span class="lo-badge">декабрь 2026</span>' +
+        '</header>' +
+        '<div class="lo-body">' + body + '</div>' +
+        '<footer class="lo-foot"><span>© 2026 XPRODC · проект «Лавка Online»</span><span>выход — декабрь 2026</span></footer>' +
+        '</div>';
+    },
+    pages: {
+      index: function () {
+        return '<section class="lo-hero">' +
+          '<div class="lo-hero-txt">' +
+          '<span class="lo-kicker">онлайн-город · анонс</span>' +
+          '<h1>Город, где<br>играют все</h1>' +
+          '<p>Онлайн-мир поверх твоей сети: общая карта, живые игроки и совместные смены. Это не «ещё один магазин» — это город, в котором ты уже построил бизнес.</p>' +
+          '<div class="lo-cta">' +
+          '<button class="lo-btn" type="button" onclick="LavkaOnlineSite.join()">Записаться в бету</button>' +
+          '<button class="lo-btn ghost" type="button" onclick="Web.sitePage(\'lavkaonline\',\'map\')">Посмотреть карту</button>' +
+          '</div>' +
+          '<div class="lo-date"><b>декабрь 2026</b><span>дата выхода</span></div>' +
+          '</div>' +
+          '<div class="lo-hero-map">' + loMapSVG() + '</div>' +
+          '</section>' +
+          '<section class="lo-grid">' + loPromiseCards() + '</section>' +
+          '<section class="lo-strip">' +
+          '<div><b>Что уже есть</b><span>сеть, точки, производство и сюжет в офлайне</span></div>' +
+          '<div><b>Что добавим</b><span>общий город, игроки, транспорт и сезоны</span></div>' +
+          '</section>';
+      },
+      map: function () {
+        var dist = [
+          ['Центр', 'офисы, ТРЦ, высокий спрос'],
+          ['Спальный', 'ПВЗ, кофейни, доставка'],
+          ['Промзона', 'склады и производство'],
+          ['Порт', 'грузы, опт, ночные рейсы'],
+          ['Парк', 'сезонные точки и события'],
+          ['Вокзал', 'трафик и перехват клиентов']
+        ].map(function (d) {
+          return '<div class="lo-dist">' + d[0] + '<small>' + d[1] + '</small></div>';
+        }).join('');
+        return '<section class="lo-mapwrap">' +
+          '<div class="lo-maptop"><h2>Карта города</h2>' +
+          '<p>Один город на всех. Районы, помещения под аренду, транспорт и пробки — всё в одном мире. Точки из офлайна переедут на карту автоматически.</p></div>' +
+          '<div class="lo-mapbig">' + loMapSVG() + '</div>' +
+          '<div class="lo-legend">' +
+          '<span><i class="dot green"></i>твои точки</span>' +
+          '<span><i class="dot white"></i>точки других игроков</span>' +
+          '<span><i class="dot blue"></i>транспорт</span>' +
+          '<span><i class="dot gray"></i>свободные помещения</span>' +
+          '</div>' +
+          '<div class="lo-districts">' + dist + '</div>' +
+          '</section>';
+      },
+      road: function () {
+        var steps = [
+          ['2026', 'Фундамент', 'Серверы, аккаунты и синхронизация сети с облаком.', 'готово', 'done'],
+          ['лето 2026', 'Закрытая бета', 'Только владельцы 20+ уровня: тесты карты и экономики.', 'план', ''],
+          ['осень 2026', 'Открытая бета', 'Все желающие, первые сезоны и городские события.', 'план', ''],
+          ['декабрь 2026', 'Релиз', 'Полный запуск города и перенос прогресса из офлайна.', 'выход', 'rel']
+        ].map(function (s) {
+          return '<div class="lo-step ' + s[4] + '"><time>' + s[0] + '</time><div><b>' + s[1] + '</b><small>' + s[2] + '</small></div><i>' + s[3] + '</i></div>';
+        }).join('');
+        return '<section class="lo-roadwrap">' +
+          '<h2>Планы</h2>' +
+          '<p class="lo-sub">Выход — декабрь 2026. Даты беты можем сдвинуть, релиз — нет.</p>' +
+          '<div class="lo-road">' + steps + '</div>' +
+          '<div class="lo-warn"><i class="fa-solid fa-circle-info"></i><span>Всё, что на карте и в списке, — обещание, а не скриншоты готовой игры. Показываем, к чему идём.</span></div>' +
+          '</section>';
+      }
+    }
+  });
+
+  window.LavkaOnlineSite = {
+    join: function () {
+      var S = LV.state;
+      if (S.onlineWait) { LV.toast('Вы уже в списке предзаписи'); return; }
+      S.onlineWait = true;
+      try { LV.save(); } catch (e) {}
+      if (window.Sfx) Sfx.play('reward');
+      LV.toast('Вы в списке предзаписи Lavka Online');
+      if (window.Web && document.getElementById('web-scroll')) Web.refresh();
+    }
+  };
+})();

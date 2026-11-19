@@ -595,3 +595,69 @@ mark { background: #fde68a; color: inherit; border-radius: 3px; padding: 0 1px; 
 .ap-track { display: flex; gap: 5px; margin: 12px 0 4px; }
 .ap-track span { flex: 1; height: 5px; border-radius: 99px; background: var(--chip); }
 .ap-track span.done { background: var(--green-d); }
+
+/* ===== Lavka Online — сайт-анонс ===== */
+.lo { min-height: 100%; background: radial-gradient(120% 70% at 50% 0%, #0f3d2e 0%, #0b1220 58%, #070b12 100%); color: #e2e8f0; }
+.lo-top { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid rgba(148, 163, 184, .12);
+  position: sticky; top: 0; z-index: 6; background: rgba(8, 16, 26, .88); flex-wrap: wrap; }
+.lo-logo { display: flex; align-items: center; gap: 7px; border: 0; background: none; color: #fff; font-weight: 900; font-size: 11px; letter-spacing: .01em; }
+.lo-logo img { width: 24px; height: 24px; border-radius: 7px; display: block; }
+.lo-logo b { color: #34d399; font-weight: 900; }
+.lo-nav { display: flex; gap: 2px; margin-left: auto; }
+.lo-tab { border: 0; background: none; color: #94a3b8; font-size: 11px; font-weight: 700; padding: 6px 8px; border-radius: 8px; }
+.lo-tab.on { background: rgba(16, 185, 129, .16); color: #6ee7b7; }
+.lo-badge { display: none; }
+.lo-body { padding: 16px 14px 92px; }
+.lo-hero { display: flex; flex-direction: column; gap: 14px; }
+.lo-kicker { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: #6ee7b7; }
+.lo-hero h1 { margin: 8px 0 10px; font-size: 33px; line-height: .98; letter-spacing: -.03em; font-weight: 900; color: #fff; }
+.lo-hero p { color: #94a3b8; font-size: 12.5px; line-height: 1.55; }
+.lo-cta { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+.lo-btn { border: 0; border-radius: 11px; padding: 11px 14px; font-size: 12px; font-weight: 800;
+  color: #04130a; background: linear-gradient(135deg, #34d399, #10b981); }
+.lo-btn.ghost { background: transparent; color: #e2e8f0; border: 1px solid rgba(148, 163, 184, .3); }
+.lo-btn:active { transform: scale(.98); }
+.lo-date { display: flex; align-items: baseline; gap: 8px; margin-top: 14px; }
+.lo-date b { font-size: 19px; font-weight: 900; color: #fff; }
+.lo-date span { font-size: 9.5px; color: #64748b; text-transform: uppercase; letter-spacing: .1em; }
+.lo-hero-map, .lo-mapbig { border-radius: 14px; overflow: hidden; border: 1px solid rgba(148, 163, 184, .16); background: #0b1220; }
+.lo-map { display: block; width: 100%; height: auto; }
+.lo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.lo-card { background: rgba(15, 23, 42, .66); border: 1px solid rgba(148, 163, 184, .14); border-radius: 13px; padding: 12px; }
+.lo-card i { width: 28px; height: 28px; border-radius: 9px; display: grid; place-items: center;
+  background: rgba(16, 185, 129, .16); color: #6ee7b7; font-size: 12px; }
+.lo-card b { display: block; margin-top: 8px; font-size: 11.5px; color: #fff; }
+.lo-card span { display: block; margin-top: 3px; font-size: 10.5px; line-height: 1.4; color: #94a3b8; }
+.lo-strip { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 14px; }
+.lo-strip div { background: rgba(15, 23, 42, .5); border-radius: 12px; padding: 12px 13px; border: 1px solid rgba(148, 163, 184, .12); }
+.lo-strip b { display: block; font-size: 11px; color: #6ee7b7; }
+.lo-strip span { display: block; margin-top: 3px; font-size: 10.5px; line-height: 1.4; color: #94a3b8; }
+.lo-maptop h2, .lo-roadwrap h2 { margin: 0 0 6px; font-size: 21px; color: #fff; }
+.lo-maptop p, .lo-sub { color: #94a3b8; font-size: 11.5px; line-height: 1.5; }
+.lo-mapbig { margin-top: 12px; }
+.lo-legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; font-size: 10px; color: #94a3b8; }
+.lo-legend .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 5px; }
+.lo-legend .green { background: #10b981; }
+.lo-legend .white { background: #fff; }
+.lo-legend .blue { background: #0ea5e9; }
+.lo-legend .gray { background: #64748b; }
+.lo-districts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+.lo-dist { background: rgba(15, 23, 42, .6); border: 1px solid rgba(148, 163, 184, .12); border-radius: 11px;
+  padding: 10px 12px; font-size: 11.5px; color: #e2e8f0; }
+.lo-dist small { display: block; margin-top: 3px; color: #64748b; font-size: 10px; line-height: 1.35; }
+.lo-road { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.lo-step { display: flex; flex-direction: column; gap: 5px; background: rgba(15, 23, 42, .6);
+  border: 1px solid rgba(148, 163, 184, .12); border-radius: 13px; padding: 12px 13px; }
+.lo-step time { font-size: 10px; font-weight: 800; letter-spacing: .06em; color: #6ee7b7; text-transform: uppercase; }
+.lo-step b { font-size: 12.5px; color: #fff; }
+.lo-step small { display: block; margin-top: 2px; font-size: 10.5px; color: #94a3b8; line-height: 1.4; }
+.lo-step i { align-self: flex-start; font-style: normal; font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .06em; padding: 4px 7px; border-radius: 6px; background: rgba(148, 163, 184, .12); color: #94a3b8; }
+.lo-step.done i { background: rgba(16, 185, 129, .18); color: #6ee7b7; }
+.lo-step.rel { border-color: rgba(52, 211, 153, .42); }
+.lo-step.rel i { background: #10b981; color: #04130a; }
+.lo-warn { display: flex; gap: 9px; align-items: flex-start; margin-top: 14px; padding: 12px 13px; border-radius: 12px;
+  background: rgba(245, 158, 11, .1); border: 1px solid rgba(245, 158, 11, .25); color: #fbbf24;
+  font-size: 10.5px; line-height: 1.45; }
+.lo-foot { display: flex; justify-content: space-between; gap: 10px; padding: 14px 14px 26px;
+  border-top: 1px solid rgba(148, 163, 184, .1); color: #64748b; font-size: 9.5px; }

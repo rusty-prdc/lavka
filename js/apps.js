@@ -2728,7 +2728,7 @@
         '<div class="onl-road">' + steps + '</div>' +
         '<button class="onl-join' + (joined ? ' on' : '') + '" type="button" onclick="Online.join()">' +
         (joined ? 'Вы в листе ожидания' : 'Записаться в бету') + '</button>' +
-        '<p class="onl-note">Приложение появится после релиза сети. Дату объявим в Лавке и Телеграме.</p>' +
+        '<p class="onl-note">Выход — декабрь 2026. Запись в бету откроется раньше — сайт online.lavka в браузере.</p>' +
         '</div>';
     }
   });
