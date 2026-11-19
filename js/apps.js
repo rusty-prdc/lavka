@@ -1421,7 +1421,7 @@
   };
 
   // =====================================================
-  // БРАУЗЕР — LAVKA.NET
+  // БРАУЗЕР — LACKUUN.COM
   // =====================================================
   var WEB_CATS = [
     { id: 'news', name: 'Новости', icon: 'fa-newspaper', color: '#0ea5e9' },
@@ -1434,7 +1434,7 @@
 
   var WEB_SITES = [
     {
-      id: 'lavka', name: 'Лавка', host: 'lavka.net', cat: 'shop',
+      id: 'lavka', name: 'Лавка', host: 'lackuun.com', cat: 'shop',
       icon: 'fa-bag-shopping', color: '#10b981',
       slogan: 'Маркетплейс, где всё рядом',
       nav: [['index', 'Главная'], ['catalog', 'Каталог'], ['deals', 'Акции'], ['about', 'О нас']],
@@ -1484,12 +1484,12 @@
             '<p class="web-text">Лавка — маркетплейс полного цикла: 21 категория, 2100 товаров, собственная доставка и оплата по XPRODC ID.</p>' +
             '<div class="web-stats"><div><b>2100</b><span>товаров</span></div><div><b>21</b><span>категория</span></div><div><b>1 день</b><span>доставка</span></div></div>' +
             '<p class="web-text">Мы работаем с локальными продавцами и проверяем каждый отзыв. Возврат — 14 дней без вопросов.</p>' +
-            '<p class="web-muted">Москва, Тверская, 12 · support@lavka.net</p>';
+            '<p class="web-muted">Москва, Тверская, 12 · support@lackuun.com</p>';
         }
       }
     },
     {
-      id: 'vesti', name: 'Городские вести', host: 'vesti.lavka.net', cat: 'news',
+      id: 'vesti', name: 'Городские вести', host: 'vesti.lackuun.com', cat: 'news',
       icon: 'fa-newspaper', color: '#0ea5e9',
       slogan: 'Что происходит в городе',
       nav: [['index', 'Лента'], ['city', 'Город'], ['tech', 'Технологии'], ['sport', 'Спорт']],
@@ -1587,7 +1587,7 @@
             '<h3>Один ID — вся экосистема</h3><p>Лавка, банк, почта, кошелёк и браузер работают с единым аккаунтом.</p>' +
             '<button class="btn btn-white" type="button" onclick="Web.sitePage(\'xprodc\',\'id\')">Подробнее об ID</button></div>' +
             '<div class="web-h">Обновления</div>' +
-            webNews('u1', 'Версия 4.2: браузер LAVKA.NET', 'Встроенный браузер получил стартовую страницу, категории и закладки.', 'Сегодня') +
+            webNews('u1', 'Версия 4.2: браузер Lackuun', 'Встроенный браузер получил стартовую страницу, категории и закладки.', 'Сегодня') +
             webNews('u2', 'Лавка: 2100 товаров', 'Каталог расширен до 21 категории, добавлены отзывы и избранное.', '12 ноября') +
             webNews('u3', 'LAVKA PAY: переводы по X ID', 'Переводы между аккаунтами без комиссии.', '8 ноября');
         },
@@ -1614,7 +1614,7 @@
       }
     },
     {
-      id: 'techno', name: 'ТехноМир', host: 'techno.lavka.net', cat: 'shop',
+      id: 'techno', name: 'ТехноМир', host: 'techno.lackuun.com', cat: 'shop',
       icon: 'fa-microchip', color: '#6366f1',
       slogan: 'Гаджеты, которые работают',
       nav: [['index', 'Главная'], ['catalog', 'Каталог'], ['p1', 'Хит']],
@@ -1651,7 +1651,7 @@
       }
     },
     {
-      id: 'dom', name: 'Дом и Сад', host: 'dom.lavka.net', cat: 'shop',
+      id: 'dom', name: 'Дом и Сад', host: 'dom.lackuun.com', cat: 'shop',
       icon: 'fa-couch', color: '#65a30d',
       slogan: 'Уют начинается здесь',
       nav: [['index', 'Главная'], ['catalog', 'Каталог']],
@@ -1737,7 +1737,7 @@
       }
     },
     {
-      id: 'coin', name: 'КриптоЛавка', host: 'coin.lavka.net', cat: 'money',
+      id: 'coin', name: 'КриптоЛавка', host: 'coin.lackuun.com', cat: 'money',
       icon: 'fa-coins', color: '#f59e0b',
       slogan: 'Курсы и цифровые активы',
       nav: [['index', 'Курсы']],
@@ -1757,7 +1757,7 @@
       }
     },
     {
-      id: 'kino', name: 'Кинозал', host: 'kino.lavka.net', cat: 'fun',
+      id: 'kino', name: 'Кинозал', host: 'kino.lackuun.com', cat: 'fun',
       icon: 'fa-film', color: '#ef4444',
       slogan: 'Фильмы и сериалы без рекламы',
       nav: [['index', 'Афиша'], ['m1', 'Новинка']],
@@ -1788,7 +1788,7 @@
       }
     },
     {
-      id: 'igromir', name: 'ИгроМир', host: 'games.lavka.net', cat: 'fun',
+      id: 'igromir', name: 'ИгроМир', host: 'games.lackuun.com', cat: 'fun',
       icon: 'fa-gamepad', color: '#2563eb',
       slogan: 'Игры для любого настроения',
       nav: [['index', 'Каталог'], ['g1', 'Хит']],
@@ -1812,7 +1812,7 @@
       }
     },
     {
-      id: 'weather', name: 'Погода', host: 'weather.lavka.net', cat: 'service',
+      id: 'weather', name: 'Погода', host: 'weather.lackuun.com', cat: 'service',
       icon: 'fa-cloud-sun', color: '#06b6d4',
       slogan: 'Точный прогноз на неделю',
       nav: [['index', 'Москва']],
@@ -1831,40 +1831,41 @@
       }
     },
     {
-      id: 'maps', name: 'Карты', host: 'maps.lavka.net', cat: 'service',
+      id: 'maps', name: 'Карты', host: 'maps.lackuun.com', cat: 'service',
       icon: 'fa-map-location-dot', color: '#22c55e',
       slogan: 'Найди всё рядом',
       nav: [['index', 'Карта']],
       pages: {
         index: function () {
           var markers = [
-            { x: 120, y: 100, kind: 'shop', color: '#22c55e' },
-            { x: 235, y: 130, kind: 'rub', color: '#059669' },
-            { x: 150, y: 55, kind: 'shield', color: '#3b82f6' },
-            { x: 235, y: 55, kind: 'cross', color: '#ef4444' },
-            { x: 40, y: 230, kind: 'tree', color: '#16a34a' },
-            { x: 330, y: 120, kind: 'columns', color: '#64748b' },
-            { x: 165, y: 150, kind: 'flag', color: '#8b5cf6' },
-            { x: 265, y: 275, kind: 'factory', color: '#475569' }
+            { x: 280, y: 240, kind: 'shop', color: '#22c55e' },
+            { x: 500, y: 300, kind: 'rub', color: '#059669' },
+            { x: 240, y: 440, kind: 'shield', color: '#3b82f6' },
+            { x: 430, y: 470, kind: 'cross', color: '#ef4444' },
+            { x: 80, y: 520, kind: 'tree', color: '#16a34a' },
+            { x: 650, y: 260, kind: 'columns', color: '#64748b' },
+            { x: 380, y: 340, kind: 'flag', color: '#8b5cf6' },
+            { x: 520, y: 550, kind: 'factory', color: '#475569' },
+            { x: 660, y: 590, kind: 'anchor', color: '#0ea5e9' }
           ];
           return '<div class="web-map">' +
-            (window.CityMap ? CityMap.svg(markers, { you: { x: 180, y: 150 } }) : '') +
+            (window.CityMap ? CityMap.svg(markers, { you: { x: 380, y: 340 } }) : '') +
             '<span class="web-map-tag">Карта города</span></div>' +
             '<div class="web-h">Рядом с вами</div>' +
             webPlace('Пункт выдачи Лавки', 'Тверская, 12 · 240 м', 'fa-bag-shopping', '#10b981') +
             webPlace('Кофейня на углу', 'Тверская, 8 · 380 м', 'fa-mug-hot', '#b45309') +
-            webPlace('BankFake', 'Тверская, 15 · 520 м', 'fa-building-columns', '#059669') +
-            webPlace('Правительство', 'Тверская, 1 · 700 м', 'fa-building-columns', '#64748b') +
+            webPlace('BankFake', 'Садовая, 15 · 520 м', 'fa-building-columns', '#059669') +
+            webPlace('Правительство', 'Правительственная, 1 · 700 м', 'fa-building-columns', '#64748b') +
             webPlace('БЦ «Сити»', 'Садовая, 8 · 900 м', 'fa-building', '#8b5cf6') +
             webPlace('ПК-клуб «Арена»', 'Тверская, 20 · 1,1 км', 'fa-gamepad', '#6366f1') +
-            webPlace('Отделение полиции', 'Садовая, 2 · 610 м', 'fa-shield-halved', '#3b82f6') +
-            webPlace('Городская больница', 'Ленина, 4 · 900 м', 'fa-hospital', '#ef4444') +
+            webPlace('Отделение полиции', 'Привокзальная, 2 · 610 м', 'fa-shield-halved', '#3b82f6') +
+            webPlace('Городская больница', 'Садовая, 4 · 900 м', 'fa-hospital', '#ef4444') +
             '<p class="web-muted">Карта демонстрационная · маршруты недоступны</p>';
         }
       }
     },
     {
-      id: 'mail', name: 'Почта', host: 'mail.lavka.net', cat: 'service',
+      id: 'mail', name: 'Почта', host: 'mail.lackuun.com', cat: 'service',
       icon: 'fa-envelope', color: '#0ea5e9',
       slogan: 'Письма и уведомления',
       nav: [['index', 'Входящие']],
@@ -2042,10 +2043,23 @@
   WEB_SITES.push.apply(WEB_SITES, EXTRA_SITES);
 
   var webBody = null;
-  var webHistory = [{ kind: 'start' }];
-  var webIndex = 0;
+  var webTabs = [];
+  var webActive = 0;
+  var webTabSeq = 0;
+  var webTabsOpen = false;
+  var webScrollReset = false;
   var webLikes = {};
   var webFollows = {};
+
+  function webNewTabState(entry) {
+    return { id: ++webTabSeq, history: [entry || { kind: 'start' }], index: 0, scroll: 0 };
+  }
+  function webTab() { return webTabs[webActive] || webTabs[0] || null; }
+  function webTabsReset() {
+    webTabs = [webNewTabState({ kind: 'start' })];
+    webActive = 0;
+    webTabsOpen = false;
+  }
 
   function webSite(id) {
     return WEB_SITES.filter(function (s) { return s.id === id; })[0];
@@ -2056,12 +2070,19 @@
   function webSitesIn(cat) {
     return WEB_SITES.filter(function (s) { return s.cat === cat && !s.hidden; });
   }
-  function webEntry() { return webHistory[webIndex] || { kind: 'start' }; }
+  function webEntry() {
+    var t = webTab();
+    return t ? (t.history[t.index] || { kind: 'start' }) : { kind: 'start' };
+  }
 
   function webPush(e) {
-    webHistory = webHistory.slice(0, webIndex + 1);
-    webHistory.push(e);
-    webIndex = webHistory.length - 1;
+    var t = webTab();
+    if (!t) return;
+    t.history = t.history.slice(0, t.index + 1);
+    t.history.push(e);
+    t.index = t.history.length - 1;
+    t.scroll = 0;
+    webScrollReset = true;
     webRender();
   }
 
@@ -2136,24 +2157,35 @@
     return 'lackuun.com';
   }
 
+  function webShortcuts() {
+    var ids = ['lavka', 'bankfake', 'pulse', 'edok', 'kino', 'mail', 'weather', 'maps'];
+    return '<div class="web-shortcuts">' + ids.map(function (id) {
+      var s = webSite(id);
+      if (!s || s.hidden) return '';
+      return '<button class="web-shortcut" type="button" onclick="Web.open(\'' + s.id + '\')">' +
+        '<span class="web-shortcut-ic" style="background:' + s.color + '">' + siteLogoHTML(s) + '</span>' +
+        '<b>' + LV.esc(s.name) + '</b></button>';
+    }).join('') + '</div>';
+  }
+
   function webStart() {
     var letters = [['L', '#4285F4'], ['a', '#EA4335'], ['c', '#FBBC05'], ['k', '#4285F4'], ['u', '#34A853'], ['u', '#EA4335'], ['n', '#4285F4']];
     var favs = (S.webFav || []).map(webSite).filter(function (s) { return s && !s.hidden; });
-    var popular = ['lavka', 'pulse', 'opt', 'torg', 'edok', 'bankfake', 'forum'].map(function (id) {
-      var s = webSite(id);
-      return s && !s.hidden ? webSiteCard(s) : '';
-    }).join('');
     return '<div class="web-start web-google">' +
       '<div class="web-g-logo">' + letters.map(function (l) { return '<span style="color:' + l[1] + '">' + l[0] + '</span>'; }).join('') + '<em>.com</em></div>' +
       '<p class="web-g-sub">Поиск по сайтам, новостям и сервисам Lackuun</p>' +
       '<div class="web-gsearch"><i class="fa-solid fa-magnifying-glass"></i>' +
       '<input id="web-search" placeholder="Поиск в Lackuun" onkeydown="if(event.key===\'Enter\')Web.search()">' +
       '<button type="button" onclick="Web.search()" aria-label="Найти"><i class="fa-solid fa-magnifying-glass"></i></button></div>' +
+      '<div class="web-g-actions">' +
+      '<button type="button" onclick="Web.search()">Поиск в Lackuun</button>' +
+      '<button type="button" onclick="Web.cats()">Все категории</button>' +
+      '</div>' +
       '<div class="web-gchips">' + WEB_CATS.map(function (c) {
-        return '<button class="web-gchip" type="button" onclick="Web.cat(\'' + c.id + '\')">' + c.name + '</button>';
+        return '<button class="web-gchip" type="button" onclick="Web.cat(\'' + c.id + '\')"><i class="fa-solid ' + c.icon + '" style="color:' + c.color + '"></i>' + c.name + '</button>';
       }).join('') + '</div>' +
+      '<div class="web-h web-h-center">Популярное</div>' + webShortcuts() +
       (favs.length ? '<div class="web-h">Закладки</div>' + favs.map(webSiteCard).join('') : '') +
-      '<div class="web-h">Часто посещаемые</div>' + popular +
       '<div class="web-h">Сейчас в городе</div>' +
       webNews('a2', 'Городские службы перешли на зимний график', 'Техника вышла на улицы, работа идёт круглосуточно.', 'Сегодня, 09:05') +
       webNews('a3', 'Доставка за час стала доступна в 12 районах', 'Сервис расширил зону экспресс-доставки — проверьте свой адрес.', 'Вчера, 18:40') +
@@ -2319,51 +2351,112 @@
     return webStart();
   }
 
+  function webTabTitle(t) {
+    if (!t) return 'Lackuun';
+    var e = t.history[t.index] || { kind: 'start' };
+    if (e.kind === 'start') return 'Lackuun';
+    if (e.kind === 'search') return e.q ? 'Поиск: ' + e.q : 'Поиск';
+    if (e.kind === 'cats') return 'Категории';
+    if (e.kind === 'cat') { var c = webCat(e.cat); return c ? c.name : 'Категория'; }
+    if (e.kind === 'favs') return 'Закладки';
+    if (e.kind === 'site') { var s = webSite(e.site); return s ? s.name : 'Сайт'; }
+    return 'Lackuun';
+  }
+  function webTabHost(t) {
+    if (!t) return 'lackuun.com';
+    var e = t.history[t.index] || { kind: 'start' };
+    if (e.kind === 'site') { var s = webSite(e.site); return s ? s.host : 'lackuun.com'; }
+    return 'lackuun.com';
+  }
+  function webTabIcon(t) {
+    if (!t) return 'fa-globe';
+    var e = t.history[t.index] || { kind: 'start' };
+    if (e.kind === 'site') { var s = webSite(e.site); return s ? s.icon : 'fa-globe'; }
+    if (e.kind === 'search') return 'fa-magnifying-glass';
+    if (e.kind === 'cats' || e.kind === 'cat') return 'fa-border-all';
+    if (e.kind === 'favs') return 'fa-star';
+    return 'fa-globe';
+  }
+  function webTabColor(t) {
+    var e = t ? (t.history[t.index] || {}) : {};
+    var s = e.kind === 'site' ? webSite(e.site) : null;
+    return s ? s.color : '#4285F4';
+  }
+
   function webTopHTML() {
+    var t = webTab();
     var e = webEntry();
-    var marked = e.kind === 'site' && (S.webFav || []).indexOf(e.site) >= 0;
     return '<div class="web-top"><div class="web-controls">' +
       '<button class="web-navbtn web-exit" type="button" data-back aria-label="Закрыть браузер"><i class="fa-solid fa-xmark"></i></button>' +
-      '<button class="web-navbtn" type="button" onclick="Web.back()" ' + (webIndex <= 0 ? 'disabled' : '') + ' aria-label="Назад"><i class="fa-solid fa-chevron-left"></i></button>' +
-      '<button class="web-navbtn" type="button" onclick="Web.forward()" ' + (webIndex >= webHistory.length - 1 ? 'disabled' : '') + ' aria-label="Вперёд"><i class="fa-solid fa-chevron-right"></i></button>' +
+      '<button class="web-navbtn" type="button" onclick="Web.back()" ' + (!t || t.index <= 0 ? 'disabled' : '') + ' aria-label="Назад"><i class="fa-solid fa-chevron-left"></i></button>' +
+      '<button class="web-navbtn" type="button" onclick="Web.forward()" ' + (!t || t.index >= t.history.length - 1 ? 'disabled' : '') + ' aria-label="Вперёд"><i class="fa-solid fa-chevron-right"></i></button>' +
       '<div class="web-url"><i class="fa-solid fa-lock"></i><input id="web-url" value="' + LV.esc(webAddress(e)) + '" onkeydown="if(event.key===\'Enter\')Web.go()" aria-label="Адрес сайта" spellcheck="false"></div>' +
       '<button class="web-navbtn" type="button" onclick="Web.refresh()" aria-label="Обновить"><i class="fa-solid fa-rotate"></i></button>' +
-      '<button class="web-navbtn' + (marked ? ' on' : '') + '" type="button" onclick="Web.bookmark()" aria-label="В закладки"><i class="fa-' + (marked ? 'solid' : 'regular') + ' fa-star"></i></button>' +
+      '<button class="web-navbtn web-tabcount" type="button" onclick="Web.showTabs()" aria-label="Вкладки"><i class="fa-regular fa-square"></i><b>' + webTabs.length + '</b></button>' +
       '</div></div>';
   }
 
   function webBottomHTML() {
     var e = webEntry();
-    var active = (e.kind === 'start' || e.kind === 'search') ? 'home'
-      : (e.kind === 'cats' || e.kind === 'cat') ? 'cats'
-        : e.kind === 'favs' ? 'favs' : '';
+    var active = webTabsOpen ? 'tabs'
+      : (e.kind === 'start' || e.kind === 'search') ? 'home'
+        : (e.kind === 'cats' || e.kind === 'cat') ? 'cats'
+          : e.kind === 'favs' ? 'favs' : '';
     var tabs = [
-      ['home', 'Поиск', 'fa-magnifying-glass', 'Web.home()'],
-      ['cats', 'Категории', 'fa-border-all', 'Web.cats()'],
-      ['favs', 'Закладки', 'fa-star', 'Web.favs()'],
-      ['menu', 'Ещё', 'fa-ellipsis', 'Web.menu()']
+      ['home', 'Поиск', 'fa-magnifying-glass', 'Web.home()', 0],
+      ['cats', 'Категории', 'fa-border-all', 'Web.cats()', 0],
+      ['tabs', 'Вкладки', 'fa-clone', 'Web.showTabs()', webTabs.length],
+      ['favs', 'Закладки', 'fa-star', 'Web.favs()', 0],
+      ['menu', 'Меню', 'fa-ellipsis', 'Web.menu()', 0]
     ];
     return '<div class="web-bottom">' + tabs.map(function (t) {
-      return '<button class="web-bbtn' + (active === t[0] ? ' on' : '') + '" type="button" onclick="' + t[3] + '"><i class="fa-' + (t[0] === 'favs' && active !== 'favs' ? 'regular' : 'solid') + ' ' + t[2] + '"></i><span>' + t[1] + '</span></button>';
+      return '<button class="web-bbtn' + (active === t[0] ? ' on' : '') + '" type="button" onclick="' + t[3] + '">' +
+        '<span class="web-bbtn-ic"><i class="fa-' + (t[0] === 'favs' && active !== 'favs' ? 'regular' : 'solid') + ' ' + t[2] + '"></i>' +
+        (t[4] ? '<em>' + t[4] + '</em>' : '') + '</span><span>' + t[1] + '</span></button>';
     }).join('') + '</div>';
+  }
+
+  function webTabsOverlay() {
+    var cards = webTabs.map(function (t, i) {
+      var color = webTabColor(t);
+      return '<div class="web-tab-card' + (i === webActive ? ' on' : '') + '">' +
+        '<button class="web-tab-main" type="button" onclick="Web.switchTab(' + i + ')">' +
+        '<span class="web-tab-thumb" style="background:linear-gradient(155deg,' + color + ',#0f172a)"><i class="fa-solid ' + webTabIcon(t) + '"></i><em>' + LV.esc(webTabHost(t)) + '</em></span>' +
+        '<b>' + LV.esc(webTabTitle(t)) + '</b><small>' + LV.esc(webTabHost(t)) + '</small>' +
+        '</button>' +
+        '<button class="web-tab-x" type="button" onclick="Web.closeTab(' + i + ')" aria-label="Закрыть вкладку"><i class="fa-solid fa-xmark"></i></button>' +
+        '</div>';
+    }).join('');
+    return '<div class="web-tabs-ov">' +
+      '<div class="web-tabs-top"><h3>Вкладки <span>' + webTabs.length + '</span></h3>' +
+      '<button class="web-navbtn" type="button" onclick="Web.hideTabs()" aria-label="Закрыть"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<div class="web-tabs-scroll">' +
+      '<button class="web-newtab" type="button" onclick="Web.newTab()"><i class="fa-solid fa-plus"></i> Новая вкладка</button>' +
+      '<div class="web-tab-grid">' + cards + '</div>' +
+      '<p class="web-muted center" style="margin:14px 0">У каждой вкладки своя история переходов</p>' +
+      '</div></div>';
   }
 
   function webRender() {
     if (!webBody) return;
-    var sc = document.getElementById('web-scroll');
-    var top = sc ? sc.scrollTop : 0;
-    webBody.innerHTML = webTopHTML() + '<div class="web-scroll" id="web-scroll">' + webContent(webEntry()) + '</div>' + webBottomHTML();
+    var t = webTab();
+    var old = document.getElementById('web-scroll');
+    if (old && t && !webScrollReset) t.scroll = old.scrollTop;
+    webScrollReset = false;
+    webBody.innerHTML = webTopHTML() +
+      '<div class="web-scroll" id="web-scroll">' + webContent(webEntry()) + '</div>' +
+      webBottomHTML() + (webTabsOpen ? webTabsOverlay() : '');
     var ns = document.getElementById('web-scroll');
-    if (ns) ns.scrollTop = top;
+    if (ns && t) ns.scrollTop = t.scroll || 0;
   }
 
   LV.registerApp({
     id: 'browser', name: 'Браузер', icon: 'fa-globe', bg: 'linear-gradient(140deg,#38bdf8,#0284c7)',
-    page: 1, desc: 'Интернет внутри телефона: сайты, категории, закладки',
+    page: 1, desc: 'Lackuun.com: поиск, сайты, вкладки и категории',
     mount: function (body) {
       webBody = body;
-      webHistory = [{ kind: 'start' }];
-      webIndex = 0;
+      webTabsReset();
+      webScrollReset = true;
       webRender();
       return function () { webBody = null; };
     }
@@ -2390,13 +2483,68 @@
     cats: function () { webPush({ kind: 'cats' }); },
     home: function () { webPush({ kind: 'start' }); },
     back: function () {
-      if (webIndex <= 0) return;
-      webIndex--;
+      var t = webTab();
+      if (!t || t.index <= 0) return;
+      t.index--;
+      t.scroll = 0;
+      webScrollReset = true;
       webRender();
     },
     forward: function () {
-      if (webIndex >= webHistory.length - 1) return;
-      webIndex++;
+      var t = webTab();
+      if (!t || t.index >= t.history.length - 1) return;
+      t.index++;
+      t.scroll = 0;
+      webScrollReset = true;
+      webRender();
+    },
+    showTabs: function () {
+      webTabsOpen = true;
+      webRender();
+    },
+    hideTabs: function () {
+      webTabsOpen = false;
+      webRender();
+    },
+    newTab: function () {
+      var old = document.getElementById('web-scroll');
+      var cur = webTab();
+      if (old && cur) cur.scroll = old.scrollTop;
+      webTabs.push(webNewTabState({ kind: 'start' }));
+      webActive = webTabs.length - 1;
+      webTabsOpen = false;
+      webScrollReset = true;
+      webRender();
+      setTimeout(function () {
+        var i = document.getElementById('web-search');
+        if (i) i.focus();
+      }, 60);
+    },
+    switchTab: function (i) {
+      if (i < 0 || i >= webTabs.length) return;
+      if (i === webActive) { webTabsOpen = false; webRender(); return; }
+      var old = document.getElementById('web-scroll');
+      var cur = webTab();
+      if (old && cur) cur.scroll = old.scrollTop;
+      webActive = i;
+      webTabsOpen = false;
+      webScrollReset = true;
+      webRender();
+    },
+    closeTab: function (i) {
+      if (i < 0 || i >= webTabs.length) return;
+      if (webTabs.length <= 1) {
+        webTabs[0] = webNewTabState({ kind: 'start' });
+        webActive = 0;
+        webTabsOpen = false;
+        webScrollReset = true;
+        webRender();
+        return;
+      }
+      webTabs.splice(i, 1);
+      if (webActive > i) webActive--;
+      else if (webActive === i) webActive = Math.min(i, webTabs.length - 1);
+      webScrollReset = true;
       webRender();
     },
     refresh: function () {
@@ -2407,10 +2555,19 @@
       var i = document.getElementById('web-url');
       var raw = i ? i.value.trim().toLowerCase() : '';
       if (!raw) return;
-      raw = raw.replace(/^https?:\/\//, '').replace(/\/+$/, '');
+      raw = raw.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/+$/, '');
+      raw = raw.replace(/lavka\.net/g, 'lackuun.com');
       var parts = raw.split('/');
       var host = parts[0];
       var page = parts[1] || 'index';
+      if (host === 'lackuun.com' || host === 'lackuun') {
+        if (page === 'c' && parts[2]) { webPush({ kind: 'cat', cat: parts[2] }); return; }
+        if (page === 'categories') { webPush({ kind: 'cats' }); return; }
+        if (page === 'bookmarks') { webPush({ kind: 'favs' }); return; }
+        if (page === 'search' && parts[2]) { webPush({ kind: 'search', q: parts.slice(2).join('/') }); return; }
+        webPush({ kind: 'start' });
+        return;
+      }
       var site = WEB_SITES.filter(function (s) { return s.host === host || s.id === host; })[0];
       if (site && !site.hidden) {
         webPush({ kind: 'site', site: site.id, page: site.pages[page] ? page : 'index' });
@@ -2463,15 +2620,19 @@
     },
     menu: function () {
       sheet('<div class="sheet-grab"></div><h3>Lackuun</h3><p class="sub">Поиск, сайты и сервисы города</p>' +
-        '<button class="btn btn-block" type="button" onclick="closeSheet();Web.cats()"><i class="fa-solid fa-border-all"></i> Все категории</button>' +
-        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="closeSheet();Web.clearHistory()"><i class="fa-solid fa-broom"></i> Очистить историю</button>' +
+        '<button class="btn btn-block" type="button" onclick="closeSheet();Web.newTab()"><i class="fa-solid fa-plus"></i> Новая вкладка</button>' +
+        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="closeSheet();Web.showTabs()"><i class="fa-solid fa-clone"></i> Все вкладки · ' + webTabs.length + '</button>' +
+        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="closeSheet();Web.cats()"><i class="fa-solid fa-border-all"></i> Все категории</button>' +
+        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="closeSheet();Web.clearHistory()"><i class="fa-solid fa-broom"></i> Очистить историю вкладки</button>' +
         '<p class="center tiny muted" style="margin:14px 0 4px">Lackuun · 2026</p>');
     },
     clearHistory: function () {
-      webHistory = [{ kind: 'start' }];
-      webIndex = 0;
+      var t = webTab();
+      if (t) { t.history = [{ kind: 'start' }]; t.index = 0; t.scroll = 0; }
+      webTabsOpen = false;
+      webScrollReset = true;
       webRender();
-      LV.toast('История переходов очищена');
+      LV.toast('История вкладки очищена');
     }
   };
 

@@ -16,7 +16,8 @@
     cash: 30000,
     level: 1, xp: 0,
     points: [], staff: [], factory: null,
-    licenses: { alcohol: false, weapon: false },
+    listings: [], nextListId: 0,
+    licenses: { alcohol: false, tobacco: false, weapon: false, pharma: false, finance: false, transport: false },
     credit: { score: 50, loans: [], taken: 0 },
     auto: { on: false, left: 0 },
     nextId: 0,
@@ -84,6 +85,10 @@
     pcclub: { name: 'ПК-клуб', cost: 150000, rent: 3500, avg: 500, base: 40, icon: 'fa-gamepad', color: '#6366f1', desc: 'Компьютеры, турниры, бар', level: 6 },
     alcohol: { name: 'Алкомаркет', cost: 180000, rent: 4200, avg: 900, base: 56, icon: 'fa-wine-bottle', color: '#a855f7', desc: 'Алкоголь и напитки', license: 'alcohol', level: 7 },
     pharmacy: { name: 'Аптека', cost: 170000, rent: 3800, avg: 800, base: 44, icon: 'fa-capsules', color: '#10b981', desc: 'Лекарства и здоровье', level: 8 },
+    tobacconist: { name: 'Табачная лавка', cost: 190000, rent: 4400, avg: 950, base: 50, icon: 'fa-smoking', color: '#a16207', desc: 'Табак, вейпы и аксессуары', license: 'tobacco', level: 9 },
+    medical: { name: 'Медицинский центр', cost: 600000, rent: 11000, avg: 2200, base: 64, icon: 'fa-hospital', color: '#0ea5e9', desc: 'Приёмы, анализы и справки', license: 'pharma', level: 13 },
+    pawnshop: { name: 'Ломбард', cost: 700000, rent: 12000, avg: 2400, base: 68, icon: 'fa-hand-holding-dollar', color: '#eab308', desc: 'Залоги, оценка и выкуп', license: 'finance', level: 16 },
+    taxifleet: { name: 'Таксопарк', cost: 1100000, rent: 18000, avg: 3600, base: 76, icon: 'fa-taxi', color: '#f59e0b', desc: 'Автопарк и корпоративные поездки', license: 'transport', level: 20 },
     gym: { name: 'Спортзал', cost: 220000, rent: 4500, avg: 900, base: 50, icon: 'fa-dumbbell', color: '#ef4444', desc: 'Тренажёры и абонементы', level: 9 },
     boutique: { name: 'Бутик', cost: 240000, rent: 4800, avg: 1100, base: 54, icon: 'fa-shirt', color: '#ec4899', desc: 'Одежда и аксессуары', level: 10 },
     electronics: { name: 'Электроника', cost: 280000, rent: 5200, avg: 1300, base: 58, icon: 'fa-mobile-screen', color: '#3b82f6', desc: 'Техника и гаджеты', level: 11 },
@@ -95,9 +100,16 @@
   };
   var MAP_KIND = {
     cafe: 'cup', barbershop: 'scissors', carwash: 'car', pcclub: 'pc', pharmacy: 'cross',
+    tobacconist: 'shop', medical: 'cross', pawnshop: 'rub', taxifleet: 'car',
     gym: 'dumbbell', boutique: 'shirt', electronics: 'phone', cinema: 'film',
     hotel: 'house', autosalon: 'car', mall: 'shop'
   };
+  var SERVICES = {
+    hospital: { kind: 'cross', color: '#ef4444', icon: 'fa-hospital', label: 'Больница' },
+    police: { kind: 'shield', color: '#3b82f6', icon: 'fa-shield-halved', label: 'Полиция' },
+    port: { kind: 'anchor', color: '#0ea5e9', icon: 'fa-anchor', label: 'Порт' }
+  };
+  var MAP_YOU = { x: 380, y: 340 };
 
   var SPOTS = (window.CityMap && window.CityMap.SPOTS) || {};
   var LEGACY_SPOT = { center: 'center1', station: 'station', sleep: 'sleep2', elite: 'elite', park: 'park', industrial: 'industrial' };
@@ -115,7 +127,12 @@
     { id: 'c1', name: 'Игорь', role: 'Продавец', salary: 1200, eff: 0.12, ini: 'И', color: '#0ea5e9' },
     { id: 'c2', name: 'Настя', role: 'Менеджер', salary: 1800, eff: 0.2, ini: 'Н', color: '#ec4899' },
     { id: 'c3', name: 'Тимур', role: 'Курьер', salary: 900, eff: 0.08, ini: 'Т', color: '#16a34a' },
-    { id: 'c4', name: 'Лена', role: 'Кассир', salary: 1000, eff: 0.1, ini: 'Л', color: '#f59e0b' }
+    { id: 'c4', name: 'Лена', role: 'Кассир', salary: 1000, eff: 0.1, ini: 'Л', color: '#f59e0b' },
+    { id: 'c5', name: 'Руслан', role: 'Охранник', salary: 1600, eff: 0.14, ini: 'Р', color: '#dc2626' },
+    { id: 'c6', name: 'Марина', role: 'Администратор', salary: 2000, eff: 0.22, ini: 'М', color: '#8b5cf6' },
+    { id: 'c7', name: 'Костя', role: 'Логист', salary: 1400, eff: 0.13, ini: 'К', color: '#0891b2' },
+    { id: 'c8', name: 'Алия', role: 'Фармацевт', salary: 2100, eff: 0.18, ini: 'А', color: '#10b981' },
+    { id: 'c9', name: 'Денис', role: 'Водитель', salary: 1300, eff: 0.11, ini: 'Д', color: '#f97316' }
   ];
 
   var PLOT_NUMBER = '+7 099 328-22-23';
@@ -123,14 +140,21 @@
 
   var GOV_NUMBER = '+7 099 000-00-01';
   var LICENSES = {
-    alcohol: { name: 'Алкоголь', level: 7, fee: 60000 },
-    weapon: { name: 'Оружие', level: 12, fee: 150000, requires: 'alcohol' }
+    alcohol: { name: 'Алкоголь', level: 7, fee: 60000, point: 'alcohol' },
+    tobacco: { name: 'Табак', level: 9, fee: 90000, requires: 'alcohol', point: 'tobacconist' },
+    weapon: { name: 'Оружие', level: 12, fee: 150000, requires: 'alcohol', point: 'weapon' },
+    pharma: { name: 'Фармацевтика', level: 13, fee: 180000, point: 'medical' },
+    finance: { name: 'Финансы', level: 16, fee: 260000, point: 'pawnshop' },
+    transport: { name: 'Перевозки', level: 20, fee: 380000, point: 'taxifleet' }
   };
+  var LICENSE_ORDER = ['alcohol', 'tobacco', 'weapon', 'pharma', 'finance', 'transport'];
 
   var CONTACTS = {
     maks: { name: 'Макс', number: '+7 999 120-45-67', ini: 'М', color: '#0ea5e9', kind: 'friend' },
     mom: { name: 'Мама', number: '+7 916 555-01-24', ini: 'М', color: '#ec4899', kind: 'family' },
     dad: { name: 'Папа', number: '+7 916 555-77-02', ini: 'П', color: '#f59e0b', kind: 'family' },
+    liza: { name: 'Лиза', number: '+7 999 640-12-88', ini: 'Л', color: '#db2777', kind: 'lawyer' },
+    vera: { name: 'Виктория', number: '+7 916 202-44-10', ini: 'В', color: '#0ea5e9', kind: 'doctor' },
     taxi: { name: 'Такси Лавка', number: '+7 800 555-35-35', ini: 'Т', color: '#facc15', kind: 'taxi' },
     gov: { name: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b', kind: 'gov' }
   };
@@ -179,13 +203,9 @@
     LV.toast('Новый уровень: ' + lvl);
     if (lvl >= 10 && !B.story.flags.prodUnlocked) unlockProduction();
     if (lvl === 5 || lvl === 10) storyTick();
-    if (lvl === 7) {
-      govIntro();
-    } else if (lvl === 12) {
-      ensureGov();
-      addSms('Правительство', 'Можно оформить лицензию на оружие. Позвоните и приезжайте.');
-      LV.toast('Доступна лицензия на оружие');
-    } else if (lvl === 20 || lvl === MAX_LEVEL) {
+    if (lvl === 7) govIntro();
+    notifyLicenses(lvl);
+    if (lvl === 20 || lvl === MAX_LEVEL) {
       queueCall({
         incoming: true, from: 'Макс', number: CONTACTS.maks.number, ini: 'М', color: '#0ea5e9',
         lines: [
@@ -256,9 +276,50 @@
     'Открой алкомаркет',
     'Получи лицензию на оружие',
     'Открой оружейный магазин',
+    'Получи лицензию на табак',
+    'Открой табачную лавку',
+    'Получи фармацевтическую лицензию',
+    'Открой медицинский центр',
+    'Дорасти до 16 уровня',
+    'Получи финансовую лицензию',
+    'Открой ломбард',
+    'Дорасти до 20 уровня',
+    'Получи лицензию на перевозки',
+    'Открой таксопарк',
     'Дорасти до 30 уровня',
-    'Игра пройдена — ты построил свой маркетплейс'
+    'Открой ТРЦ',
+    'Проведи смену — ОПГ требует 5 000 ₽',
+    'Отбей точку от бандитов — реши, когда драться',
+    'Вызови 112 и выбери скорую',
+    'Довези Макса до больницы на скорой',
+    'Дождись новостей от врачей',
+    'Поговори с Лизой — изучи камеры БЦ',
+    'Найди зацепку в ломбарде',
+    'Собери команду из 5 человек',
+    'Купи снаряжение в оружейном',
+    'Защити ломбард от налёта',
+    'Допроси задержанного бандита',
+    'Проверь груз в порту',
+    'Поезжай в порт «Северный»',
+    'Обезвредь босса в порту',
+    'Передай босса полиции',
+    'Дай показания в отделении',
+    'Восстанови разрушенные точки',
+    'Открой мемориал Макса',
+    'Запусти фонд имени Макса',
+    'Расширь сеть до 15 точек',
+    'Дай интервью о своём пути',
+    'Сюжет пройден — город помнит Макса'
   ];
+
+  function migrateStoryV2() {
+    if (B.story.v2) return;
+    var st = Number(B.story.step) || 0;
+    if (st >= 17) B.story.step = 28;
+    else if (st === 16) B.story.step = 26;
+    B.story.v2 = true;
+    save();
+  }
 
   function storyTick() {
     var st = B.story.step;
@@ -279,7 +340,38 @@
     else if (st === 13 && countType('alcohol') >= 1) nxt = 14;
     else if (st === 14 && B.licenses.weapon) nxt = 15;
     else if (st === 15 && countType('weapon') >= 1) nxt = 16;
-    else if (st === 16 && B.level >= MAX_LEVEL) nxt = 17;
+    else if (st === 16 && B.licenses.tobacco) nxt = 17;
+    else if (st === 17 && countType('tobacconist') >= 1) nxt = 18;
+    else if (st === 18 && B.licenses.pharma) nxt = 19;
+    else if (st === 19 && countType('medical') >= 1) nxt = 20;
+    else if (st === 20 && B.level >= 16) nxt = 21;
+    else if (st === 21 && B.licenses.finance) nxt = 22;
+    else if (st === 22 && countType('pawnshop') >= 1) nxt = 23;
+    else if (st === 23 && B.level >= 20) nxt = 24;
+    else if (st === 24 && B.licenses.transport) nxt = 25;
+    else if (st === 25 && countType('taxifleet') >= 1) nxt = 26;
+    else if (st === 26 && B.level >= MAX_LEVEL) nxt = 27;
+    else if (st === 27 && countType('mall') >= 1) nxt = 28;
+    else if (st === 28 && B.story.flags.extortDone) nxt = 29;
+    else if (st === 29 && B.story.flags.shootoutWon) nxt = 30;
+    else if (st === 30 && B.story.flags.called112) nxt = 31;
+    else if (st === 31 && B.story.flags.hospital) nxt = 32;
+    else if (st === 33 && B.story.flags.lizaCam) nxt = 34;
+    else if (st === 34 && B.story.flags.clue) nxt = 35;
+    else if (st === 35 && B.staff.length >= 5) nxt = 36;
+    else if (st === 36 && B.story.flags.gear) nxt = 37;
+    else if (st === 37 && B.story.flags.defense) nxt = 38;
+    else if (st === 38 && B.story.flags.interrogated) nxt = 39;
+    else if (st === 39 && B.story.flags.portClue) nxt = 40;
+    else if (st === 40 && B.story.flags.portArrived) nxt = 41;
+    else if (st === 41 && B.story.flags.bossDown) nxt = 42;
+    else if (st === 42 && B.story.flags.policeCalled) nxt = 43;
+    else if (st === 43 && B.story.flags.testimony) nxt = 44;
+    else if (st === 44 && B.story.flags.rebuilt) nxt = 45;
+    else if (st === 45 && B.story.flags.memorial) nxt = 46;
+    else if (st === 46 && B.story.flags.foundation) nxt = 47;
+    else if (st === 47 && B.points.length >= 15) nxt = 48;
+    else if (st === 48 && B.story.flags.interview) nxt = 49;
     if (nxt !== null) advanceStory(nxt);
   }
 
@@ -382,17 +474,186 @@
       ] }));
       addSms('Аркадий', 'Оружейный магазин доступен на карте.');
     } else if (step === 16) {
-      queueCall(Object.assign({}, maks, { lines: [
-        'Макс: Оружейный?! Ты серьёзно?',
-        'Макс: Осталось дойти до 30 уровня. Покажи, на что способен.'
+      var liza = { incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777' };
+      queueCall(Object.assign({}, liza, { lines: [
+        'Лиза: Привет. Я Лиза, юрист Аркадия.',
+        'Лиза: Оружейный уже работает — значит, пора расширять ассортимент.',
+        'Лиза: Табак — отдельная лицензия. Оформи в Job → Лицензии, правительство в курсе.',
+        'Лиза: Дальше будут фармацевтика, финансы и перевозки. Но обо всём по порядку.'
       ] }));
-      addSms('Макс', 'Финальная цель — 30 уровень. Ты почти у вершины.');
+      addSms('Лиза', 'Я на связи по лицензиям и документам. Табак — следующая лицензия.');
     } else if (step === 17) {
       queueCall(Object.assign({}, ark, { lines: [
-        'Аркадий: 30 уровень. Ты построил свой маркетплейс.',
-        'Аркадий: Город у твоих ног. Что дальше — решать тебе.'
+        'Аркадий: Табачная лавка — маленькая точка, а маржа серьёзная.',
+        'Аркадий: Помещение найдёшь на карте. Лицензия у тебя уже есть.'
       ] }));
-      addSms('Аркадий', 'Игра пройдена. Ты построил маркетплейс. Это только начало.');
+      addSms('Аркадий', 'Табачная лавка доступна на карте. Не забудь завести товар через «Опт».');
+    } else if (step === 18) {
+      var vera = { incoming: true, from: 'Виктория', number: CONTACTS.vera.number, ini: 'В', color: '#0ea5e9' };
+      queueCall(Object.assign({}, vera, { lines: [
+        'Виктория: Здравствуйте. Меня зовут Виктория, я отвечаю за медицинское направление.',
+        'Виктория: Лиза передала ваши документы. Фармацевтическая лицензия — с 13 уровня.',
+        'Виктория: Получите её в Job → Лицензии. Потом поговорим о медицинском центре.'
+      ] }));
+      addSms('Виктория', 'Фармацевтическая лицензия — с 13 уровня. Оформите в Job → Лицензии.');
+    } else if (step === 19) {
+      queueCall(Object.assign({}, vera, { lines: [
+        'Виктория: Лицензия есть. Теперь медицинский центр.',
+        'Виктория: Это приёмы, анализы и справки. Помещение подберём в центре города.',
+        'Виктория: Открывайте точку на карте — и заказывайте оборудование через «Опт».'
+      ] }));
+      addSms('Виктория', 'Медицинский центр доступен на карте. Оборудование и медикаменты — на сайте «Опт».');
+    } else if (step === 20) {
+      queueCall(Object.assign({}, liza, { lines: [
+        'Лиза: 16 уровень. Поздравляю, вы уже крупный предприниматель.',
+        'Лиза: Пора в финансы. Ломбард — это залоги, оценка и выкуп.',
+        'Лиза: Финансовая лицензия уже доступна. Загляните в Job → Лицензии.'
+      ] }));
+      addSms('Лиза', 'Финансовая лицензия доступна с 16 уровня. Ломбард ждёт.');
+    } else if (step === 21) {
+      queueCall(Object.assign({}, liza, { lines: [
+        'Лиза: Финансы — самый зарегулированный рынок.',
+        'Лиза: Пошлина выше, но и сделки крупнее. Звоните в правительство и приезжайте.',
+        'Лиза: После лицензии подберём помещение под ломбард.'
+      ] }));
+      addSms('Лиза', 'Финансовая лицензия — в Job → Лицензии. Пошлина ' + fmt(LICENSES.finance.fee) + '.');
+    } else if (step === 22) {
+      queueCall(Object.assign({}, ark, { lines: [
+        'Аркадий: Ломбард — это деньги, которые работают даже без покупателей.',
+        'Аркадий: Только с оценкой не халтурь. Репутация дороже.',
+        'Аркадий: Открывай точку и заводи товар. Дальше — масштаб.'
+      ] }));
+      addSms('Аркадий', 'Ломбард доступен на карте. Сейфы и бланки — на сайте «Опт».');
+    } else if (step === 23) {
+      queueCall(Object.assign({}, maks, { lines: [
+        'Макс: 20 уровень?! Ты уже город двигаешь.',
+        'Макс: Слушай, у меня знакомый держит таксопарк. Тема рабочая.',
+        'Макс: Но сначала лицензия на перевозки. Без неё — никак.'
+      ] }));
+      addSms('Макс', 'Перевозки — с 20 уровня. Лицензия в Job → Лицензии.');
+    } else if (step === 24) {
+      queueCall(Object.assign({}, liza, { lines: [
+        'Лиза: Лицензия на перевозки — финальная в моём списке.',
+        'Лиза: Машины, водители, корпоративные контракты. Пошлина — ' + fmt(LICENSES.transport.fee) + '.',
+        'Лиза: Звоните в правительство. Дальше я помогу с таксопарком.'
+      ] }));
+      addSms('Лиза', 'Лицензия на перевозки — в Job → Лицензии. Это последняя лицензия в сюжете.');
+    } else if (step === 25) {
+      queueCall(Object.assign({}, maks, { lines: [
+        'Макс: Таксопарк! Вот это размах.',
+        'Макс: Машины, топливо, сервис — всё через «Опт».',
+        'Макс: Открывай точку. Осталось дойти до 30 уровня.'
+      ] }));
+      addSms('Макс', 'Таксопарк доступен на карте. Автомобили и топливо — на сайте «Опт».');
+    } else if (step === 26) {
+      queueCall(Object.assign({}, ark, { lines: [
+        'Аркадий: 30 уровень. Ты собрал почти всё.',
+        'Аркадий: Остался один шаг — ТРЦ. Целый торговый центр под твоим именем.',
+        'Аркадий: Деньги серьёзные, но и отдача другая. Решайся.'
+      ] }));
+      addSms('Аркадий', 'Финальная цель — открыть ТРЦ. Это вершина бизнеса.');
+    } else if (step === 27) {
+      queueCall(Object.assign({}, ark, { lines: [
+        'Аркадий: ТРЦ открыт. Арендаторы, фудкорт, кино — всё работает на тебя.',
+        'Аркадий: Помнишь ларёк у метро? Вот оттуда всё началось.',
+        'Аркадий: Город у твоих ног. Дальше — только твои решения.'
+      ] }));
+      addSms('Аркадий', 'ТРЦ открыт. Ты построил целую империю.');
+    } else if (step === 28) {
+      queueCall(Object.assign({}, maks, { lines: [
+        'Макс: ТРЦ открыт. Ты построил империю, но расслабляться рано.',
+        'Макс: Мне шепнули: Тима с района снова точит зуб на твою точку.',
+        'Макс: На смене будь на связи. Если что — я рядом.'
+      ] }));
+      addSms('Тима', 'Пять тысяч — и работаешь спокойно. Жду на смене.\n— Тима');
+    } else if (step === 29) {
+      addSms('Макс', 'Бандиты у входа. Я рядом. Скажи, когда будешь готов — прикрою.');
+    } else if (step === 30) {
+      queueCall(Object.assign({}, maks, { lines: [
+        'Макс: Всё, они ушли... но меня зацепило.',
+        'Макс: Плечо. Кровь не останавливается.',
+        'Макс: Вызывай 112. Только быстро. И выбери скорую.'
+      ] }));
+      addSms('Макс', 'Я ранен. Вызови 112 и выбери медицинскую службу.');
+    } else if (step === 31) {
+      queueCall({ incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777', lines: [
+        'Лиза: Слышала, что случилось. Скорая едет к вам.',
+        'Лиза: Но там пробки, а Макс не дождётся. Угоняй бригаду и вези его сам.',
+        'Лиза: Я предупрежу больницу. Только не разбей машину.'
+      ] });
+      addSms('Лиза', 'Скорая у входа. Садись за руль и вези Макса в городскую больницу.');
+    } else if (step === 32) {
+      setTimeout(maxDeathScene, 500);
+      addSms('Больница', 'Пациент доставлен в реанимацию. Врачи борются за жизнь.');
+    } else if (step === 33) {
+      queueCall({ incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777', lines: [
+        'Лиза: Мне жаль Макса. Он был хорошим человеком.',
+        'Лиза: Камеры БЦ записали, как Тима встречался с кем-то из порта.',
+        'Лиза: Приезжай в БЦ. Посмотрим записи вместе.'
+      ] });
+      addSms('Лиза', 'Камеры БЦ записали Тима и человека из порта. Жду тебя в офисе.');
+    } else if (step === 34) {
+      queueCall({ incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777', lines: [
+        'Лиза: На записи Тима передал папку человеку по кличке Штырь.',
+        'Лиза: Штырь держит ломбард на Садовой. Там может быть зацепка.',
+        'Лиза: Загляни туда под видом клиента.'
+      ] });
+      addSms('Лиза', 'Ищи Штыря в ломбарде на Садовой. Он связан с портом.');
+    } else if (step === 35) {
+      queueCall({ incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777', lines: [
+        'Лиза: Один ты не справишься. Нужны люди, которым можно доверять.',
+        'Лиза: Собери команду из пяти человек. Не обязательно бойцов — нужны те, кто прикроет.',
+        'Лиза: Как соберёшь — начнём готовиться.'
+      ] });
+      addSms('Лиза', 'Собери команду из 5 сотрудников. Это не только про бизнес.');
+    } else if (step === 36) {
+      queueCall(Object.assign({}, ark, { lines: [
+        'Аркадий: Слышал про Макса. Соболезную.',
+        'Аркадий: Если собираешься идти до конца — купи снаряжение в оружейном.',
+        'Аркадий: Бронежилет и аптечка стоят 15 000 ₽. Это не роскошь.'
+      ] }));
+      addSms('Аркадий', 'Снаряжение — 15 000 ₽ в оружейном. Без него дальше лучше не соваться.');
+    } else if (step === 37) {
+      queueCall({ incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777', lines: [
+        'Лиза: Штырь понял, что ты копаешь. Он послал людей в ломбард.',
+        'Лиза: Если они уничтожат документы — ниточка оборвётся.',
+        'Лиза: Защити ломбард. Только не переусердствуй.'
+      ] });
+      addSms('Лиза', 'Люди Штыря идут в ломбард за документами. Останови их.');
+    } else if (step === 38) {
+      addSms('Лиза', 'Один из нападавших жив. Он готов говорить. Допроси его.');
+    } else if (step === 39) {
+      addSms('Тима', 'Ты не знаешь, во что лезешь. Штырь — не главный.\n— Тима');
+    } else if (step === 40) {
+      addSms('Лиза', 'Груз в порту «Северный». Приезжай, я буду на связи.');
+    } else if (step === 41) {
+      addSms('Лиза', 'В порту Штырь и его люди. Полиция будет через пятнадцать минут. Держись.');
+    } else if (step === 42) {
+      addSms('Полиция', 'Задержанный доставлен в отделение. Дайте показания — и дело пойдёт в суд.');
+    } else if (step === 43) {
+      addSms('Полиция', 'Показания приняты. Штырь даёт признательные. Дело закрыто.');
+    } else if (step === 44) {
+      addSms('Лиза', 'Точки после перестрелки надо восстановить. Это 20 000 ₽. Я помогу с бумагами.');
+    } else if (step === 45) {
+      addSms('Лиза', 'Пора открыть мемориал Макса. Он это заслужил.');
+    } else if (step === 46) {
+      queueCall({ incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777', lines: [
+        'Лиза: Юристы готовы. Фонд имени Макса — 50 000 ₽ на старт.',
+        'Лиза: Он хотел, чтобы город был добрее. Сделаем это за него.',
+        'Лиза: Как будешь готов — запускаем.'
+      ] });
+      addSms('Лиза', 'Фонд имени Макса — 50 000 ₽. Дальше город будет помнить его.');
+    } else if (step === 47) {
+      addSms('Лиза', 'Империя должна расти. Открой 15 точек — и о тебе заговорят.');
+    } else if (step === 48) {
+      addSms('Лиза', 'Журналисты хотят интервью. Покажи городу, кем ты стал.');
+    } else if (step === 49) {
+      queueCall({ incoming: true, from: 'Лиза', number: CONTACTS.liza.number, ini: 'Л', color: '#db2777', lines: [
+        'Лиза: Сегодня в городе открыли улицу Макса.',
+        'Лиза: Ты сделал невозможное — построил бизнес и не забыл друга.',
+        'Лиза: Спасибо. Он бы гордился.'
+      ] });
+      addSms('Лиза', 'Сюжет пройден. Город помнит Макса — и тебя.');
     }
     if (LV.current && LV.current.id === 'job' && jobHost) renderJob();
     if (LV.current && LV.current.id === 'production' && prodHost) renderProd();
@@ -409,9 +670,13 @@
     if (st === 5) return 'Biz.openMap(\'taxi\')';
     if (st === 10) return 'Biz.openMap(\'factory\')';
     if (st === 11) return 'LV.openApp(\'production\')';
-    if (st === 12 || st === 14) return 'Biz.jobTab(\'licenses\')';
-    if (st === 13 || st === 15) return 'Biz.openMap(\'rent\')';
-    if (st === 16) return 'Biz.shift()';
+    if (st === 12 || st === 14 || st === 16 || st === 18 || st === 21 || st === 24) return 'Biz.jobTab(\'licenses\')';
+    if (st === 13 || st === 15 || st === 17 || st === 19 || st === 22 || st === 25 || st === 27) return 'Biz.openMap(\'rent\')';
+    if (st === 20 || st === 23 || st === 26 || st === 28) return 'Biz.shift()';
+    if (st === 35) return 'Biz.jobTab(\'staff\')';
+    if (st === 47) return 'Biz.openMap(\'rent\')';
+    if (st >= 29 && st <= 48 && st !== 32 && st !== 35 && st !== 47) return 'Biz.storyAction()';
+    if (st === 32) return 'Biz.storyAction()';
     return '';
   }
   function objectiveLabel() {
@@ -424,9 +689,29 @@
     if (st === 5) return 'Такси';
     if (st === 10) return 'Завод';
     if (st === 11) return 'Производство';
-    if (st === 12 || st === 14) return 'Лицензии';
-    if (st === 13 || st === 15) return 'Открыть точку';
-    if (st === 16) return 'Смена';
+    if (st === 12 || st === 14 || st === 16 || st === 18 || st === 21 || st === 24) return 'Лицензии';
+    if (st === 13 || st === 15 || st === 17 || st === 19 || st === 22 || st === 25 || st === 27) return 'Открыть точку';
+    if (st === 20 || st === 23 || st === 26 || st === 28) return 'Смена';
+    if (st === 29) return 'Налёт';
+    if (st === 30) return 'Вызвать 112';
+    if (st === 31) return 'Скорая';
+    if (st === 32) return 'Больница';
+    if (st === 33) return 'Лиза';
+    if (st === 34) return 'Ломбард';
+    if (st === 35) return 'Команда';
+    if (st === 36) return 'Снаряжение';
+    if (st === 37) return 'Оборона';
+    if (st === 38) return 'Допрос';
+    if (st === 39) return 'Зацепка';
+    if (st === 40) return 'В порт';
+    if (st === 41) return 'Босс';
+    if (st === 42) return 'Полиция';
+    if (st === 43) return 'Показания';
+    if (st === 44) return 'Восстановить';
+    if (st === 45) return 'Мемориал';
+    if (st === 46) return 'Фонд';
+    if (st === 47) return 'Открыть точку';
+    if (st === 48) return 'Интервью';
     return '';
   }
 
@@ -639,6 +924,13 @@
     Object.keys(SPOTS).forEach(function (id) {
       if (used[id]) return;
       var sp = SPOTS[id];
+      var svc = SERVICES[sp.serviceKind];
+      if (sp.service && svc) {
+        if (mapMode === 'view' || mapMode === 'taxi') {
+          list.push({ x: sp.x, y: sp.y, kind: svc.kind, color: svc.color, id: id });
+        }
+        return;
+      }
       if (sp.gov) {
         if (mapMode === 'taxi' || mapMode === 'view') {
           list.push({ x: sp.x, y: sp.y, kind: 'columns', color: '#64748b', id: id });
@@ -660,14 +952,14 @@
 
   function mapRoutePoint() {
     if (!mapSel) return null;
-    if (mapSel === 'contract') return { x: 165, y: 150 };
+    if (mapSel === 'contract') return SPOTS.bc || null;
     return SPOTS[mapSel] || null;
   }
 
   function renderMapCanvas() {
     var c = document.getElementById('mp-canvas');
     if (!c) return;
-    var svg = window.CityMap ? window.CityMap.svg(mapMarkers(), { you: { x: 180, y: 150 }, route: mapRoutePoint() }) : '';
+    var svg = window.CityMap ? window.CityMap.svg(mapMarkers(), { you: MAP_YOU, route: mapRoutePoint() }) : '';
     c.innerHTML = svg + '<span class="mp-tag">Пункты выдачи Лавки</span>';
   }
 
@@ -675,18 +967,29 @@
     return '<div class="mp-head"><button class="mp-back" type="button" onclick="Biz.closeMap()"><i class="fa-solid fa-chevron-left"></i></button>' +
       '<div><b>' + mapTitle() + '</b><span>Москва · демо</span></div><span class="mp-cash">' + fmt(B.cash) + '</span></div>' +
       '<div class="mp-canvas" id="mp-canvas">' +
-      (window.CityMap ? window.CityMap.svg(mapMarkers(), { you: { x: 180, y: 150 }, route: mapRoutePoint() }) : '') +
+      (window.CityMap ? window.CityMap.svg(mapMarkers(), { you: MAP_YOU, route: mapRoutePoint() }) : '') +
       '<span class="mp-tag">Пункты выдачи Лавки</span></div>' +
-      '<div class="mp-legend"><span><i class="fa-solid fa-shop"></i> помещения</span><span><i class="fa-solid fa-taxi"></i> такси</span><span><i class="fa-solid fa-file-signature"></i> контракт</span></div>' +
+      '<div class="mp-legend"><span><i class="fa-solid fa-shop"></i> помещения</span><span><i class="fa-solid fa-taxi"></i> такси</span><span><i class="fa-solid fa-hospital"></i> службы</span><span><i class="fa-solid fa-file-signature"></i> контракт</span></div>' +
       '<div class="mp-sheet" id="mp-sheet"></div>';
+  }
+
+  function spotPin(sp) {
+    var svc = SERVICES[sp.serviceKind];
+    if (sp.service && svc) return { kind: svc.kind, color: svc.color, icon: svc.icon };
+    if (sp.factory) return { kind: 'factory', color: '#475569', icon: 'fa-industry' };
+    if (sp.gov) return { kind: 'columns', color: '#64748b', icon: 'fa-building-columns' };
+    if (sp.office) return { kind: 'flag', color: '#8b5cf6', icon: 'fa-building' };
+    return { kind: 'shop', color: '#22c55e', icon: 'fa-shop' };
   }
 
   function mpSpotRow(id) {
     var sp = SPOTS[id];
     if (!sp) return '';
+    var pin = spotPin(sp);
+    var extra = sp.service ? ' · городская служба' : (sp.gov || sp.office ? ' · по записи' : ' · спрос ×' + sp.mult);
     return '<button class="mp-spot" type="button" onclick="Biz.mapPick(\'' + id + '\')">' +
-      '<span class="mp-spot-ic" style="background:' + (sp.factory ? '#475569' : '#22c55e') + '"><i class="fa-solid ' + (sp.factory ? 'fa-industry' : 'fa-shop') + '"></i></span>' +
-      '<div><b>' + sp.name + '</b><small>' + sp.area + ' · спрос ×' + sp.mult + '</small></div>' +
+      '<span class="mp-spot-ic" style="background:' + pin.color + '"><i class="fa-solid ' + pin.icon + '"></i></span>' +
+      '<div><b>' + sp.name + '</b><small>' + sp.area + extra + '</small></div>' +
       '<i class="fa-solid fa-chevron-right"></i></button>';
   }
 
@@ -694,8 +997,9 @@
     var el = document.getElementById('mp-sheet');
     if (!el) return;
     var ids = Object.keys(SPOTS);
+    var serviceIds = ids.filter(function (id) { return SPOTS[id].service; });
     if (mapMode === 'rent') {
-      var free = ids.filter(function (id) { return !pointAtSpot(id) && !SPOTS[id].gov && !SPOTS[id].office; });
+      var free = ids.filter(function (id) { return !pointAtSpot(id) && !SPOTS[id].gov && !SPOTS[id].office && !SPOTS[id].service; });
       el.innerHTML = '<div class="mp-sheet-h">Свободные помещения <span>' + free.length + '</span></div>' +
         (free.length ? free.map(mpSpotRow).join('') : '<p class="mp-sheet-note">Свободных помещений нет.</p>');
     } else if (mapMode === 'factory') {
@@ -706,15 +1010,17 @@
       if (B.level >= 7) {
         rows += '<button class="mp-spot" type="button" onclick="Biz.mapPick(\'gov\')"><span class="mp-spot-ic" style="background:#64748b"><i class="fa-solid fa-building-columns"></i></span><div><b>Правительство</b><small>лицензии · по записи</small></div><i class="fa-solid fa-chevron-right"></i></button>';
       }
-      rows += ids.filter(function (id) { return !SPOTS[id].gov && !SPOTS[id].office; }).map(mpSpotRow).join('');
-      el.innerHTML = '<div class="mp-sheet-h">Куда едем? <span>300 ₽</span></div>' + rows;
+      rows += ids.filter(function (id) { return !SPOTS[id].gov && !SPOTS[id].office && !SPOTS[id].service; }).map(mpSpotRow).join('');
+      el.innerHTML = '<div class="mp-sheet-h">Куда едем? <span>300 ₽</span></div>' + rows +
+        (serviceIds.length ? '<div class="mp-sheet-h" style="margin-top:10px">Городские службы <span>круглосуточно</span></div>' + serviceIds.map(mpSpotRow).join('') : '');
     } else {
       var pts = B.points.map(function (p) {
         var id = spotOf(p), sp = SPOTS[id];
         if (!sp) return '';
         return '<button class="mp-spot" type="button" onclick="Biz.mapPick(\'' + id + '\')"><span class="mp-spot-ic" style="background:' + TYPES[p.type].color + '"><i class="fa-solid ' + TYPES[p.type].icon + '"></i></span><div><b>' + TYPES[p.type].name + '</b><small>' + sp.name + ' · заказов ' + (p.orders || 0) + '</small></div><i class="fa-solid fa-chevron-right"></i></button>';
       }).join('');
-      el.innerHTML = '<div class="mp-sheet-h">Мои точки <span>' + B.points.length + '</span></div>' + (pts || '<p class="mp-sheet-note">Точек пока нет.</p>');
+      el.innerHTML = '<div class="mp-sheet-h">Мои точки <span>' + B.points.length + '</span></div>' + (pts || '<p class="mp-sheet-note">Точек пока нет.</p>') +
+        (serviceIds.length ? '<div class="mp-sheet-h" style="margin-top:10px">Городские службы <span>на карте</span></div>' + serviceIds.map(mpSpotRow).join('') : '');
     }
   }
 
@@ -734,13 +1040,26 @@
     if (id === 'gov') {
       var gs = SPOTS[id] || {};
       el.innerHTML = '<div class="mp-sheet-h">Правительство <span>' + (gs.area || 'Центр') + '</span></div>' +
-        '<p class="mp-sheet-note">Лицензии на алкоголь и оружие. Приём по записи.</p>' +
+        '<p class="mp-sheet-note">Лицензии: алкоголь, табак, оружие, фарма, финансы, перевозки. Приём по записи.</p>' +
         (mapMode === 'taxi' ? '<button class="mp-go" type="button" onclick="Biz.taxiGo()">Вызвать такси · 300 ₽</button>' : '') +
         (mapMode === 'taxi' && !B.story.flags.govCalled ? '<p class="mp-sheet-note">Сначала позвоните в правительство — контакт в телефоне.</p>' : '');
       return;
     }
     var s = SPOTS[id];
     if (!s) return;
+    if (s.service) {
+      var svc = SERVICES[s.serviceKind] || { label: 'Служба', icon: 'fa-location-dot', color: '#0ea5e9' };
+      var texts = {
+        hospital: 'Приёмный покой и реанимация работают круглосуточно. Сюда везут Макса после ранения.',
+        police: 'Дежурная часть, приём заявлений и изолятор временного содержания.',
+        port: 'Грузовые причалы, склады и таможенный пост. Ночью здесь почти никого.'
+      };
+      el.innerHTML = '<div class="mp-sheet-h">' + s.name + ' <span>' + s.area + '</span></div>' +
+        '<div class="mp-point"><span style="background:' + svc.color + '"><i class="fa-solid ' + svc.icon + '"></i></span><div><b>' + svc.label + '</b><small>городская служба · ' + s.area + '</small></div></div>' +
+        '<p class="mp-sheet-note">' + (texts[s.serviceKind] || 'Городская служба.') + '</p>' +
+        (mapMode === 'taxi' ? '<button class="mp-go" type="button" onclick="Biz.taxiGo()">Вызвать такси · 300 ₽</button>' : '');
+      return;
+    }
     var p = pointAtSpot(id);
     if (mapMode === 'rent' && !p) {
       var rows = Object.keys(TYPES).map(function (t) {
@@ -795,7 +1114,7 @@
     addXp(30);
     storyTick();
     save();
-    toast(t.name + ' открыт');
+    toast('Открыта точка: ' + t.name);
     if (type === 'pvz' && !B.story.flags.opgIntro) {
       B.story.flags.opgIntro = true;
       save();
@@ -844,6 +1163,360 @@
     save();
     setTimeout(function () { addSms('Неизвестный', 'Ну смотри, бизнесмен. Мы вернёмся.'); }, 1200);
   }
+
+  // ============================================================
+  // СЮЖЕТ · ОПГ, ПЕРЕСТРЕЛКА, МАКС
+  // ============================================================
+  function shiftExtortion() {
+    showCutscene({
+      kicker: 'Смена · ОПГ',
+      scene: 'street',
+      slides: [
+        { who: 'Тима', ini: 'Т', color: '#dc2626', text: 'Работаешь? Хорошо. Пять тысяч — и никто не мешает.' },
+        { who: 'Тима', ini: 'Т', color: '#dc2626', text: 'Откажешься — пеняй на себя. Люди у точки уже стоят.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: '...' }
+      ],
+      choices: [
+        { label: 'Заплатить 5 000 ₽', primary: true, action: shiftPay },
+        { label: 'Отказаться', action: shiftRefuse }
+      ]
+    });
+  }
+
+  function shiftPay() {
+    if (B.cash < 5000) {
+      B.story.flags.extort = 'debt';
+      addSms('Тима', 'Денег нет? Ладно. Должок растёт, бизнесмен.');
+    } else {
+      B.cash -= 5000;
+      B.story.flags.extort = 'paid';
+      addSms('Тима', 'Красавчик. Пока не трогаем. Но мы вернёмся проверить.');
+    }
+    B.events.unshift({ t: 'opg', text: 'ОПГ: дань на смене', time: nowTime() });
+    B.story.flags.extortDone = true;
+    save();
+    advanceStory(29);
+    setTimeout(function () { if (!shift) Biz.shift(); }, 420);
+  }
+
+  function shiftRefuse() {
+    B.story.flags.extort = 'refused';
+    B.story.flags.extortDone = true;
+    B.events.unshift({ t: 'opg', text: 'ОПГ: отказ на смене', time: nowTime() });
+    B.stats.rating = Math.max(3, Math.round(((Number(B.stats.rating) || 4.8) - 0.1) * 100) / 100);
+    save();
+    addSms('Тима', 'Ну смотри. Мы вернёмся — и не одни.');
+    advanceStory(29);
+    setTimeout(function () { if (!shift) Biz.shift(); }, 420);
+  }
+
+  function maxDeathScene() {
+    showCutscene({
+      kicker: 'Больница · реанимация',
+      scene: 'office',
+      slides: [
+        { who: 'Врач', ini: 'В', color: '#0ea5e9', text: 'Мы сделали всё, что могли. Ранение оказалось слишком тяжёлым.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Макс... Ты же обещал, что мы ещё поработаем.' },
+        { who: 'Врач', ini: 'В', color: '#0ea5e9', text: 'Он просил передать: не бросай это дело. И не прощай их.' }
+      ],
+      choices: [
+        { label: 'Проститься', primary: true, action: function () {
+          B.story.flags.maxDead = true;
+          save();
+          advanceStory(33);
+        } }
+      ]
+    });
+  }
+
+  function storyLizaCam() {
+    showCutscene({
+      kicker: 'БЦ «Сити» · камеры',
+      scene: 'office',
+      slides: [
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Вот запись. Тима передаёт папку человеку по кличке Штырь.' },
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Штырь держит ломбард на Садовой и людей в порту.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Значит, ищем ломбард.' }
+      ],
+      choices: [
+        { label: 'Дальше', primary: true, action: function () {
+          B.story.flags.lizaCam = true;
+          save();
+          advanceStory(34);
+        } }
+      ]
+    });
+  }
+
+  function storyClue() {
+    showCutscene({
+      kicker: 'Ломбард · Садовая',
+      scene: 'office',
+      slides: [
+        { who: 'Оценщик', ini: 'О', color: '#b45309', text: 'Штырь? Был тут. Оставлял папку в сейфе, а забрать не успел.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Накладные на груз. Порт «Северный», причал семь.' },
+        { who: 'Оценщик', ini: 'О', color: '#b45309', text: 'Только учти: за этой папкой придут. И не одни.' }
+      ],
+      choices: [
+        { label: 'Забрать документы', primary: true, action: function () {
+          B.story.flags.clue = true;
+          save();
+          advanceStory(35);
+        } }
+      ]
+    });
+  }
+
+  function storyGear() {
+    if (B.cash < 15000) { toast('Не хватает ' + fmt(15000 - B.cash) + ' на снаряжение'); return; }
+    B.cash -= 15000;
+    B.story.flags.gear = true;
+    B.events.unshift({ t: 'gear', text: 'Снаряжение: бронежилет и аптечка', time: nowTime() });
+    save();
+    toast('Снаряжение куплено');
+    advanceStory(37);
+  }
+
+  function storyInterrogation() {
+    showCutscene({
+      kicker: 'Ломбард · подсобка',
+      scene: 'street',
+      slides: [
+        { who: 'Бандит', ini: 'Б', color: '#dc2626', text: 'Я просто работал за деньги. Штырь сказал — забрать папку.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Кто за Штырём?' },
+        { who: 'Бандит', ini: 'Б', color: '#dc2626', text: 'Человек из порта. Его все зовут Босс. Он и заказал Макса.' }
+      ],
+      choices: [
+        { label: 'Понятно', primary: true, action: function () {
+          B.story.flags.interrogated = true;
+          save();
+          advanceStory(39);
+        } }
+      ]
+    });
+  }
+
+  function storyPortClue() {
+    showCutscene({
+      kicker: 'Порт · документы',
+      scene: 'city',
+      slides: [
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Накладные сходятся. Через причал семь идёт нелегальный груз.' },
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Штырь и Босс будут там сегодня. Полиция уже в курсе.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Значит, пора заканчивать.' }
+      ],
+      choices: [
+        { label: 'Ехать в порт', primary: true, action: function () {
+          B.story.flags.portClue = true;
+          save();
+          advanceStory(40);
+        } }
+      ]
+    });
+  }
+
+  function storyPortArrive() {
+    showCutscene({
+      kicker: 'Порт «Северный» · ночь',
+      scene: 'city',
+      slides: [
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Я на связи. Босс у седьмого причала, с ним люди Штыря.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Макс, это за тебя.' },
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Полиция будет через пятнадцать минут. Держись.' }
+      ],
+      choices: [
+        { label: 'Войти в порт', primary: true, action: function () {
+          B.story.flags.portArrived = true;
+          save();
+          advanceStory(41);
+        } }
+      ]
+    });
+  }
+
+  function storyPoliceHandover() {
+    showCutscene({
+      kicker: 'Порт · полиция',
+      scene: 'office',
+      slides: [
+        { who: 'Полиция', ini: 'П', color: '#3b82f6', text: 'Босса и Штыря забираем. Вам придётся дать показания.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Я всё расскажу. У меня есть документы и свидетели.' }
+      ],
+      choices: [
+        { label: 'Передать задержанных', primary: true, action: function () {
+          B.story.flags.policeCalled = true;
+          save();
+          advanceStory(43);
+        } }
+      ]
+    });
+  }
+
+  function storyTestimony() {
+    showCutscene({
+      kicker: 'Отделение полиции',
+      scene: 'office',
+      slides: [
+        { who: 'Следователь', ini: 'С', color: '#3b82f6', text: 'Показания записаны. Штырь начал давать признательные.' },
+        { who: 'Следователь', ini: 'С', color: '#3b82f6', text: 'Заказ на Макса шёл от Босса. Дело пойдёт в суд.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Спасибо. Теперь можно и о бизнесе подумать.' }
+      ],
+      choices: [
+        { label: 'Выйти', primary: true, action: function () {
+          B.story.flags.testimony = true;
+          save();
+          advanceStory(44);
+        } }
+      ]
+    });
+  }
+
+  function storyRebuild() {
+    if (B.cash < 20000) { toast('Не хватает ' + fmt(20000 - B.cash) + ' на восстановление'); return; }
+    B.cash -= 20000;
+    B.story.flags.rebuilt = true;
+    B.events.unshift({ t: 'rebuild', text: 'Восстановление точек после перестрелки', time: nowTime() });
+    save();
+    toast('Точки восстановлены');
+    advanceStory(45);
+  }
+
+  function storyMemorial() {
+    showCutscene({
+      kicker: 'Сквер · мемориал',
+      scene: 'city',
+      slides: [
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Город выделил место. Здесь будет мемориал Макса.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Он всегда говорил, что бизнес — это про людей.' },
+        { who: 'Лиза', ini: 'Л', color: '#db2777', text: 'Теперь город это запомнит.' }
+      ],
+      choices: [
+        { label: 'Открыть мемориал', primary: true, action: function () {
+          B.story.flags.memorial = true;
+          save();
+          advanceStory(46);
+        } }
+      ]
+    });
+  }
+
+  function storyFoundation() {
+    if (B.cash < 50000) { toast('Не хватает ' + fmt(50000 - B.cash) + ' на фонд'); return; }
+    B.cash -= 50000;
+    B.story.flags.foundation = true;
+    B.events.unshift({ t: 'found', text: 'Фонд имени Макса', time: nowTime() });
+    save();
+    toast('Фонд имени Макса запущен');
+    advanceStory(47);
+  }
+
+  function storyInterview() {
+    showCutscene({
+      kicker: 'Телевидение · интервью',
+      scene: 'office',
+      slides: [
+        { who: 'Журналист', ini: 'Ж', color: '#8b5cf6', text: 'Вы построили империю с нуля. Что помогло?' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Друг. Он не дожил до этого дня, но он часть всего.' },
+        { who: 'Журналист', ini: 'Ж', color: '#8b5cf6', text: 'Город запомнит и его, и вас.' }
+      ],
+      choices: [
+        { label: 'Завершить', primary: true, action: function () {
+          B.story.flags.interview = true;
+          save();
+          advanceStory(49);
+        } }
+      ]
+    });
+  }
+
+  function raidBrief() {
+    showCutscene({
+      kicker: 'Точка · налёт',
+      scene: 'street',
+      slides: [
+        { who: 'Тима', ini: 'Т', color: '#dc2626', text: 'Последний раз: пять тысяч — и мы уходим. Нет — пеняй на себя.' },
+        { who: 'Макс', ini: 'М', color: '#0ea5e9', text: 'Их четверо, у тебя одна обойма. Я подъеду, но не мгновенно.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Значит, держимся.' }
+      ],
+      choices: [
+        { label: 'Драться', primary: true, action: function () { setTimeout(function () { Biz.startShootout('shop'); }, 120); } },
+        { label: 'Ещё не готов', action: function () {} }
+      ]
+    });
+  }
+
+  Biz.startShootout = function (scene) {
+    if (!window.BizAction) { toast('Перестрелка недоступна'); return; }
+    var st = B.story.step;
+    window.BizAction.shooter({
+      scene: scene,
+      waves: scene === 'shop' ? 2 : 3,
+      perWave: scene === 'shop' ? 4 : 5,
+      onWin: function () {
+        if (st === 29) {
+          B.story.flags.shootoutWon = true;
+          B.events.unshift({ t: 'fight', text: 'Точка удержана в перестрелке', time: nowTime() });
+        } else if (st === 37) {
+          B.story.flags.defense = true;
+          B.events.unshift({ t: 'fight', text: 'Ломбард защищён', time: nowTime() });
+        } else if (st === 41) {
+          B.story.flags.bossDown = true;
+          B.events.unshift({ t: 'fight', text: 'Босс обезврежен в порту', time: nowTime() });
+        }
+        addXp(40);
+        save();
+        storyTick();
+        if (LV.current && LV.current.id === 'job' && jobHost) renderJob();
+      }
+    });
+  };
+
+  Biz.storyAction = function () {
+    var st = B.story.step;
+    if (st === 28) { Biz.shift(); return; }
+    if (st === 29) { raidBrief(); return; }
+    if (st === 30) {
+      if (!window.BizAction) { toast('112 недоступен'); return; }
+      window.BizAction.call112({
+        address: (SPOTS.center1 && SPOTS.center1.name ? SPOTS.center1.name : 'Тверская, 12') + ' · Лавка',
+        onDone: function () {
+          B.story.flags.called112 = true;
+          save();
+          advanceStory(31);
+        }
+      });
+      return;
+    }
+    if (st === 31) {
+      if (!window.BizAction) { toast('Скорая недоступна'); return; }
+      window.BizAction.drive({
+        onWin: function () {
+          B.story.flags.hospital = true;
+          addXp(35);
+          save();
+          advanceStory(32);
+        }
+      });
+      return;
+    }
+    if (st === 32) { maxDeathScene(); return; }
+    if (st === 33) { storyLizaCam(); return; }
+    if (st === 34) { storyClue(); return; }
+    if (st === 35) { Biz.jobTab('staff'); return; }
+    if (st === 36) { storyGear(); return; }
+    if (st === 37) { Biz.startShootout('lombard'); return; }
+    if (st === 38) { storyInterrogation(); return; }
+    if (st === 39) { storyPortClue(); return; }
+    if (st === 40) { storyPortArrive(); return; }
+    if (st === 41) { Biz.startShootout('port'); return; }
+    if (st === 42) { storyPoliceHandover(); return; }
+    if (st === 43) { storyTestimony(); return; }
+    if (st === 44) { storyRebuild(); return; }
+    if (st === 45) { storyMemorial(); return; }
+    if (st === 46) { storyFoundation(); return; }
+    if (st === 47) { Biz.openMap('rent'); return; }
+    if (st === 48) { storyInterview(); return; }
+  };
 
   function arrivalScene(dest) {
     var sp = SPOTS[dest] || {};
@@ -1085,9 +1758,15 @@
     var text;
     if (!B.story.flags.plotUnlocked) text = 'Аркадий: Мы ещё не знакомы. Позвони по номеру, который дал Макс.';
     else if (!B.story.flags.contract) text = 'Аркадий: Рано. Сначала позвони и договорись о встрече.';
-    else if (!B.licenses.alcohol) text = 'Аркадий: Ларёк работает? Тогда слушай: алкоголь — это лицензия. Звони в правительство, контакт у тебя в телефоне.';
-    else if (!B.licenses.weapon) text = 'Аркадий: Алкоголь оформил? Молодец. Теперь оружие — но только с 12 уровня и после алкоголя.';
-    else text = 'Аркадий: Обе лицензии есть. Дальше — только масштаб. Открывай точки и расти до 30.';
+    else {
+      var nextLic = LICENSE_ORDER.filter(function (t) { return !B.licenses[t]; })[0];
+      if (!nextLic) text = 'Аркадий: Все лицензии оформлены. Дальше — только масштаб. Открывай точки и расти до 30.';
+      else {
+        var licState = licenseReady(nextLic);
+        text = 'Аркадий: Следующая лицензия — «' + LICENSES[nextLic].name + '». ' +
+          (licState.ok ? 'Уже доступна: звони в правительство, Лиза подскажет.' : 'Пока ' + licState.reason + '. Подрастёшь — оформим.');
+      }
+    }
     showCutscene({
       kicker: 'БЦ «Сити» · офис Аркадия',
       scene: 'office',
@@ -1145,6 +1824,26 @@
       { id: 'meds', name: 'Лекарства', desc: 'Основной ассортимент', qty: 50, price: 12000, icon: 'fa-capsules', color: '#10b981' },
       { id: 'vitamins', name: 'Витамины', desc: 'Сезонные комплексы', qty: 40, price: 6000, icon: 'fa-pills', color: '#0ea5e9' },
       { id: 'consumables', name: 'Расходники', desc: 'Бинты, маски, антисептик', qty: 60, price: 3000, icon: 'fa-kit-medical', color: '#64748b' }
+    ],
+    tobacconist: [
+      { id: 'cigarettes', name: 'Сигареты', desc: 'Основные бренды', qty: 60, price: 16000, icon: 'fa-smoking', color: '#a16207' },
+      { id: 'vapes', name: 'Вейпы и жидкости', desc: 'Устройства и картриджи', qty: 40, price: 14000, icon: 'fa-cloud', color: '#0ea5e9' },
+      { id: 'accessories', name: 'Аксессуары', desc: 'Зажигалки, пепельницы', qty: 50, price: 5000, icon: 'fa-fire', color: '#f59e0b' }
+    ],
+    medical: [
+      { id: 'equipment', name: 'Оборудование', desc: 'Диагностика и приёмы', qty: 15, price: 60000, icon: 'fa-stethoscope', color: '#0ea5e9' },
+      { id: 'meds', name: 'Медикаменты', desc: 'Расходные препараты', qty: 50, price: 24000, icon: 'fa-capsules', color: '#10b981' },
+      { id: 'supplies', name: 'Расходники', desc: 'Перчатки, шприцы, бинты', qty: 60, price: 12000, icon: 'fa-kit-medical', color: '#64748b' }
+    ],
+    pawnshop: [
+      { id: 'valuation', name: 'Оценка и экспертиза', desc: 'Ювелирка и техника', qty: 30, price: 15000, icon: 'fa-magnifying-glass-dollar', color: '#eab308' },
+      { id: 'safe', name: 'Сейфы и витрины', desc: 'Хранение залогов', qty: 10, price: 25000, icon: 'fa-vault', color: '#334155' },
+      { id: 'forms', name: 'Документы и бланки', desc: 'Договоры и квитанции', qty: 60, price: 6000, icon: 'fa-file-lines', color: '#64748b' }
+    ],
+    taxifleet: [
+      { id: 'cars', name: 'Автомобили', desc: 'Новые машины, 2 шт', qty: 2, price: 700000, icon: 'fa-taxi', color: '#f59e0b' },
+      { id: 'fuel', name: 'Топливо', desc: 'Заправка парка', qty: 80, price: 32000, icon: 'fa-gas-pump', color: '#ef4444' },
+      { id: 'service', name: 'Сервис и шины', desc: 'ТО и комплекты резины', qty: 30, price: 45000, icon: 'fa-screwdriver-wrench', color: '#64748b' }
     ],
     gym: [
       { id: 'sportfood', name: 'Спортпит', desc: 'Протеин и батончики', qty: 30, price: 12000, icon: 'fa-dumbbell', color: '#ef4444' },
@@ -1293,13 +1992,13 @@
       incoming: true, from: 'Макс', number: CONTACTS.maks.number, ini: 'М', color: '#0ea5e9',
       lines: [
         'Макс: Слушай, у тебя уже есть точка, а товар ты как завозишь?',
-        'Макс: Есть сайт «Опт» — у каждого бизнеса там свой раздел. Открой браузер и зайди на opt.lavka.net.',
+        'Макс: Есть сайт «Опт» — у каждого бизнеса там свой раздел. Открой браузер и зайди на opt.lackuun.com.',
         'Макс: Запомни главное: без товара смену не откроешь. Кнопка просто скажет «Нет товара» — и всё.',
         'Макс: Для ПВЗ — коробки и упаковка. Для кофейни — зерно и молоко. Для автосалона — машины.',
         'Макс: Заходи в раздел своего бизнеса и закажи первую партию. Дальше сам.'
       ]
     });
-    addSms('Макс', 'Открой Браузер → opt.lavka.net. Без товара смена не запустится. У каждого бизнеса свой раздел.');
+    addSms('Макс', 'Открой Браузер → opt.lackuun.com. Без товара смена не запустится. У каждого бизнеса свой раздел.');
   }
   function supplyTaskCard() {
     if (!B.story.flags.supplyIntro) return '';
@@ -1328,7 +2027,7 @@
 
   if (window.Web && window.Web.sites) {
     window.Web.sites.push({
-      id: 'opt', name: 'Опт', host: 'opt.lavka.net', cat: 'shop', custom: true,
+      id: 'opt', name: 'Опт', host: 'opt.lackuun.com', cat: 'shop', custom: true,
       icon: 'fa-truck-fast', color: '#0f766e',
       slogan: 'Оптовые поставки для каждого бизнеса',
       nav: [],
@@ -1361,6 +2060,30 @@
   // ============================================================
   // ЛИЦЕНЗИИ И ПРАВИТЕЛЬСТВО
   // ============================================================
+  function notifyLicenses(lvl) {
+    var list = LICENSE_ORDER.filter(function (t) { return LICENSES[t].level === lvl && !B.licenses[t]; });
+    if (!list.length) return;
+    ensureGov();
+    list.forEach(function (t) {
+      addSms('Правительство', 'Доступна лицензия «' + LICENSES[t].name + '». Позвоните в правительство и приезжайте.');
+    });
+    LV.toast(list.length === 1 ? 'Доступна лицензия: ' + LICENSES[list[0]].name : 'Доступны новые лицензии');
+  }
+
+  function licenseReady(type) {
+    var L = LICENSES[type];
+    if (!L) return { ok: false, reason: 'недоступно' };
+    if (B.level < L.level) return { ok: false, reason: 'с ' + L.level + ' уровня' };
+    if (L.requires && !B.licenses[L.requires]) return { ok: false, reason: 'сначала «' + LICENSES[L.requires].name + '»' };
+    return { ok: true, reason: 'открыто' };
+  }
+
+  function govPickType() {
+    var ready = LICENSE_ORDER.filter(function (t) { return !B.licenses[t] && licenseReady(t).ok; });
+    if (ready.length) return ready[0];
+    return LICENSE_ORDER.filter(function (t) { return !B.licenses[t]; })[0] || null;
+  }
+
   function ensureGov() {
     if (B.level < LICENSES.alcohol.level || B.story.flags.govUnlocked) return;
     B.story.flags.govUnlocked = true;
@@ -1377,14 +2100,14 @@
       incoming: true, from: 'Аркадий', number: PLOT_NUMBER, ini: 'А', color: '#8b5cf6',
       lines: [
         'Аркадий: Седьмой уровень. Уже не ларёк.',
-        'Аркадий: Хочешь алкоголь или оружие? Это не просто точка — нужна лицензия.',
+        'Аркадий: Дальше без лицензий нельзя: алкоголь, табак, оружие, фарма, финансы, перевозки.',
         'Аркадий: Я скинул контакт правительства. Позвони, договорись и съезди на такси.',
         'Аркадий: Скажешь, что от меня. Дальше сам.'
       ]
     });
   }
 
-  function callGovReal() {
+  function callGovReal(type) {
     ensureGov();
     if (B.level < LICENSES.alcohol.level) {
       showCall({
@@ -1396,64 +2119,60 @@
       });
       return;
     }
-    if (B.story.flags.govVisitType) {
+    if (!type) type = govPickType();
+    if (!type) {
       showCall({
         incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
         lines: [
-          'Сергей Петрович: Я уже дал задание.',
+          'Сергей Петрович: Все лицензии у вас оформлены.',
+          'Сергей Петрович: Работайте. Больше мне нечего предложить.'
+        ]
+      });
+      return;
+    }
+    var L = LICENSES[type];
+    var ready = licenseReady(type);
+    if (!ready.ok) {
+      showCall({
+        incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
+        lines: [
+          'Сергей Петрович: Лицензия «' + L.name + '» — ' + ready.reason + '.',
+          'Сергей Петрович: Выполните условие — и звоните.'
+        ]
+      });
+      return;
+    }
+    if (B.licenses[type]) {
+      showCall({
+        incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
+        lines: ['Сергей Петрович: Лицензия «' + L.name + '» уже оформлена. Не тратьте моё время.']
+      });
+      return;
+    }
+    if (B.story.flags.govVisitType === type) {
+      showCall({
+        incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
+        lines: [
+          'Сергей Петрович: Я уже дал задание по лицензии «' + L.name + '».',
           'Сергей Петрович: Приезжайте в правительство, Тверская, 1. Такси через телефон.'
         ]
       });
       return;
     }
-    var alcohol = B.licenses.alcohol, weapon = B.licenses.weapon;
-    var type = null;
-    if (!alcohol) type = 'alcohol';
-    else if (!weapon && B.level >= LICENSES.weapon.level) type = 'weapon';
-
-    var lines;
-    if (type === 'alcohol') {
-      lines = [
-        'Сергей Петрович: Аркадий говорил о вас.',
-        'Сергей Петрович: Лицензия на алкоголь. Пошлина — ' + fmt(LICENSES.alcohol.fee) + '.',
-        'Сергей Петрович: Приезжайте в правительство, Тверская, 1.',
-        'Сергей Петрович: Такси вызовите через телефон.'
-      ];
-    } else if (type === 'weapon') {
-      lines = [
-        'Сергей Петрович: Алкоголь уже оформили. Теперь оружие?',
-        'Сергей Петрович: Лицензия на торговлю оружием. Пошлина — ' + fmt(LICENSES.weapon.fee) + '.',
-        'Сергей Петрович: Приезжайте, Тверская, 1. Такси через телефон.'
-      ];
-    } else if (!alcohol) {
-      lines = [
-        'Сергей Петрович: Слушаю.',
-        'Сергей Петрович: Сначала получите лицензию на алкоголь — с 7 уровня.'
-      ];
-    } else if (!weapon) {
-      lines = [
-        'Сергей Петрович: Слушаю.',
-        'Сергей Петрович: Оружие — с 12 уровня. Подрастёте — приезжайте.'
-      ];
-    } else {
-      lines = [
-        'Сергей Петрович: Слушаю.',
-        'Сергей Петрович: Обе лицензии у вас. Всё оформлено, работайте.'
-      ];
-    }
-
-    if (type) {
-      B.story.flags.govCalled = true;
-      B.story.flags.govCallType = type;
-      B.story.flags.govVisitType = type;
-      save();
-    }
-
+    B.story.flags.govCalled = true;
+    B.story.flags.govCallType = type;
+    B.story.flags.govVisitType = type;
+    save();
     showCall({
       incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
-      lines: lines,
+      lines: [
+        'Сергей Петрович: Слушаю.',
+        'Сергей Петрович: Лицензия «' + L.name + '». Пошлина — ' + fmt(L.fee) + '.',
+        'Сергей Петрович: Приезжайте в правительство, Тверская, 1.',
+        'Сергей Петрович: Такси вызовите через телефон.'
+      ],
       onEnd: function () {
-        if (type) toast('Запись: ' + LICENSES[type].name.toLowerCase() + ' · приезжайте в правительство');
+        toast('Запись: ' + L.name.toLowerCase() + ' · приезжайте в правительство');
         if (LV.current && LV.current.id === 'job' && jobHost) renderJob();
         if (phoneHost) renderPhone();
       }
@@ -1470,7 +2189,7 @@
       scene: 'gov',
       slides: [
         { who: 'Сергей Петрович', ini: 'С', color: '#64748b', text: 'Проходите. Присаживайтесь.' },
-        { who: 'Сергей Петрович', ini: 'С', color: '#64748b', text: 'Лицензия на ' + L.name.toLowerCase() + '. Пошлина — ' + fmt(L.fee) + '.' },
+        { who: 'Сергей Петрович', ini: 'С', color: '#64748b', text: 'Лицензия «' + L.name + '». Пошлина — ' + fmt(L.fee) + '.' },
         { who: 'Сергей Петрович', ini: 'С', color: '#64748b', text: enough ? 'Деньги на бизнес-счёте? Подписывайте.' : 'Не хватает ' + fmt(L.fee - B.cash) + '. Приходите, когда будут деньги.' }
       ],
       choices: [
@@ -1509,17 +2228,19 @@
       return;
     }
     var L = LICENSES[type];
+    if (!L) return;
     if (B.licenses[type]) {
       showCall({
         incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
-        lines: ['Сергей Петрович: Лицензия уже оформлена. Не тратьте моё время.']
+        lines: ['Сергей Петрович: Лицензия «' + L.name + '» уже оформлена. Не тратьте моё время.']
       });
       return;
     }
-    if (type === 'weapon' && !B.licenses.alcohol) {
+    var ready = licenseReady(type);
+    if (!ready.ok) {
       showCall({
         incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
-        lines: ['Сергей Петрович: Сначала алкоголь. Потом оружие.']
+        lines: ['Сергей Петрович: Пока нельзя. Лицензия «' + L.name + '» — ' + ready.reason + '.']
       });
       return;
     }
@@ -1527,23 +2248,13 @@
   }
 
   function callGovEntry() {
-    ensureGov();
-    if (B.level < LICENSES.alcohol.level) {
-      showCall({
-        incoming: false, from: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b',
-        lines: [
-          'Сергей Петрович: Слушаю.',
-          'Сергей Петрович: Лицензии оформляем с 7 уровня. Подрастите — и звоните.'
-        ]
-      });
-      return;
-    }
     callGovReal();
   }
 
   Biz.callGov = callGovEntry;
+  Biz.callGovLicense = function (type) { callGovReal(type); };
   Biz.taxiToGov = function () {
-    if (!B.story.flags.govCalled) { toast('Сначала позвоните в правительство'); return; }
+    if (!B.story.flags.govCalled || !B.story.flags.govVisitType) { toast('Сначала позвоните в правительство'); return; }
     mapSel = 'gov';
     Biz.taxiGo();
   };
@@ -1555,25 +2266,25 @@
   var jobTab = 'main';
 
   function licCard(type) {
-    var L = LICENSES[type], ty = TYPES[type];
+    var L = LICENSES[type], ty = TYPES[L.point || type];
     var licensed = !!B.licenses[type];
-    var ready = B.level >= L.level && (!L.requires || B.licenses[L.requires]);
-    var called = B.story.flags.govCallType === type || licensed;
-    var opened = countType(type) > 0;
+    var ready = licenseReady(type);
+    var assigned = B.story.flags.govVisitType === type;
+    var called = B.story.flags.govCallType === type || assigned || licensed;
+    var opened = countType(L.point || type) > 0;
     var steps = [
       ['Позвонить в правительство', called],
       ['Приехать на такси', licensed],
-      ['Получить лицензию', licensed],
+      ['Оплатить пошлину', licensed],
       ['Открыть точку', opened]
     ];
     var action;
-    if (!ready) {
-      var why = B.level < L.level ? 'с ' + L.level + ' уровня' : 'сначала алкоголь';
-      action = '<button class="lic-btn" type="button" disabled>Доступно ' + why + '</button>';
-    } else if (!licensed && !called) {
-      action = '<button class="lic-btn" type="button" onclick="Biz.callGov()">Позвонить в правительство</button>';
-    } else if (!licensed) {
+    if (!ready.ok && !licensed) {
+      action = '<button class="lic-btn" type="button" disabled>Доступно ' + ready.reason + '</button>';
+    } else if (!licensed && (called || assigned)) {
       action = '<button class="lic-btn" type="button" onclick="Biz.taxiToGov()">Такси к правительству · 300 ₽</button>';
+    } else if (!licensed) {
+      action = '<button class="lic-btn" type="button" onclick="Biz.callGovLicense(\'' + type + '\')">Позвонить в правительство</button>';
     } else {
       action = '<button class="lic-btn" type="button" onclick="Biz.openMap(\'rent\')">Открыть точку за ' + fmt(ty.cost) + '</button>';
     }
@@ -1587,8 +2298,10 @@
   }
 
   function renderLicenses() {
-    return '<div class="lic-intro"><b>Обучение: лицензии</b><p>Позвоните в правительство, приезжайте на такси и оформите лицензию. После этого можно открыть алкомаркет или оружейный.</p></div>' +
-      licCard('alcohol') + licCard('weapon') +
+    var got = LICENSE_ORDER.filter(function (t) { return B.licenses[t]; }).length;
+    return '<div class="lic-intro"><b>Лицензии · ' + got + ' из ' + LICENSE_ORDER.length + '</b>' +
+      '<p>Позвоните в правительство, приезжайте на такси и оплатите пошлину. Лицензия открывает новую точку — от алкомаркета до таксопарка.</p></div>' +
+      LICENSE_ORDER.map(licCard).join('') +
       '<p class="lic-note">Правительство: ' + GOV_NUMBER + ' · контакт в телефоне</p>';
   }
 
@@ -1652,7 +2365,7 @@
       body = '<div class="bj-obj"><span>ТЕКУЩАЯ ЦЕЛЬ</span><b>' + esc(objective()) + '</b>' +
         (objectiveAction() ? '<button type="button" onclick="' + objectiveAction() + '">' + objectiveLabel() + '</button>' : '') + '</div>' +
         (isX8() ? '<button class="bj-lic-banner adm-banner" type="button" onclick="Biz.jobTab(\'admin\')"><i class="fa-solid fa-user-shield"></i><div><b>Админ-панель · X-8</b><span>выдать деньги</span></div><i class="fa-solid fa-chevron-right"></i></button>' : '') +
-        (B.story.flags.govUnlocked ? '<button class="bj-lic-banner" type="button" onclick="Biz.jobTab(\'licenses\')"><i class="fa-solid fa-file-signature"></i><div><b>Лицензии</b><span>алкоголь и оружие · обучение</span></div><i class="fa-solid fa-chevron-right"></i></button>' : '') +
+        (B.story.flags.govUnlocked ? '<button class="bj-lic-banner" type="button" onclick="Biz.jobTab(\'licenses\')"><i class="fa-solid fa-file-signature"></i><div><b>Лицензии</b><span>' + LICENSE_ORDER.length + ' направлений · от алкоголя до перевозок</span></div><i class="fa-solid fa-chevron-right"></i></button>' : '') +
         supplyTaskCard() +
         '<div class="bj-stats"><div><b>' + B.stats.orders + '</b><span>заказов</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div><div><b>' + B.points.length + '</b><span>точек</span></div></div>' +
         '<div class="bj-rate"><span>Рейтинг</span><b>' + (B.stats.rating || 4.8) + '</b><span>· потеряно ' + (B.stats.missed || 0) + '</span></div>' +
@@ -1716,7 +2429,11 @@
     carwash: ['Мойка', 'Химчистка', 'Полировка', 'Коврики', 'Экспресс'],
     pcclub: ['Час игры', 'Турнир', 'Напитки', 'Абонемент', 'Ночной пакет'],
     alcohol: ['Вино', 'Крепкое', 'Пиво', 'Доставка', 'Крупный заказ'],
+    tobacconist: ['Сигареты', 'Вейп', 'Табак', 'Аксессуар', 'Крупный заказ'],
     pharmacy: ['Лекарства', 'Витамины', 'Заказ', 'Консультация', 'Доставка'],
+    medical: ['Приём', 'Анализы', 'Справка', 'Процедура', 'Корпоративный'],
+    pawnshop: ['Залог', 'Оценка', 'Выкуп', 'Кредит', 'Крупная сделка'],
+    taxifleet: ['Поездка', 'Корпоратив', 'Аэропорт', 'Доставка', 'Смена'],
     gym: ['Абонемент', 'Тренировка', 'Персональный', 'Спортпит', 'Годовой'],
     boutique: ['Платье', 'Костюм', 'Аксессуар', 'Примерка', 'Крупный заказ'],
     electronics: ['Смартфон', 'Ноутбук', 'Наушники', 'Гарантия', 'Крупный заказ'],
@@ -1907,6 +2624,7 @@
 
   Biz.shift = function () {
     if (shift) return;
+    if (B.story.step === 28 && !B.story.flags.extortDone) { shiftExtortion(); return; }
     if (!B.points.length) { toast('Сначала откройте точку'); openMap('rent'); return; }
     var list = [];
     B.points.forEach(function (p) {
@@ -2028,11 +2746,13 @@
   Biz.hire = function (cid) {
     var c = STAFF_POOL.filter(function (x) { return x.id === cid; })[0];
     if (!c) return;
+    if (!B.points.length) { toast('Сначала откройте точку'); return; }
     var free = B.points.filter(function (p) { return !B.staff.some(function (s) { return s.pointId === p.id; }); });
-    if (!free.length) { toast('Нет свободных точек'); return; }
     if (B.cash < 3000) { toast('Найм стоит 3 000 ₽'); return; }
     B.cash -= 3000;
-    var point = free[0];
+    var point = free[0] || B.points.slice().sort(function (a, b) {
+      return shiftStaffCount(a.id) - shiftStaffCount(b.id);
+    })[0];
     B.staff.push({ cid: c.id, name: c.name, role: c.role, salary: c.salary, eff: c.eff, pointId: point.id, ini: c.ini, color: c.color });
     B.events.unshift({ t: 'hire', text: c.name + ' нанят · ' + TYPES[point.type].name, time: nowTime() });
     toast(c.name + ' нанят');
@@ -2048,6 +2768,110 @@
   // ПРОИЗВОДСТВО
   // ============================================================
   var prodHost = null;
+
+  var PROD_CATS = [
+    { id: 'home', name: 'Дом и уют', icon: 'fa-house', color: '#0f766e' },
+    { id: 'care', name: 'Уход', icon: 'fa-pump-soap', color: '#0284c7' },
+    { id: 'kitchen', name: 'Кухня', icon: 'fa-utensils', color: '#b45309' },
+    { id: 'textile', name: 'Текстиль', icon: 'fa-shirt', color: '#7c3aed' },
+    { id: 'eco', name: 'Эко', icon: 'fa-leaf', color: '#16a34a' },
+    { id: 'kids', name: 'Детям', icon: 'fa-child', color: '#ec4899' }
+  ];
+
+  var PROD_ITEMS = [
+    { id: 'home_set', cat: 'home', name: 'Набор для дома Lavka Home', price: 1490, cost: 640, icon: 'fa-couch', color: '#0f766e', desc: 'Плед, свеча и органайзер в подарочной упаковке.' },
+    { id: 'home_candle', cat: 'home', name: 'Свечи «Уют»', price: 590, cost: 210, icon: 'fa-fire', color: '#0f766e', desc: 'Пара свечей из соевого воска с ароматом ванили.' },
+    { id: 'home_plaid', cat: 'home', name: 'Плед «Тепло»', price: 1890, cost: 780, icon: 'fa-bed', color: '#0f766e', desc: 'Мягкий плед 150×200 из микрофибры.' },
+
+    { id: 'care_set', cat: 'care', name: 'Набор ухода Lavka Care', price: 990, cost: 390, icon: 'fa-pump-soap', color: '#0284c7', desc: 'Гель, крем и мыло — три шага ежедневного ухода.' },
+    { id: 'care_soap', cat: 'care', name: 'Мыло ручной работы', price: 290, cost: 90, icon: 'fa-soap', color: '#0284c7', desc: 'Натуральное мыло с мягким ароматом.' },
+    { id: 'care_cream', cat: 'care', name: 'Крем для рук', price: 490, cost: 170, icon: 'fa-hand-holding-droplet', color: '#0284c7', desc: 'Питательный крем с глицерином, 75 мл.' },
+
+    { id: 'kitchen_set', cat: 'kitchen', name: 'Кухонный набор Lavka Kitchen', price: 1690, cost: 720, icon: 'fa-utensils', color: '#b45309', desc: 'Лопатка, полотенце и банка для специй.' },
+    { id: 'kitchen_board', cat: 'kitchen', name: 'Разделочная доска', price: 790, cost: 320, icon: 'fa-table-cells-large', color: '#b45309', desc: 'Доска из берёзы с масляным покрытием.' },
+    { id: 'kitchen_jar', cat: 'kitchen', name: 'Набор банок', price: 690, cost: 240, icon: 'fa-jar', color: '#b45309', desc: 'Три стеклянные банки с деревянными крышками.' },
+
+    { id: 'textile_towel', cat: 'textile', name: 'Полотенца «Мягкость»', price: 690, cost: 260, icon: 'fa-layer-group', color: '#7c3aed', desc: 'Комплект из двух вафельных полотенец.' },
+    { id: 'textile_apron', cat: 'textile', name: 'Фартук «Кухня»', price: 890, cost: 340, icon: 'fa-shirt', color: '#7c3aed', desc: 'Плотный фартук с карманом и регулировкой.' },
+    { id: 'textile_plaid', cat: 'textile', name: 'Плед-покрывало', price: 1590, cost: 620, icon: 'fa-bed', color: '#7c3aed', desc: 'Покрывало с фактурной вязкой, 180×200.' },
+
+    { id: 'eco_bag', cat: 'eco', name: 'Шоппер «Эко»', price: 450, cost: 150, icon: 'fa-bag-shopping', color: '#16a34a', desc: 'Хлопковый шоппер, выдерживает до 10 кг.' },
+    { id: 'eco_bottle', cat: 'eco', name: 'Бутылка для воды', price: 990, cost: 380, icon: 'fa-bottle-water', color: '#16a34a', desc: 'Стальная бутылка 600 мл, не держит запах.' },
+    { id: 'eco_kit', cat: 'eco', name: 'Эко-набор', price: 1290, cost: 480, icon: 'fa-seedling', color: '#16a34a', desc: 'Шоппер, бутылка и бамбуковая щётка.' },
+
+    { id: 'kids_art', cat: 'kids', name: 'Набор для творчества', price: 1090, cost: 410, icon: 'fa-palette', color: '#ec4899', desc: 'Краски, кисти и альбом для юных художников.' },
+    { id: 'kids_plush', cat: 'kids', name: 'Мягкая игрушка', price: 790, cost: 300, icon: 'fa-shapes', color: '#ec4899', desc: 'Плюшевый зверь, гипоаллергенный наполнитель.' },
+    { id: 'kids_blocks', cat: 'kids', name: 'Конструктор', price: 1390, cost: 520, icon: 'fa-cubes', color: '#ec4899', desc: '80 деталей, совместим с популярными наборами.' }
+  ];
+
+  var PROD_BATCHES = [
+    { qty: 20, off: 0 },
+    { qty: 50, off: 0.03 },
+    { qty: 100, off: 0.07 },
+    { qty: 250, off: 0.12 }
+  ];
+
+  var PROD_ALIAS = { home: 'home_set', care: 'care_set', kitchen: 'kitchen_set' };
+
+  function prodCat(id) {
+    return PROD_CATS.filter(function (c) { return c.id === id; })[0] || null;
+  }
+  function prodItem(id) {
+    id = PROD_ALIAS[id] || id;
+    return PROD_ITEMS.filter(function (i) { return i.id === id; })[0] || null;
+  }
+  function prodLine(id) {
+    return prodItem(id) || PROD_ITEMS[0];
+  }
+  function prodBatch(n) {
+    return PROD_BATCHES.filter(function (b) { return b.qty === Number(n); })[0] || PROD_BATCHES[1];
+  }
+  function prodUnitCost(item, batch) {
+    var off = (batch && batch.off) || 0;
+    var lvl = Math.min(0.1, Math.max(0, (B.level - 10) * 0.01));
+    return Math.max(1, Math.round(item.cost * (1 - off) * (1 - lvl)));
+  }
+  function wholesalePrice(item) {
+    return Math.max(item.cost + 1, Math.round(item.price * 0.6));
+  }
+  function prodStockTotal() {
+    var f = B.factory;
+    if (!f || !f.goods) return 0;
+    var n = 0;
+    Object.keys(f.goods).forEach(function (k) { n += Number(f.goods[k]) || 0; });
+    f.stock = n;
+    return n;
+  }
+  function migrateFactory() {
+    var f = B.factory;
+    if (!f || !f.built) return null;
+    if (!f.goods || typeof f.goods !== 'object') {
+      f.goods = {};
+      if (Number(f.stock) > 0) f.goods.home_set = Number(f.stock);
+    }
+    Object.keys(f.goods).forEach(function (k) {
+      var item = prodItem(k);
+      if (!item) {
+        f.goods.home_set = (f.goods.home_set || 0) + (Number(f.goods[k]) || 0);
+        delete f.goods[k];
+      } else if (PROD_ALIAS[k]) {
+        f.goods[item.id] = (f.goods[item.id] || 0) + (Number(f.goods[k]) || 0);
+        delete f.goods[k];
+      }
+    });
+    prodStockTotal();
+    if (!prodCat(f.cat)) f.cat = prodItem(f.line) ? prodItem(f.line).cat : 'home';
+    if (!prodItem(f.line) || prodItem(f.line).cat !== f.cat) {
+      var first = PROD_ITEMS.filter(function (i) { return i.cat === f.cat; })[0] || PROD_ITEMS[0];
+      f.line = first.id;
+      f.cat = first.cat;
+    }
+    f.batch = prodBatch(f.batch).qty;
+    return f;
+  }
+  function activeListings() {
+    return (B.listings || []).filter(function (l) { return l.active !== false; });
+  }
 
   function renderProd() {
     if (!prodHost) return;
@@ -2065,13 +2889,87 @@
         '<p>Выберите место в Промзоне и постройте цех. Стоимость — 150 000 ₽.</p>' +
         '<button type="button" onclick="Biz.openMap(\'factory\')">Выбрать место</button></div>';
     } else {
+      migrateFactory();
+      var cat = prodCat(f.cat) || PROD_CATS[0];
+      var items = PROD_ITEMS.filter(function (i) { return i.cat === cat.id; });
+      var sel = prodItem(f.line);
+      if (!sel || sel.cat !== cat.id) sel = items[0];
+      f.cat = cat.id;
+      f.line = sel.id;
+      var batch = prodBatch(f.batch);
+      var unit = prodUnitCost(sel, batch);
+      var total = unit * batch.qty;
+      var margin = Math.max(0, sel.price - unit);
+      var stockTotal = prodStockTotal();
+      var rows = PROD_ITEMS.filter(function (i) { return (Number(f.goods[i.id]) || 0) > 0; });
+      var wholesale = rows.reduce(function (s, i) { return s + (Number(f.goods[i.id]) || 0) * wholesalePrice(i); }, 0);
+
+      var catHTML = PROD_CATS.map(function (c) {
+        var cnt = PROD_ITEMS.filter(function (i) { return i.cat === c.id; }).length;
+        return '<button class="pr-cat' + (c.id === cat.id ? ' on' : '') + '" type="button" onclick="Biz.prodCat(\'' + c.id + '\')">' +
+          '<span style="background:' + c.color + '"><i class="fa-solid ' + c.icon + '"></i></span>' +
+          '<b>' + esc(c.name) + '</b><small>' + cnt + ' тов.</small></button>';
+      }).join('');
+
+      var lineHTML = items.map(function (i) {
+        var has = Number(f.goods[i.id]) || 0;
+        return '<button class="pr-line' + (i.id === sel.id ? ' on' : '') + '" type="button" onclick="Biz.prodPick(\'' + i.id + '\')">' +
+          '<span class="pr-line-ic" style="background:' + i.color + '"><i class="fa-solid ' + i.icon + '"></i></span>' +
+          '<span class="pr-line-info"><b>' + esc(i.name) + '</b><small>' + fmt(i.price) + ' · склад ' + has + ' шт</small></span>' +
+          (i.id === sel.id ? '<i class="fa-solid fa-check pr-line-ok"></i>' : '') +
+          '</button>';
+      }).join('');
+
+      var whHTML = '<div class="pr-wh">' +
+        '<div class="pr-wh-head"><b>Склад</b><span>' + stockTotal + ' шт</span></div>' +
+        (rows.length ? rows.map(function (i) {
+          var q = Number(f.goods[i.id]) || 0;
+          return '<div class="pr-wrow"><span class="pr-wic" style="background:' + i.color + '"><i class="fa-solid ' + i.icon + '"></i></span>' +
+            '<div><b>' + esc(i.name) + '</b><span>' + q + ' шт · опт ' + fmt(wholesalePrice(i)) + '/шт</span></div>' +
+            '<button type="button" onclick="Biz.openListing(\'' + i.id + '\')">В Лавку</button></div>';
+        }).join('') : '<p class="pr-note" style="margin:2px 0 10px">Склад пуст — запустите партию.</p>') +
+        (stockTotal ? '<button class="pr-wh-sell" type="button" onclick="Biz.sell()"><i class="fa-solid fa-truck-fast"></i> Продать всё оптом · ' + fmt(wholesale) + '</button>' : '') +
+        '</div>';
+
+      var selHTML = '<div class="pr-sel">' +
+        '<div class="pr-sel-head"><span class="pr-sel-ic" style="background:' + sel.color + '"><i class="fa-solid ' + sel.icon + '"></i></span>' +
+        '<div><b>' + esc(sel.name) + '</b><span>' + esc(sel.desc) + '</span></div></div>' +
+        '<div class="pr-money">' +
+        '<div><span>Себестоимость</span><b>' + fmt(unit) + '<small>/шт</small></b></div>' +
+        '<div><span>Цена в Лавке</span><b>' + fmt(sel.price) + '</b></div>' +
+        '<div><span>Прибыль</span><b class="up">+' + fmt(margin) + '</b></div>' +
+        '</div>' +
+        '<div class="pr-batch-head"><span>Размер партии</span><span>себестоимость</span></div>' +
+        '<div class="pr-batches">' + PROD_BATCHES.map(function (b) {
+          var u = prodUnitCost(sel, b), t = u * b.qty;
+          return '<button class="pr-batch' + (b.qty === batch.qty ? ' on' : '') + '" type="button" onclick="Biz.prodBatch(' + b.qty + ')">' +
+            '<b>' + b.qty + ' шт</b><span>' + fmt(t) + '</span>' + (b.off ? '<em>−' + Math.round(b.off * 100) + '%</em>' : '') + '</button>';
+        }).join('') + '</div>' +
+        '<button class="pr-go" type="button" onclick="Biz.produce()"><i class="fa-solid fa-gears"></i> Запустить партию · ' + fmt(total) + '</button>' +
+        '<p class="pr-hint">Партия ' + batch.qty + ' шт · потенциал ' + fmt(margin * batch.qty) + ' при продаже по цене Лавки</p>' +
+        '</div>';
+
+      var ls = activeListings();
+      var marketBlock = '<div class="pr-market">' +
+        '<div class="pr-market-head"><b>Витрина Лавки</b><span>' + ls.length + ' поз. · продано ' + ls.reduce(function (n, l) { return n + (Number(l.sold) || 0); }, 0) + '</span></div>' +
+        (ls.length ? ls.map(function (l) {
+          var line = prodLine(l.line);
+          return '<div class="pr-mrow"><span class="pr-mic" style="background:' + line.color + '"><i class="fa-solid ' + line.icon + '"></i></span>' +
+            '<div style="flex:1;min-width:0"><b>' + esc(l.name) + '</b><span>' + fmt(l.price) + ' · остаток ' + l.stock + ' шт · продано ' + (l.sold || 0) + '</span></div>' +
+            '<button type="button" class="pr-mx" onclick="Biz.unlist(' + l.id + ')">Снять</button></div>';
+        }).join('') : '<p class="pr-note">Пока пусто. Выставьте партию — её увидят покупатели Лавки.</p>') +
+        '<button class="pr-list-btn" type="button" onclick="Biz.openListing()"><i class="fa-solid fa-store"></i> Выставить в Лавку</button></div>';
+
       body = '<div class="pr-factory"><div class="pr-factory-top"><span>ЦЕХ №4</span><i class="fa-solid fa-industry"></i></div>' +
         '<b>Лавка Продакшн</b><span>Промзона · линия №1</span></div>' +
-        '<div class="pr-stock"><span>На складе</span><b>' + (f.stock || 0) + ' шт</b><small>партия — 100 шт</small></div>' +
-        '<button class="pr-run" type="button" onclick="Biz.produce()"><i class="fa-solid fa-gears"></i> Запустить партию · 5 000 ₽</button>' +
-        '<button class="pr-sell" type="button" onclick="Biz.sell()"><i class="fa-solid fa-truck-fast"></i> Продать партию · 9 000 ₽</button>' +
-        '<div class="pr-stats"><div><b>' + (B.stats.sold || 0) + '</b><span>партий продано</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div></div>' +
-        '<p class="pr-note">Товар уходит в Лавку. Чем выше уровень — тем больше партия.</p>';
+        whHTML +
+        '<div class="pr-prod"><div class="pr-prod-head"><b>Что производим</b><span>категория и товар</span></div>' +
+        '<div class="pr-cats">' + catHTML + '</div>' +
+        '<div class="pr-lines">' + lineHTML + '</div>' +
+        selHTML + '</div>' +
+        marketBlock +
+        '<div class="pr-stats"><div><b>' + (B.stats.sold || 0) + '</b><span>опт. сделок</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div><div><b>' + stockTotal + '</b><span>на складе</span></div></div>' +
+        '<p class="pr-note">Себестоимость падает с уровнем и размером партии. Товар можно продать в Лавке или сдать оптом.</p>';
     }
     prodHost.innerHTML = '<div class="pr">' +
       '<header class="pr-top"><button class="pr-back" type="button" data-back><i class="fa-solid fa-chevron-left"></i></button>' +
@@ -2079,38 +2977,235 @@
       '<div class="app-scroll pb pr-body">' + body + '</div></div>';
   }
 
-  Biz.produce = function () {
-    if (!B.factory || !B.factory.built) { toast('Сначала постройте завод'); return; }
-    if (B.cash < 5000) { toast('Нужно 5 000 ₽'); return; }
-    B.cash -= 5000;
-    B.factory.stock = (B.factory.stock || 0) + 100;
-    B.events.unshift({ t: 'prod', text: 'Выпущена партия 100 шт', time: nowTime() });
-    addXp(25);
+  Biz.prodCat = function (id) {
+    var f = migrateFactory();
+    if (!f || !prodCat(id)) return;
+    var first = PROD_ITEMS.filter(function (i) { return i.cat === id; })[0];
+    if (!first) return;
+    f.cat = id;
+    f.line = first.id;
     save();
     renderProd();
-    toast('Партия готова: 100 шт');
+  };
+
+  Biz.prodPick = function (id) {
+    var f = migrateFactory();
+    var item = prodItem(id);
+    if (!f || !item) return;
+    f.line = item.id;
+    f.cat = item.cat;
+    save();
+    renderProd();
+  };
+
+  Biz.prodBatch = function (n) {
+    var f = migrateFactory();
+    if (!f) return;
+    f.batch = prodBatch(n).qty;
+    save();
+    renderProd();
+  };
+
+  Biz.produce = function () {
+    var f = migrateFactory();
+    if (!f) { toast('Сначала постройте завод'); return; }
+    var item = prodItem(f.line) || PROD_ITEMS[0];
+    var batch = prodBatch(f.batch);
+    var unit = prodUnitCost(item, batch);
+    var total = unit * batch.qty;
+    if (B.cash < total) { toast('Нужно ' + fmt(total)); return; }
+    B.cash -= total;
+    f.goods[item.id] = (Number(f.goods[item.id]) || 0) + batch.qty;
+    prodStockTotal();
+    B.events.unshift({ t: 'prod', text: 'Выпущено ' + batch.qty + ' шт · ' + item.name, time: nowTime() });
+    addXp(12 + Math.round(batch.qty / 10));
+    save();
+    renderProd();
+    if (jobHost) renderJob();
+    toast('Партия готова: ' + batch.qty + ' шт · ' + item.name);
   };
 
   Biz.sell = function () {
-    if (!B.factory || !B.factory.built) { toast('Сначала постройте завод'); return; }
-    if ((B.factory.stock || 0) < 100) { toast('На складе меньше партии'); return; }
-    B.factory.stock -= 100;
-    B.cash += 9000;
+    var f = migrateFactory();
+    if (!f) { toast('Сначала постройте завод'); return; }
+    var rows = PROD_ITEMS.filter(function (i) { return (Number(f.goods[i.id]) || 0) > 0; });
+    if (!rows.length) { toast('Склад пуст — запустите партию'); return; }
+    var total = 0, units = 0;
+    var listHTML = rows.map(function (i) {
+      var q = Number(f.goods[i.id]) || 0;
+      var sum = q * wholesalePrice(i);
+      total += sum;
+      units += q;
+      return '<div class="pr-opl-row"><span>' + esc(i.name) + ' · ' + q + ' шт</span><b>' + fmt(sum) + '</b></div>';
+    }).join('');
+    showSheet('<div class="bj-sheet-grab"></div><h3>Продать оптом</h3>' +
+      '<p class="bj-sheet-sub">Скупщик заберёт весь склад: ' + units + ' шт. В Лавке продавать выгоднее.</p>' +
+      '<div class="pr-opl">' + listHTML + '</div>' +
+      '<div class="summary-total"><span>Итого</span><b>' + fmt(total) + '</b></div>' +
+      '<button class="btn btn-primary btn-block" style="margin-top:10px" type="button" onclick="Biz.sellGo()">Продать · ' + fmt(total) + '</button>' +
+      '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="Biz.closeSheet()">Отмена</button>');
+  };
+
+  Biz.sellGo = function () {
+    var f = migrateFactory();
+    if (!f) return;
+    var total = 0, units = 0;
+    PROD_ITEMS.forEach(function (i) {
+      var q = Number(f.goods[i.id]) || 0;
+      if (q > 0) { units += q; total += q * wholesalePrice(i); }
+    });
+    if (!units) { closeSheet(); return; }
+    B.cash += total;
     B.stats.sold = (B.stats.sold || 0) + 1;
-    B.events.unshift({ t: 'sold', text: 'Партия продана · +9 000 ₽', time: nowTime() });
-    addXp(45);
+    f.goods = {};
+    prodStockTotal();
+    B.events.unshift({ t: 'sold', text: 'Опт: ' + units + ' шт · +' + fmt(total), time: nowTime() });
+    addXp(Math.min(90, 10 + Math.round(units / 10)));
+    closeSheet();
     storyTick();
     save();
     renderProd();
     if (jobHost) renderJob();
-    toast('Партия продана · +9 000 ₽');
+    toast('Опт: ' + units + ' шт · +' + fmt(total));
+  };
+
+  Biz.openListing = function (id) {
+    var f = migrateFactory();
+    if (!f) { toast('Сначала постройте завод'); return; }
+    var avail = PROD_ITEMS.filter(function (i) { return (Number(f.goods[i.id]) || 0) > 0; });
+    if (!avail.length) { toast('На складе нет товара — запустите партию'); return; }
+    var want = id ? prodItem(id) : prodItem(f.line);
+    var pick = want && (Number(f.goods[want.id]) || 0) > 0 ? want : avail[0];
+    var opts = avail.map(function (i) {
+      return '<option value="' + i.id + '"' + (i.id === pick.id ? ' selected' : '') + '>' +
+        esc(i.name) + ' · ' + (Number(f.goods[i.id]) || 0) + ' шт · от ' + fmt(i.price) + '</option>';
+    }).join('');
+    var have = Number(f.goods[pick.id]) || 0;
+    showSheet('<div class="bj-sheet-grab"></div><h3>Выставить в Лавку</h3>' +
+      '<p class="bj-sheet-sub">Товар появится в маркетплейсе. Покупатели увидят его в разделе «Мой завод».</p>' +
+      '<label class="pr-field"><span>Товар</span><select class="field" id="lst-line" onchange="Biz.listingFill()">' + opts + '</select></label>' +
+      '<label class="pr-field"><span>Цена за штуку, ₽</span><input class="field" id="lst-price" type="number" value="' + pick.price + '" min="100" step="10"></label>' +
+      '<label class="pr-field"><span id="lst-have">Количество · на складе ' + have + ' шт</span>' +
+      '<input class="field" id="lst-qty" type="number" value="' + Math.min(100, have) + '" min="1" max="' + have + '"></label>' +
+      '<button class="btn btn-primary btn-block" style="margin-top:10px" type="button" onclick="Biz.listAdd()">Выставить</button>' +
+      '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="Biz.closeSheet()">Отмена</button>');
+  };
+
+  Biz.listingFill = function () {
+    var f = migrateFactory();
+    if (!f) return;
+    var sel = document.getElementById('lst-line');
+    var item = prodItem(sel ? sel.value : '');
+    if (!item) return;
+    var have = Number(f.goods[item.id]) || 0;
+    var pr = document.getElementById('lst-price');
+    var qt = document.getElementById('lst-qty');
+    var lbl = document.getElementById('lst-have');
+    if (pr) pr.value = item.price;
+    if (lbl) lbl.textContent = 'Количество · на складе ' + have + ' шт';
+    if (qt) {
+      qt.max = have;
+      if (Number(qt.value) > have || Number(qt.value) < 1) qt.value = Math.min(100, have);
+    }
+  };
+
+  Biz.listAdd = function () {
+    var f = migrateFactory();
+    if (!f) return;
+    var sel = document.getElementById('lst-line');
+    var pr = document.getElementById('lst-price');
+    var qt = document.getElementById('lst-qty');
+    var item = prodItem(sel ? sel.value : f.line);
+    if (!item) return;
+    var have = Number(f.goods[item.id]) || 0;
+    var price = Math.round(Number(pr ? pr.value : item.price) || item.price);
+    var qty = Math.round(Number(qt ? qt.value : 0) || 0);
+    if (price < 100) { toast('Цена — не меньше 100 ₽'); return; }
+    if (qty < 1) { toast('Укажите количество'); return; }
+    if (qty > have) { toast('На складе только ' + have + ' шт'); return; }
+    var same = activeListings().filter(function (l) { return (prodItem(l.line) || PROD_ITEMS[0]).id === item.id; })[0];
+    if (same) {
+      same.price = price;
+      same.stock += qty;
+    } else {
+      B.nextListId = (B.nextListId || 0) + 1;
+      B.listings.push({ id: B.nextListId, line: item.id, name: item.name, price: price, stock: qty, sold: 0, active: true });
+    }
+    f.goods[item.id] = have - qty;
+    prodStockTotal();
+    B.events.unshift({ t: 'prod', text: 'В Лавку выставлено ' + qty + ' шт · ' + item.name, time: nowTime() });
+    closeSheet();
+    save();
+    renderProd();
+    toast('Товар выставлен в Лавку');
+  };
+
+  Biz.unlist = function (id) {
+    var l = (B.listings || []).filter(function (x) { return x.id === Number(id); })[0];
+    if (!l) return;
+    var f = migrateFactory();
+    var item = prodItem(l.line);
+    if (f && item) {
+      f.goods[item.id] = (Number(f.goods[item.id]) || 0) + (Number(l.stock) || 0);
+      prodStockTotal();
+    }
+    B.listings = B.listings.filter(function (x) { return x !== l; });
+    save();
+    renderProd();
+    toast('Товар снят с витрины');
+  };
+
+  Biz.marketListings = function () {
+    return activeListings().filter(function (l) { return Number(l.stock) > 0; }).map(function (l) {
+      var line = prodLine(l.line);
+      return { id: l.id, name: l.name, price: l.price, stock: l.stock, sold: l.sold || 0, line: line.id, icon: line.icon, color: line.color };
+    });
+  };
+
+  Biz.checkStock = function (id, qty) {
+    var l = (B.listings || []).filter(function (x) { return x.id === Number(id); })[0];
+    return !!l && l.active !== false && Number(l.stock) >= Number(qty);
+  };
+
+  Biz.fulfill = function (items) {
+    var earned = 0, sold = 0;
+    (items || []).forEach(function (it) {
+      var l = (B.listings || []).filter(function (x) { return x.id === Number(it.biz); })[0];
+      var q = Number(it.qty) || 0;
+      if (!l || q <= 0 || Number(l.stock) < q) return;
+      l.stock = Number(l.stock) - q;
+      l.sold = (Number(l.sold) || 0) + q;
+      if (l.stock <= 0) l.active = false;
+      earned += (Number(it.price) || 0) * q;
+      sold += q;
+    });
+    if (!earned) return;
+    B.cash += earned;
+    B.stats.orders = (B.stats.orders || 0) + sold;
+    B.stats.revenue = (B.stats.revenue || 0) + earned;
+    B.events.unshift({ t: 'sold', text: 'Продажа через Лавку · +' + fmt(earned), time: nowTime() });
+    addXp(Math.min(120, 20 + sold * 2));
+    storyTick();
+    save();
+    if (prodHost) renderProd();
+    if (jobHost) renderJob();
+    toast('Продажа через Лавку · +' + fmt(earned));
+  };
+
+  Biz.resetState = function () {
+    var fresh = JSON.parse(JSON.stringify(DEFAULTS));
+    Object.keys(B).forEach(function (k) { delete B[k]; });
+    Object.keys(fresh).forEach(function (k) { B[k] = fresh[k]; });
+    try { save(); } catch (e) {}
+    if (prodHost) { try { renderProd(); } catch (e) {} }
+    if (jobHost) { try { renderJob(); } catch (e) {} }
   };
 
   Biz.buildFactory = function () {
     if (B.factory && B.factory.built) { toast('Завод уже построен'); return; }
     if (B.cash < 150000) { toast('Нужно 150 000 ₽. Проведите ещё смены'); return; }
     B.cash -= 150000;
-    B.factory = { built: true, district: 'industrial', stock: 0 };
+    B.factory = { built: true, district: 'industrial', stock: 0, goods: {}, cat: 'home', line: 'home_set', batch: 50 };
     B.events.unshift({ t: 'factory', text: 'Завод построен в Промзоне', time: nowTime() });
     closeMap();
     addXp(80);
@@ -2551,6 +3646,12 @@
   // ============================================================
   // СТАРТ
   // ============================================================
+  Biz.migrateStory = function (force) {
+    if (force) B.story.v2 = false;
+    migrateStoryV2();
+  };
+  migrateStoryV2();
+
   if (B.story.step === 0 && !B.story.flags.introCall) {
     B.story.flags.introCall = true;
     save();

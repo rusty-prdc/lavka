@@ -126,6 +126,7 @@
   }
 
   function xidApplyMe(me) {
+    lavkaHold = true;
     state.user.xid = me.xid || state.user.xid;
     state.user.name = me.username || state.user.name;
     state.user.email = me.email || '';
@@ -162,6 +163,7 @@
     xidApplyMe(me);
     updateHomeUser();
     try { await bankReload(); } catch (e) {}
+    lavkaPull().catch(function () {});
     return me;
   }
 
@@ -182,6 +184,7 @@
     xidApplyMe(me);
     updateHomeUser();
     try { await bankReload(); } catch (e) {}
+    lavkaPull().catch(function () {});
     return me;
   }
 
@@ -204,6 +207,7 @@
     state.balance = DEFAULTS.balance;
     save();
     updateHomeUser();
+    lavkaForgetLocal();
   }
 
   function xidGuest() {
@@ -486,7 +490,176 @@
   // ---------- state ----------
   function save() {
     try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+    if (!lavkaQuiet && !lavkaHold) {
+      lavkaTsSet(Date.now());
+      lavkaPushSoon();
+    }
   }
+
+  // ---------- облачный сейв Лавки в XPRODC ----------
+  var LAVKA_GAME = 'lavka';
+  var LAVKA_OWNER = 'lavka_owner_xid';
+  var lavkaVersion = 0;
+  var lavkaPushTimer = null;
+  var lavkaQuiet = false;
+  var lavkaHold = true;
+  var lavkaBusy = false;
+  var lavkaAgain = false;
+  var lavkaPulling = false;
+
+  function lavkaOwnerGet() { try { return localStorage.getItem(LAVKA_OWNER) || ''; } catch (e) { return ''; } }
+  function lavkaOwnerSet(x) {
+    try { if (x) localStorage.setItem(LAVKA_OWNER, x); else localStorage.removeItem(LAVKA_OWNER); } catch (e) {}
+  }
+  function lavkaTsGet() { var n = Number(xidLsGet('lavka_ts', 0)); return n > 0 ? n : 0; }
+  function lavkaTsSet(n) { xidLsSet('lavka_ts', Number(n) || 0); }
+
+  function lavkaDeep(tgt, src) {
+    Object.keys(src || {}).forEach(function (k) {
+      var v = src[k];
+      if (v && typeof v === 'object' && !Array.isArray(v)) {
+        if (!tgt[k] || typeof tgt[k] !== 'object' || Array.isArray(tgt[k])) tgt[k] = {};
+        lavkaDeep(tgt[k], v);
+      } else {
+        tgt[k] = Array.isArray(v) ? JSON.parse(JSON.stringify(v)) : v;
+      }
+    });
+  }
+
+  function lavkaPushSoon() {
+    if (lavkaQuiet || lavkaHold) return;
+    if (!readXidSession()) return;
+    clearTimeout(lavkaPushTimer);
+    lavkaPushTimer = setTimeout(function () { lavkaPush(); }, 1200);
+  }
+
+  async function lavkaPush() {
+    if (!readXidSession()) return false;
+    if (lavkaBusy) { lavkaAgain = true; return false; }
+    lavkaBusy = true;
+    var xid = state.user.xid || '';
+    var stamp = Date.now();
+    var value = JSON.stringify({ updatedAt: stamp, xid: xid, data: state });
+    var ok = false;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      try {
+        var r = await xidApi('/sync', {
+          method: 'PUT',
+          body: JSON.stringify({ game_id: LAVKA_GAME, key: 'state', value: value, version: lavkaVersion })
+        });
+        if (r.ok) {
+          try {
+            var d = await r.json();
+            if (d && d.version !== undefined) lavkaVersion = Number(d.version) || lavkaVersion;
+          } catch (e) {}
+          lavkaTsSet(stamp);
+          lavkaOwnerSet(xid);
+          ok = true;
+          break;
+        }
+        if (r.status === 409) {
+          var detail = null;
+          try { var e = await r.json(); detail = (e && e.detail) || e; } catch (e2) {}
+          if (detail && detail.server_version !== undefined) {
+            lavkaVersion = Number(detail.server_version) || lavkaVersion;
+            continue;
+          }
+        }
+        break;
+      } catch (e) { break; }
+    }
+    lavkaBusy = false;
+    if (lavkaAgain) { lavkaAgain = false; lavkaPushSoon(); }
+    return ok;
+  }
+
+  function lavkaResetLocal() {
+    var d = clone(DEFAULTS);
+    lavkaQuiet = true;
+    state.cart = d.cart;
+    state.orders = d.orders;
+    state.fav = d.fav;
+    state.notes = d.notes;
+    state.webFav = d.webFav;
+    state.removed = d.removed;
+    state.balance = d.balance;
+    state.page = 0;
+    if (window.Biz && Biz.resetState) { try { Biz.resetState(); } catch (e) {} }
+    lavkaQuiet = false;
+    try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  async function lavkaPull() {
+    if (lavkaPulling) return false;
+    if (!readXidSession()) { lavkaHold = false; return false; }
+    lavkaPulling = true;
+    var xid = state.user.xid || '';
+    var applied = false;
+    try {
+      var r = await xidApi('/sync?game_id=' + LAVKA_GAME + '&key=state');
+      if (!r.ok) { lavkaHold = false; lavkaPulling = false; return false; }
+      var d = await r.json();
+      lavkaVersion = Number(d && d.version) || 0;
+      var owner = lavkaOwnerGet();
+      var cloud = null, cloudTs = 0;
+      if (d && d.found && d.value) {
+        try {
+          var v = JSON.parse(d.value);
+          cloud = v && v.data ? v.data : v;
+          cloudTs = Number(v && v.updatedAt) || 0;
+        } catch (e) { cloud = null; }
+      }
+      if (!cloud) {
+        if (owner && xid && owner !== xid) lavkaResetLocal();
+        lavkaOwnerSet(xid);
+        lavkaHold = false;
+        lavkaPushSoon();
+        lavkaPulling = false;
+        return false;
+      }
+      var localTs = lavkaTsGet();
+      if (owner === xid && localTs > cloudTs && localTs > 0) {
+        lavkaHold = false;
+        lavkaPushSoon();
+      } else {
+        var keepUser = JSON.parse(JSON.stringify(state.user || {}));
+        var oldStory = !!(cloud && cloud.biz && cloud.biz.story && cloud.biz.story.v2 === undefined);
+        lavkaQuiet = true;
+        lavkaDeep(state, cloud);
+        if (window.Biz && Biz.migrateStory) { try { Biz.migrateStory(oldStory); } catch (e) {} }
+        lavkaQuiet = false;
+        ['xid', 'name', 'email', 'tg', 'joined', 'bankLinked'].forEach(function (k) {
+          if (keepUser[k] !== undefined) state.user[k] = keepUser[k];
+        });
+        if (xid) state.user.xid = xid;
+        lavkaOwnerSet(xid);
+        lavkaTsSet(cloudTs);
+        try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+        updateHomeUser();
+        if (window.LV && LV.renderApps) LV.renderApps();
+        applied = true;
+      }
+    } catch (e) {
+      // облако недоступно — продолжаем с локальным сейвом
+    }
+    lavkaPulling = false;
+    lavkaHold = false;
+    return applied;
+  }
+
+  function lavkaForgetLocal() {
+    lavkaResetLocal();
+    lavkaOwnerSet('');
+    lavkaTsSet(0);
+    lavkaVersion = 0;
+    lavkaHold = false;
+    lavkaRefreshHome();
+  }
+  function lavkaRefreshHome() {
+    try { updateHomeUser(); } catch (e) {}
+    try { renderApps(); } catch (e) {}
+  }
+
   function cartCount() {
     return Object.keys(state.cart || {}).reduce(function (s, k) { return s + (Number(state.cart[k]) || 0); }, 0);
   }
@@ -840,7 +1013,7 @@
     tutEl = document.getElementById('tutorial');
 
     if (state.theme === 'dark') document.body.classList.add('dark');
-    xidBoot();
+    xidBoot().then(function () { return lavkaPull(); }).catch(function () { lavkaHold = false; });
     updateHomeUser();
     renderApps();
     tick();
@@ -1002,6 +1175,7 @@
     xidRegister: xidRegister,
     xidLogout: xidLogout,
     bankReload: bankReload,
+    cloud: { pull: lavkaPull, push: lavkaPush, reset: lavkaForgetLocal },
     startTutorial: startTutorial,
     copyText: copyText,
     openSettingsTo: openSettingsTo,

@@ -46,6 +46,46 @@
   function catColor(id) { return (CAT[id] && CAT[id].color) || '#10b981'; }
   function catIcon(id) { return (CAT[id] && CAT[id].icon) || 'fa-tag'; }
 
+  // ---------- витрина бизнеса (завод → Лавка) ----------
+  var BIZ_CAT = { id: 'biz', name: 'Мой завод', color: '#b45309', icon: 'fa-industry' };
+
+  function bizListings() {
+    try {
+      if (window.Biz && Biz.marketListings) return Biz.marketListings() || [];
+    } catch (e) {}
+    return [];
+  }
+
+  function bizProduct(l) {
+    var id = -1000 - Number(l.id);
+    var p = BY_ID[id];
+    if (!p) {
+      p = {
+        id: id, cat: 'biz', name: l.name,
+        desc: 'Товар с вашего завода «Лавка Продакшн». Произведён в Промзоне и отгружается со склада.',
+        price: Number(l.price) || 0, oldPrice: 0,
+        rating: 5, reviews: Number(l.sold) || 0, sold: Number(l.sold) || 0,
+        seller: 'Мой завод · Lavka Production',
+        delivery: 2, free: true, stock: Number(l.stock) || 0,
+        specs: {}, bizId: Number(l.id)
+      };
+      BY_ID[id] = p;
+    }
+    p.name = l.name;
+    p.price = Number(l.price) || 0;
+    p.stock = Number(l.stock) || 0;
+    p.sold = Number(l.sold) || 0;
+    p.reviews = p.sold;
+    p.bizId = Number(l.id);
+    p.specs = { 'Производство': 'Лавка Продакшн', 'Склад': 'Промзона', 'Остаток': p.stock + ' шт.' };
+    return p;
+  }
+
+  function syncBiz() {
+    CAT.biz = BIZ_CAT;
+    return bizListings().map(bizProduct);
+  }
+
   function art(p, big) {
     if (!p) return LV.svgArt('#10b981', 'ЛВ', 0, big);
     return LV.svgArt(catColor(p.cat), LV.initials(p.name), p.id, big);
@@ -121,13 +161,43 @@
   }
 
   function catsChips(active) {
+    var biz = bizListings();
     return '<div class="cat-chips">' +
       '<button class="cat-chip' + (!active ? ' on' : '') + '" onclick="Market.tab(\'catalog\')"><span class="cat-dot" style="background:#10b981"><i class="fa-solid fa-border-all"></i></span>Все</button>' +
+      (biz.length ? '<button class="cat-chip' + (active === 'biz' ? ' on' : '') + '" onclick="Market.category(\'biz\')"><span class="cat-dot" style="background:' + BIZ_CAT.color + '"><i class="fa-solid ' + BIZ_CAT.icon + '"></i></span>Мой завод</button>' : '') +
       CATS.map(function (c) {
         return '<button class="cat-chip' + (active === c.id ? ' on' : '') + '" onclick="Market.category(\'' + c.id + '\')">' +
           '<span class="cat-dot" style="background:' + c.color + '"><i class="fa-solid ' + c.icon + '"></i></span>' +
           LV.esc(c.name) + '</button>';
       }).join('') + '</div>';
+  }
+
+  function bizHomeHTML() {
+    var list = syncBiz();
+    if (!list.length) return '';
+    var revenue = 0, sold = 0;
+    list.forEach(function (p) { sold += Number(p.sold) || 0; });
+    try { revenue = (LV.state.biz && LV.state.biz.stats && LV.state.biz.stats.revenue) || 0; } catch (e) {}
+    return '<div class="mkt-sec"><div class="sec-head"><span class="sec-title">Мой завод</span>' +
+      '<button class="sec-more" type="button" onclick="Market.category(\'biz\')">Все товары</button></div>' +
+      '<div class="mkt-note" style="margin-bottom:10px"><i class="fa-solid fa-industry"></i> Своё производство · продано ' + LV.fmtNum(sold) + ' шт · выручка ' + LV.fmt(revenue) + '</div>' +
+      '<div class="hscroll">' + list.map(hcardHTML).join('') + '</div></div>';
+  }
+
+  function bizCategoryHTML(params) {
+    var list = syncBiz();
+    if (!list.length) {
+      return '<div class="empty" style="padding-top:56px"><i class="fa-solid fa-industry"></i>' +
+        '<div class="empty-title">Витрина пуста</div>' +
+        '<div class="empty-text">Постройте завод в Промзоне, выпустите партию и выставьте товар в Лавку.</div>' +
+        '<button class="btn btn-primary" onclick="LV.openApp(\'production\')">Открыть Производство</button></div>';
+    }
+    return '<div class="cat-hero" style="background:linear-gradient(130deg,#b45309,#7c2d12)">' +
+      '<span class="cat-hero-ic"><i class="fa-solid fa-industry"></i></span>' +
+      '<div><b>Мой завод</b><span>' + list.length + ' товаров на витрине</span></div></div>' +
+      '<div class="mkt-note"><i class="fa-solid fa-store"></i> Это ваши товары — продажи идут на счёт бизнеса</div>' +
+      '<div class="pgrid" style="margin-top:10px">' + list.map(pcardHTML).join('') + '</div>' +
+      '<div style="padding:16px 14px 4px"><button class="btn btn-block" type="button" onclick="LV.openApp(\'production\')"><i class="fa-solid fa-plus"></i> Выставить ещё</button></div>';
   }
 
   function cartTotal() {
@@ -210,6 +280,8 @@
 
       catsChips(null) +
 
+      bizHomeHTML() +
+
       '<div class="mkt-sec"><div class="sec-head"><span class="sec-title">Подборки</span></div>' +
       '<div class="banners">' +
       '<div class="banner bn1"><span class="bn-tag">ВЫГОДНО</span><b>Скидки до 40% на технику</b><span>Смартфоны, ноутбуки и аксессуары по акции</span></div>' +
@@ -250,12 +322,17 @@
         return '<button class="cat-card" type="button" onclick="Market.category(\'' + c.id + '\')">' +
           '<span class="cat-ico" style="background:' + c.color + '"><i class="fa-solid ' + c.icon + '"></i></span>' +
           '<span class="cat-info"><b>' + LV.esc(c.name) + '</b><span>' + c.count + ' товаров</span></span></button>';
-      }).join('') + '</div></div>' +
+      }).join('') +
+      (bizListings().length ? '<button class="cat-card" type="button" onclick="Market.category(\'biz\')">' +
+        '<span class="cat-ico" style="background:' + BIZ_CAT.color + '"><i class="fa-solid ' + BIZ_CAT.icon + '"></i></span>' +
+        '<span class="cat-info"><b>Мой завод</b><span>' + bizListings().length + ' товаров</span></span></button>' : '') +
+      '</div></div>' +
       '<div class="mkt-sec"><div class="sec-head"><span class="sec-title">Популярное</span></div>' +
       '<div class="pgrid">' + sortProducts(PRODUCTS, 'pop').slice(0, 8).map(pcardHTML).join('') + '</div></div>';
   }
 
   function categoryHTML(params) {
+    if (params.id === 'biz') return bizCategoryHTML(params);
     var c = CAT[params.id];
     if (!DATA || !c) return '<div class="spinner"></div>';
     var list = PRODUCTS.filter(function (p) { return p.cat === c.id; });
@@ -512,6 +589,7 @@
 
   // ---------- chrome ----------
   function viewBody() {
+    syncBiz();
     var cur = stack[stack.length - 1] || { name: 'home', params: {} };
     var p = cur.params || {};
     switch (cur.name) {
@@ -817,6 +895,26 @@
     var payEl = document.querySelector('#mkt-sheet .pay-opt.on');
     var paySrc = payEl ? payEl.getAttribute('data-pay') : 'Картой при получении';
     var payLabel = paySrc;
+    var items = Object.keys(S.cart).map(function (id) {
+      var p = BY_ID[id];
+      return {
+        id: Number(id), name: p ? p.name : 'Товар', cat: p ? p.cat : '',
+        price: p ? p.price : 0, qty: Number(S.cart[id]), biz: p && p.bizId ? p.bizId : 0
+      };
+    }).filter(function (x) { return x.qty > 0; });
+    var bizItems = items.filter(function (x) { return x.biz > 0; });
+    if (bizItems.length && window.Biz && Biz.checkStock) {
+      var out = bizItems.filter(function (x) { return !Biz.checkStock(x.biz, x.qty); })[0];
+      if (out) {
+        delete S.cart[String(out.id)];
+        LV.save();
+        refreshBadges();
+        closeSheet();
+        render();
+        LV.toast('«' + out.name + '» уже разобрали — товар убран из корзины');
+        return;
+      }
+    }
     if (paySrc.indexOf('bank:') === 0) {
       if (!window.Bank || !Bank.linked) {
         LV.toast('BankFake не подключён');
@@ -835,10 +933,6 @@
       }
       payLabel = 'BankFake · ' + res.label;
     }
-    var items = Object.keys(S.cart).map(function (id) {
-      var p = BY_ID[id];
-      return { id: Number(id), name: p ? p.name : 'Товар', price: p ? p.price : 0, qty: Number(S.cart[id]) };
-    }).filter(function (x) { return x.qty > 0; });
     var order = {
       id: Date.now(),
       num: 'LV-' + String(100000 + Math.floor(Math.random() * 899999)),
@@ -854,6 +948,10 @@
     S.orders.unshift(order);
     S.cart = {};
     LV.save();
+    if (bizItems.length && window.Biz && Biz.fulfill) {
+      Biz.fulfill(bizItems);
+      syncBiz();
+    }
     refreshBadges();
     closeSheet();
     stack = [{ name: 'done', params: { id: order.id } }];

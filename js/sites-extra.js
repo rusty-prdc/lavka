@@ -1,4 +1,4 @@
-/* Лавка — дополнительные сайты браузера LAVKA.NET
+/* Лавка — дополнительные сайты браузера LACKUUN.COM
    Каждый сайт со своей вёрсткой, шапкой и навигацией. */
 (function () {
   'use strict';
@@ -405,7 +405,7 @@
       id: function () {
         return wikiArticle('XPRODC ID', 'Учётная запись экосистемы XPRODC',
           [['Тип', 'Единый аккаунт'], ['Запущен', '2024'], ['Сервисы', 'Лавка, BankFake, Почта, Браузер'], ['Формат', 'X-число'], ['Владелец', 'XPRODC']],
-          '<p><b>XPRODC ID</b> — единая учётная запись для сервисов XPRODC. Один аккаунт открывает доступ к маркетплейсу «Лавка», банку BankFake, почте и браузеру LAVKA.NET.</p>' +
+          '<p><b>XPRODC ID</b> — единая учётная запись для сервисов XPRODC. Один аккаунт открывает доступ к маркетплейсу «Лавка», банку BankFake, почте и браузеру Lackuun.</p>' +
           '<h3>История</h3><p>Идея единого входа появилась после запуска «Лавки»: пользователи заводили отдельные аккаунты в каждом сервисе. В 2025 году XPRODC ID стал обязательным для оформления заказов и переводов.</p>' +
           '<h3>Как это работает</h3><p>При входе сервер выдаёт пару токенов: короткий access и длинный refresh. Access используется для запросов, refresh — для продления сессии без повторного ввода пароля.</p>' +
           '<h3>Безопасность</h3><p>Пароли хранятся в виде хеша, вход фиксируется в журнале с IP и устройством. Подозрительные входы можно увидеть в разделе «Безопасность» приложения.</p>' +
@@ -441,13 +441,13 @@
      ФОРУМ — старый добрый форум
      ============================================================ */
   W.sites.push({
-    id: 'forum', name: 'Форум', host: 'forum.lavka.net', cat: 'social', custom: true,
+    id: 'forum', name: 'Форум', host: 'forum.lackuun.com', cat: 'social', custom: true,
     icon: 'fa-comments', color: '#2b4a7a',
     slogan: 'Общение без алгоритмов',
     nav: [],
     chrome: function (body) {
       var name = LV.state.user.name || 'Гость';
-      return '<div class="frm"><header class="frm-top"><b class="frm-logo">LAVKA FORUM</b>' +
+      return '<div class="frm"><header class="frm-top"><b class="frm-logo">LACKUUN FORUM</b>' +
         '<div class="frm-user"><i class="fa-solid fa-user"></i>' + esc(name) + '</div></header>' +
         '<nav class="frm-nav"><a onclick="Web.sitePage(\'forum\',\'index\')">Форум</a><a onclick="LV.toast(\'Поиск по форуму\')">Поиск</a><a onclick="LV.toast(\'Пользователи\')">Пользователи</a><a onclick="LV.toast(\'Правила\')">Правила</a></nav>' +
         '<div class="frm-body">' + body + '</div></div>';
