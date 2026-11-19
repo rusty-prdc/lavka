@@ -2661,49 +2661,6 @@
     };
   }
 
-  LV.registerApp(stubApp({
-    id: 'camera', name: 'Камера', icon: 'fa-camera', bg: 'linear-gradient(140deg,#334155,#0f172a)', page: 0,
-    desc: 'Снимай фото и видео прямо с телефона, применяй фильтры и отправляй снимки в галерею Лавки.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'files', name: 'Файлы', icon: 'fa-folder-open', bg: 'linear-gradient(140deg,#f59e0b,#d97706)', page: 1,
-    desc: 'Документы, загрузки и вложения из заказов — в одном месте, с поиском и папками.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'voice', name: 'Диктофон', icon: 'fa-microphone-lines', bg: 'linear-gradient(140deg,#ef4444,#991b1b)', page: 1,
-    installable: true,
-    desc: 'Записывай голосовые заметки, встречи и идеи. Записи можно будет прикреплять к заметкам.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'translate', name: 'Переводчик', icon: 'fa-language', bg: 'linear-gradient(140deg,#06b6d4,#0e7490)', page: 1,
-    installable: true,
-    desc: 'Переводи текст и описания товаров на 40 языков — офлайн и без рекламы.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'podcasts', name: 'Подкасты', icon: 'fa-podcast', bg: 'linear-gradient(140deg,#a855f7,#6d28d9)', page: 1,
-    installable: true,
-    desc: 'Подборки о покупках, технологиях и жизни. Слушай в фоне, продолжая листать Лавку.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'games', name: 'Игры', icon: 'fa-gamepad', bg: 'linear-gradient(140deg,#2563eb,#7c3aed)', page: 1,
-    installable: true,
-    desc: 'Мини-игры и аркады внутри телефона. Первая игра — «Собери корзину» — уже готовится.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'contacts', name: 'Контакты', icon: 'fa-address-book', bg: 'linear-gradient(140deg,#14b8a6,#0f766e)', page: 0,
-    desc: 'Все контакты в одном месте, поиск по X ID и синхронизация с профилем Лавки.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'reminders', name: 'Напоминания', icon: 'fa-list-check', bg: 'linear-gradient(140deg,#f59e0b,#b45309)', page: 0,
-    installable: true,
-    desc: 'Напоминания о доставке, оплате и важных делах. Уже готовим к запуску.'
-  }));
-  LV.registerApp(stubApp({
-    id: 'remote', name: 'Пульт', icon: 'fa-tv', bg: 'linear-gradient(140deg,#475569,#1e293b)', page: 1,
-    installable: true,
-    desc: 'Управление телевизором и техникой умного дома прямо с телефона.'
-  }));
-
   // ===== Lavka Online — будущий онлайн-город =====
   LV.registerApp({
     id: 'online', name: 'Lavka Online', icon: 'fa-globe', bg: 'linear-gradient(150deg,#10b981,#0b1220)',

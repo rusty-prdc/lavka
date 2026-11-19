@@ -23,6 +23,7 @@
     daily: { day: '', cur: {}, done: {}, streak: 0, lastAll: '' },
     ach: { on: [] },
     ads: { left: 0 },
+    tax: { due: 0, paid: 0 },
     rival: { on: false, left: 0, name: '' },
     nextId: 0,
     installed: { job: false, production: false },
@@ -1145,6 +1146,7 @@
     if (!t || !mapSel || !SPOTS[mapSel]) return;
     if (!typeUnlocked(type)) { toast('Закрыто: ' + (typeLockReason(type) || 'этот тип ещё недоступен')); return; }
     if (pointAtSpot(mapSel)) { toast('Помещение уже занято'); return; }
+    if (B.tax && B.tax.due > 60000) { toast('Долг по налогам ' + fmt(B.tax.due) + ' — оплатите в Job'); return; }
     if (B.cash < t.cost) { toast('Не хватает денег'); return; }
     B.cash -= t.cost;
     B.points.push({ id: 'p' + (++B.nextId), type: type, spot: mapSel, orders: 0, stock: START_STOCK, opened: Date.now() });
@@ -2345,6 +2347,36 @@
   };
 
   // ============================================================
+  // НАЛОГИ ЗА ТОЧКИ
+  // ============================================================
+  function taxBlockHTML() {
+    if (!B.tax) B.tax = { due: 0, paid: 0 };
+    var due = Math.round(B.tax.due || 0);
+    var blocked = due > 60000;
+    return '<div class="tax-card' + (blocked ? ' bad' : '') + '">' +
+      '<div class="tax-top"><b><i class="fa-solid fa-file-invoice-dollar"></i> Налог на точки</b>' +
+      '<span>' + (due > 0 ? fmt(due) : 'нет долга') + '</span></div>' +
+      '<small>50% от аренды за каждую смену. Долг больше 60 000 ₽ блокирует открытие новых точек.</small>' +
+      (due > 0 ? '<button class="tax-btn" type="button" onclick="Biz.taxPay()">Оплатить · ' + fmt(due) + '</button>' : '') +
+      '</div>';
+  }
+
+  Biz.taxPay = function () {
+    if (!B.tax) B.tax = { due: 0, paid: 0 };
+    var due = Math.round(B.tax.due || 0);
+    if (due <= 0) { toast('Налогов к оплате нет'); return; }
+    if (B.cash < due) { toast('Не хватает ' + fmt(due - B.cash)); return; }
+    B.cash -= due;
+    B.tax.paid = (B.tax.paid || 0) + due;
+    B.tax.due = 0;
+    B.events.unshift({ t: 'tax', text: 'Налог оплачен · ' + fmt(due), time: nowTime() });
+    save();
+    if (window.Sfx) Sfx.play('cash');
+    toast('Налог оплачен · ' + fmt(due));
+    renderJob();
+  };
+
+  // ============================================================
   // РЕКЛАМА И КОНКУРЕНТ
   // ============================================================
   var AD_PACKS = [
@@ -2671,6 +2703,7 @@
         (B.story.flags.govUnlocked ? '<button class="bj-lic-banner" type="button" onclick="Biz.jobTab(\'licenses\')"><i class="fa-solid fa-file-signature"></i><div><b>Лицензии</b><span>' + LICENSE_ORDER.length + ' направлений · от алкоголя до перевозок</span></div><i class="fa-solid fa-chevron-right"></i></button>' : '') +
         supplyTaskCard() +
         adsBlockHTML() +
+        taxBlockHTML() +
         '<div class="bj-stats"><div><b>' + B.stats.orders + '</b><span>заказов</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div><div><b>' + B.points.length + '</b><span>точек</span></div></div>' +
         '<div class="bj-rate"><span>Рейтинг</span><b>' + (B.stats.rating || 4.8) + '</b><span>· потеряно ' + (B.stats.missed || 0) + '</span></div>' +
         '<button class="bj-shift" type="button" onclick="Biz.shift()"><span class="bj-play"></span> Открыть смену</button>' +
@@ -2891,6 +2924,10 @@
     if (shiftEl && shiftEl.parentNode) shiftEl.parentNode.removeChild(shiftEl);
     shiftEl = null;
     var rent = B.points.reduce(function (a, p) { return a + TYPES[p.type].rent; }, 0);
+    if (!B.tax) B.tax = { due: 0, paid: 0 };
+    var taxSum = Math.round(rent * 0.5);
+    B.tax.due = (B.tax.due || 0) + taxSum;
+    if (!silent && taxSum > 0) B.events.unshift({ t: 'tax', text: 'Начислен налог · ' + fmt(taxSum), time: nowTime() });
     var salaries = B.staff.reduce(function (a, x) { return a + x.salary; }, 0);
     var net = s.revenue - rent - salaries - (s.eventCost || 0);
     B.cash = Math.max(0, B.cash + net);

@@ -1017,3 +1017,17 @@ body.dark .ads-on { background: rgba(16, 185, 129, .16); }
 /* логотип в иконке */
 .app-ic.app-img { padding: 0; overflow: hidden; }
 .app-ic.app-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* налог на точки */
+.tax-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin: 12px 0; }
+.tax-card.bad { border-color: rgba(239, 68, 68, .45); background: rgba(239, 68, 68, .06); }
+.tax-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; }
+.tax-top b { display: flex; align-items: center; gap: 7px; font-weight: 700; }
+.tax-top b i { color: #f59e0b; }
+.tax-top span { font-weight: 800; color: #f59e0b; }
+.tax-card.bad .tax-top span { color: #ef4444; }
+.tax-card > small { display: block; margin-top: 4px; font-size: 11px; line-height: 1.4; color: var(--muted); }
+.tax-btn { margin-top: 10px; border: 0; border-radius: 10px; padding: 9px 14px; font-size: 12px; font-weight: 800;
+  background: #f59e0b; color: #3b2404; }
+.tax-btn:active { transform: scale(.97); }
+body.dark .tax-card { background: #0f1a2b; }
