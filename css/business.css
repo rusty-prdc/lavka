@@ -1014,3 +1014,12 @@ body.dark .ads-on { background: rgba(16, 185, 129, .16); }
 .onl-join.on { background: rgba(167, 139, 250, .18); color: #c4b5fd; border: 1px solid rgba(167, 139, 250, .4); }
 .onl-join:active { transform: scale(.98); }
 .onl-note { padding: 12px 18px 26px; font-size: 10.5px; line-height: 1.5; color: #64748b; text-align: center; }
+
+/* логотип в иконке и в шапке Online */
+.app-ic.app-img { padding: 0; overflow: hidden; }
+.app-ic.app-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.onl-brand { display: flex; align-items: center; gap: 12px; margin-top: 14px; }
+.onl-brand img { width: 62px; height: 62px; border-radius: 17px; flex: none;
+  box-shadow: 0 12px 26px -12px rgba(124, 58, 237, .9); }
+.onl-brand .onl-logo { margin-top: 0; font-size: 30px; }
+.onl-brand .onl-logo b { font-size: 30px; }

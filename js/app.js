@@ -729,7 +729,9 @@
     var badge = inDock ? '' : appBadge(a.id);
     if (a.id === 'market') badge = appBadge(a.id);
     return '<button class="app" type="button" data-app="' + a.id + '" aria-label="' + esc(a.name) + '">' +
-      '<span class="app-ic" style="background:' + a.bg + '"><i class="fa-solid ' + a.icon + '"></i></span>' +
+      (a.img
+        ? '<span class="app-ic app-img" style="background:' + a.bg + '"><img src="' + a.img + '" alt=""></span>'
+        : '<span class="app-ic" style="background:' + a.bg + '"><i class="fa-solid ' + a.icon + '"></i></span>') +
       (badge ? '<span class="app-badge">' + esc(badge) + '</span>' : '') +
       '<span class="app-name">' + esc(a.name) + '</span>' +
       '</button>';
