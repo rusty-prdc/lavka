@@ -20,6 +20,10 @@
     licenses: { alcohol: false, tobacco: false, weapon: false, pharma: false, finance: false, transport: false },
     credit: { score: 50, loans: [], taken: 0 },
     auto: { on: false, left: 0 },
+    daily: { day: '', cur: {}, done: {}, streak: 0, lastAll: '' },
+    ach: { on: [] },
+    ads: { left: 0 },
+    rival: { on: false, left: 0, name: '' },
     nextId: 0,
     installed: { job: false, production: false },
     story: { step: 0, flags: {}, sms: [], calls: [], taxi: 0 },
@@ -154,6 +158,7 @@
     mom: { name: 'Мама', number: '+7 916 555-01-24', ini: 'М', color: '#ec4899', kind: 'family' },
     dad: { name: 'Папа', number: '+7 916 555-77-02', ini: 'П', color: '#f59e0b', kind: 'family' },
     liza: { name: 'Лиза', number: '+7 999 640-12-88', ini: 'Л', color: '#db2777', kind: 'lawyer' },
+    roman: { name: 'Роман', number: '+7 495 120-08-44', ini: 'Р', color: '#f43f5e', kind: 'business' },
     vera: { name: 'Виктория', number: '+7 916 202-44-10', ini: 'В', color: '#0ea5e9', kind: 'doctor' },
     taxi: { name: 'Такси Лавка', number: '+7 800 555-35-35', ini: 'Т', color: '#facc15', kind: 'taxi' },
     gov: { name: 'Правительство', number: GOV_NUMBER, ini: 'П', color: '#64748b', kind: 'gov' }
@@ -201,6 +206,18 @@
   function onLevelUp(lvl) {
     B.events.unshift({ t: 'level', text: 'Уровень ' + lvl, time: nowTime() });
     LV.toast('Новый уровень: ' + lvl);
+    if (window.Sfx) Sfx.play('level');
+    (function () {
+      var ph = document.getElementById('phone');
+      if (!ph) return;
+      var old = ph.querySelector('.lv-burst');
+      if (old) old.remove();
+      var el = document.createElement('div');
+      el.className = 'lv-burst';
+      el.innerHTML = '<i></i><b>' + lvl + '</b>';
+      ph.appendChild(el);
+      setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 1200);
+    })();
     if (lvl >= 10 && !B.story.flags.prodUnlocked) unlockProduction();
     if (lvl === 5 || lvl === 10) storyTick();
     if (lvl === 7) govIntro();
@@ -309,7 +326,11 @@
     'Запусти фонд имени Макса',
     'Расширь сеть до 15 точек',
     'Дай интервью о своём пути',
-    'Сюжет пройден — город помнит Макса'
+    'Сюжет пройден — город помнит Макса',
+    'Выслушай Романа из «Сетки»',
+    'Открой ещё две точки — конкурент следит',
+    'Запусти рекламу сети',
+    'Финал: ты выбираешь, каким будет город'
   ];
 
   function migrateStoryV2() {
@@ -372,6 +393,10 @@
     else if (st === 46 && B.story.flags.foundation) nxt = 47;
     else if (st === 47 && B.points.length >= 15) nxt = 48;
     else if (st === 48 && B.story.flags.interview) nxt = 49;
+    else if (st === 49) { ensureRoman(); nxt = 50; }
+    else if (st === 50 && B.story.flags.romanNo) nxt = 51;
+    else if (st === 51 && B.points.length >= 17) nxt = 52;
+    else if (st === 52 && B.ads && B.ads.left > 0) nxt = 53;
     if (nxt !== null) advanceStory(nxt);
   }
 
@@ -381,6 +406,14 @@
     save();
     var maks = { incoming: true, from: 'Макс', number: CONTACTS.maks.number, ini: 'М', color: '#0ea5e9' };
     var ark = { incoming: true, from: 'Аркадий', number: PLOT_NUMBER, ini: 'А', color: '#8b5cf6' };
+    if (step === 50) {
+      addSms('Роман', 'Предложение выкупа в силе. Жду ответа до конца недели.\n— Роман, «Сетка»');
+    } else if (step === 51) {
+      if (B.rival) { B.rival.on = true; B.rival.left = 6; B.rival.name = 'Сетка'; }
+      addSms('Аркадий', '«Сетка» открылась через дорогу. Демпингуют. Держись.');
+    } else if (step === 53) {
+      addSms('Лиза', 'Поздравляю. Город правда помнит, с чего всё началось.');
+    }
     if (step === 1) {
       queueCall(Object.assign({}, maks, { lines: [
         'Макс: Ну наконец-то, поставил Job.',
@@ -662,6 +695,9 @@
   function objective() { return STORY_OBJ[B.story.step] || STORY_OBJ[0]; }
   function objectiveAction() {
     var st = B.story.step;
+    if (st === 50) return 'Biz.romanTalk()';
+    if (st === 51) return 'Biz.openMap(\'rent\')';
+    if (st === 52) return 'Biz.jobTab(\'main\')';
     if (st === 0) return 'LV.openApp(\'store\')';
     if (st === 1 || st === 6 || st === 8) return 'Biz.openMap(\'rent\')';
     if (st === 2) return 'Biz.shift()';
@@ -681,6 +717,9 @@
   }
   function objectiveLabel() {
     var st = B.story.step;
+    if (st === 50) return 'Ответить Роману';
+    if (st === 51) return 'Открыть точку';
+    if (st === 52) return 'Реклама';
     if (st === 0) return 'Открыть Магазин';
     if (st === 1 || st === 6 || st === 8) return 'Открыть точку';
     if (st === 2) return 'Смена';
@@ -1471,6 +1510,51 @@
     });
   };
 
+  function ensureRoman() {
+    if (B.story.flags.romanIntro) return;
+    B.story.flags.romanIntro = true;
+    save();
+    queueCall({
+      incoming: true, from: 'Роман', number: CONTACTS.roman.number, ini: 'Р', color: '#f43f5e',
+      lines: [
+        'Роман: Добрый вечер. Роман, сеть «Сетка».',
+        'Роман: Ваша сеть — лучший актив в городе. Мы хотим её купить.',
+        'Роман: Двенадцать миллионов и полный выход. Подумайте.',
+        'Роман: В Job есть кнопка «Ответить Роману».'
+      ]
+    });
+  }
+
+  Biz.romanTalk = function () {
+    showCutscene({
+      kicker: 'Вечер · офис «Сетки»',
+      scene: 'street',
+      slides: [
+        { who: 'Роман', ini: 'Р', color: '#f43f5e', text: 'Двенадцать миллионов — и сеть становится нашей.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'А если я откажусь?' },
+        { who: 'Роман', ini: 'Р', color: '#f43f5e', text: 'Тогда мы открываемся напротив. Дешевле, громче, злее.' },
+        { who: 'Ты', ini: 'Т', color: '#0ea5e9', text: 'Значит, будем жить с этим.' }
+      ],
+      choices: [
+        { label: 'Продать сеть за 12 млн', primary: true, action: function () {
+          B.cash += 12000000;
+          B.story.flags.sold = true;
+          B.events.unshift({ t: 'sold', text: 'Сеть продана «Сетке»', time: nowTime() });
+          save();
+          if (window.Sfx) Sfx.play('cash');
+          toast('+12 000 000 ₽ · сделка закрыта');
+          advanceStory(53);
+        } },
+        { label: 'Отказаться', action: function () {
+          B.story.flags.romanNo = true;
+          save();
+          toast('Вы отказали «Сетке»');
+          advanceStory(51);
+        } }
+      ]
+    });
+  };
+
   Biz.storyAction = function () {
     var st = B.story.step;
     if (st === 28) { Biz.shift(); return; }
@@ -1975,6 +2059,7 @@
     B.cash -= price;
     p.stock = pointStock(p) + g.qty;
     B.stats.supplied = (B.stats.supplied || 0) + 1;
+    dailyAdd('supply', 1);
     B.events.unshift({ t: 'supply', text: 'Поставка: ' + g.name + ' → ' + TYPES[p.type].name, time: nowTime() });
     if (type === 'weapon') B.story.flags.supplyWeapon = true;
     else B.story.flags.supplyFood = true;
@@ -2260,6 +2345,221 @@
   };
 
   // ============================================================
+  // РЕКЛАМА И КОНКУРЕНТ
+  // ============================================================
+  var AD_PACKS = [
+    { id: 'a3', shifts: 3, price: 5000, name: '3 смены' },
+    { id: 'a7', shifts: 7, price: 10000, name: '7 смен' },
+    { id: 'a15', shifts: 15, price: 18000, name: '15 смен' }
+  ];
+  var ADS_BOOST = 1.35;
+  var RIVAL_HIT = 0.75;
+
+  function adsBlockHTML() {
+    var left = (B.ads && B.ads.left) || 0;
+    var h = '<div class="ads-card">' +
+      '<div class="ads-top"><b><i class="fa-solid fa-bullhorn"></i> Реклама</b><span>' +
+      (left > 0 ? 'ещё ' + left + ' смен' : 'выключена') + '</span></div>' +
+      '<small>Реклама в приложении: +35% заказов на каждой смене.</small>';
+    if (left > 0) {
+      h += '<div class="ads-on"><i class="fa-solid fa-circle-check"></i> +35% к заказам</div>';
+    } else {
+      h += '<div class="ads-btns">' + AD_PACKS.map(function (a) {
+        return '<button class="ads-btn" type="button" onclick="Biz.adBuy(\'' + a.id + '\')">' + a.name + '<span>' + fmt(a.price) + '</span></button>';
+      }).join('') + '</div>';
+    }
+    if (B.rival && B.rival.on) {
+      h += '<div class="rival-card"><b><i class="fa-solid fa-store-slash"></i> Конкурент «' + esc(B.rival.name || 'Сетка') + '»</b>' +
+        '<small>Открылся рядом: −25% заказов ещё ' + Math.max(0, B.rival.left) + ' смен.</small>' +
+        '<button class="ads-btn fight" type="button" onclick="Biz.adFight()">Ответить акцией · ' + fmt(8000) + '</button></div>';
+    }
+    return h + '</div>';
+  }
+
+  Biz.adBuy = function (id) {
+    var a = AD_PACKS.filter(function (x) { return x.id === id; })[0];
+    if (!a) return;
+    if (B.cash < a.price) { toast('Не хватает ' + fmt(a.price - B.cash)); return; }
+    if (!B.ads) B.ads = { left: 0 };
+    B.cash -= a.price;
+    B.ads.left = (B.ads.left || 0) + a.shifts;
+    B.events.unshift({ t: 'ads', text: 'Реклама на ' + a.shifts + ' смен', time: nowTime() });
+    save();
+    if (window.Sfx) Sfx.play('click');
+    toast('Реклама: +35% заказов на ' + a.shifts + ' смен');
+    renderJob();
+  };
+
+  Biz.adFight = function () {
+    if (B.cash < 8000) { toast('Не хватает ' + fmt(8000 - B.cash)); return; }
+    B.cash -= 8000;
+    if (!B.ads) B.ads = { left: 0 };
+    B.ads.left = (B.ads.left || 0) + 3;
+    if (B.rival) { B.rival.on = false; B.rival.left = 0; }
+    B.events.unshift({ t: 'ads', text: 'Акция против конкурента', time: nowTime() });
+    save();
+    if (window.Sfx) Sfx.play('reward');
+    toast('Конкурент отступил, реклама на 3 смены');
+    renderJob();
+  };
+
+  function rivalMaybe() {
+    if (!B.rival) B.rival = { on: false, left: 0, name: '' };
+    if (B.rival.on || B.level < 6) return;
+    if (Math.random() > 0.18) return;
+    B.rival.on = true;
+    B.rival.left = 4 + Math.floor(Math.random() * 4);
+    B.rival.name = ['Сетка', 'МегаМаркет', 'Городок'][Math.floor(Math.random() * 3)];
+    B.events.unshift({ t: 'rival', text: 'Конкурент «' + B.rival.name + '» открылся рядом', time: nowTime() });
+    queueCall({
+      incoming: true, from: 'Аркадий', number: '+7 495 120-08-44', ini: 'А', color: '#f59e0b',
+      lines: [
+        'Аркадий: У тебя через дорогу открылась «' + B.rival.name + '».',
+        'Аркадий: Демпингуют. Заказы просядут процентов на двадцать пять.',
+        'Аркадий: Либо реклама, либо жди, пока они сдуются сами.'
+      ]
+    });
+    save();
+  }
+
+  // ============================================================
+  // ЕЖЕДНЕВНЫЕ ЗАДАНИЯ И ДОСТИЖЕНИЯ
+  // ============================================================
+  var DAILY_TASKS = [
+    { id: 'shifts', name: 'Проведи 3 смены', target: 3, cash: 2000, xp: 25 },
+    { id: 'orders', name: 'Выполни 40 заказов', target: 40, cash: 3000, xp: 35 },
+    { id: 'revenue', name: 'Выручка 25 000 ₽', target: 25000, cash: 5000, xp: 50 },
+    { id: 'supply', name: 'Закупи поставку на «Опте»', target: 1, cash: 1500, xp: 15 }
+  ];
+  var ACH_LIST = [
+    { id: 'point1', name: 'Первая точка', desc: 'Открой первый объект', cash: 1000, xp: 20, test: function () { return B.points.length >= 1; } },
+    { id: 'points5', name: 'Сеть растёт', desc: '5 точек на карте', cash: 4000, xp: 40, test: function () { return B.points.length >= 5; } },
+    { id: 'points10', name: 'Город твой', desc: '10 точек на карте', cash: 8000, xp: 80, test: function () { return B.points.length >= 10; } },
+    { id: 'lvl10', name: 'Десятый уровень', desc: 'Дорасти до 10 уровня', cash: 3000, xp: 0, test: function () { return B.level >= 10; } },
+    { id: 'lvl20', name: 'Двадцатый уровень', desc: 'Дорасти до 20 уровня', cash: 8000, xp: 0, test: function () { return B.level >= 20; } },
+    { id: 'mil', name: 'Миллион', desc: 'Оборот 1 000 000 ₽', cash: 15000, xp: 150, test: function () { return (B.stats.revenue || 0) >= 1000000; } },
+    { id: 'shifts100', name: 'Сто смен', desc: 'Отработай 100 смен', cash: 10000, xp: 120, test: function () { return (B.stats.shifts || 0) >= 100; } },
+    { id: 'factory', name: 'Свой завод', desc: 'Построй производство', cash: 5000, xp: 60, test: function () { return !!(B.factory && B.factory.built); } },
+    { id: 'lic6', name: 'Все лицензии', desc: 'Собери все шесть лицензий', cash: 12000, xp: 150, test: function () { return Object.keys(B.licenses).every(function (k) { return B.licenses[k]; }); } },
+    { id: 'staff5', name: 'Команда', desc: 'Пять сотрудников', cash: 5000, xp: 40, test: function () { return B.staff.length >= 5; } },
+    { id: 'credit0', name: 'Без долгов', desc: 'Закрой кредит полностью', cash: 3000, xp: 30, test: function () { return B.credit.taken > 0 && B.credit.loans.length === 0; } },
+    { id: 'story', name: 'Город помнит', desc: 'Пройди сюжет до конца', cash: 25000, xp: 200, test: function () { return B.story.step >= 48; } }
+  ];
+
+  function dayKey(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function dailyEnsure() {
+    if (!B.daily) B.daily = { day: '', cur: {}, done: {}, streak: 0, lastAll: '' };
+    var k = dayKey();
+    if (B.daily.day !== k) {
+      B.daily = { day: k, cur: {}, done: {}, streak: B.daily.streak || 0, lastAll: B.daily.lastAll || '' };
+      save();
+    }
+    return B.daily;
+  }
+  function dailyTask(id) {
+    return DAILY_TASKS.filter(function (t) { return t.id === id; })[0];
+  }
+  function dailyAdd(id, n) {
+    if (!n) return;
+    var d = dailyEnsure();
+    var t = dailyTask(id);
+    if (!t || d.done[id]) return;
+    var was = d.cur[id] || 0;
+    d.cur[id] = was + n;
+    if (was < t.target && d.cur[id] >= t.target) {
+      toast('Задание выполнено: ' + t.name);
+      if (window.Sfx) Sfx.play('reward');
+    }
+    save();
+    if (jobHost && jobTab === 'daily') renderJob();
+  }
+
+  function achCheck() {
+    if (!B.ach) B.ach = { on: [] };
+    if (achCheck.busy) return;
+    achCheck.busy = true;
+    var got = [];
+    ACH_LIST.forEach(function (a) {
+      if (B.ach.on.indexOf(a.id) >= 0) return;
+      var ok = false;
+      try { ok = !!a.test(); } catch (e) {}
+      if (!ok) return;
+      B.ach.on.push(a.id);
+      B.cash += a.cash;
+      if (a.xp) addXp(a.xp);
+      got.push(a);
+      B.events.unshift({ t: 'ach', text: 'Достижение: ' + a.name, time: nowTime() });
+    });
+    achCheck.busy = false;
+    if (got.length) {
+      save();
+      LV.toast('Достижение: ' + got[0].name + ' · +' + fmt(got[0].cash));
+      if (window.Sfx) Sfx.play('level');
+      if (jobHost && jobTab === 'daily') renderJob();
+    }
+  }
+
+  function dailyHTML() {
+    var d = dailyEnsure();
+    var rows = DAILY_TASKS.map(function (t) {
+      var cur = Math.min(t.target, d.cur[t.id] || 0);
+      var pct = Math.round(cur / t.target * 100);
+      var done = !!d.done[t.id];
+      return '<div class="dl-task' + (done ? ' done' : '') + '">' +
+        '<div class="dl-top"><b>' + t.name + '</b><span>+' + fmt(t.cash) + '</span></div>' +
+        '<div class="dl-bar"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="dl-foot"><small>' + (t.id === 'revenue' ? LV.fmtNum(cur) + ' / ' + LV.fmtNum(t.target) + ' ₽' : cur + ' / ' + t.target) + '</small>' +
+        (done
+          ? '<span class="dl-ok">получено</span>'
+          : '<button class="dl-claim" type="button" onclick="Biz.claimDaily(\'' + t.id + '\')"' + (pct >= 100 ? '' : ' disabled') + '>Забрать</button>') +
+        '</div></div>';
+    }).join('');
+    var unlocked = (B.ach && B.ach.on) || [];
+    var cards = ACH_LIST.map(function (a) {
+      var on = unlocked.indexOf(a.id) >= 0;
+      return '<div class="ach-card' + (on ? ' on' : '') + '">' +
+        '<span class="ach-ic"><i class="fa-solid ' + (on ? 'fa-trophy' : 'fa-lock') + '"></i></span>' +
+        '<b>' + a.name + '</b><small>' + a.desc + '</small>' +
+        '<em>' + (on ? 'получено' : '+' + fmt(a.cash)) + '</em></div>';
+    }).join('');
+    return '<div class="dl-day"><div><span>Сегодня</span><b>серия ' + (d.streak || 0) + ' дн.</b></div>' +
+      '<small>Задания обновляются в полночь, за все четыре — дневной бонус</small></div>' +
+      '<div class="dl-list">' + rows + '</div>' +
+      '<div class="dl-head">Достижения <span>' + unlocked.length + ' / ' + ACH_LIST.length + '</span></div>' +
+      '<div class="ach-grid">' + cards + '</div>';
+  }
+
+  Biz.claimDaily = function (id) {
+    var d = dailyEnsure();
+    var t = dailyTask(id);
+    if (!t) return;
+    if (d.done[id]) { toast('Уже получено'); return; }
+    if ((d.cur[id] || 0) < t.target) { toast('Задание ещё не выполнено'); return; }
+    d.done[id] = true;
+    B.cash += t.cash;
+    if (t.xp) addXp(t.xp);
+    B.events.unshift({ t: 'reward', text: 'Задание: ' + t.name, time: nowTime() });
+    var all = DAILY_TASKS.every(function (x) { return d.done[x.id]; });
+    if (all) {
+      var y = dayKey(new Date(Date.now() - 86400000));
+      d.streak = (d.lastAll === y ? (d.streak || 0) : 0) + 1;
+      d.lastAll = d.day;
+      var bonus = Math.min(7000, 1000 * d.streak);
+      B.cash += bonus;
+      toast('Все задания: +' + fmt(bonus) + ' · серия ' + d.streak);
+      if (window.Sfx) Sfx.play('level');
+    } else {
+      toast('+' + fmt(t.cash) + ' за задание');
+      if (window.Sfx) Sfx.play('reward');
+    }
+    save();
+    renderJob();
+  };
+
+  // ============================================================
   // JOB
   // ============================================================
   var jobHost = null;
@@ -2355,18 +2655,22 @@
     if (B.level >= 7) { ensureGov(); if (!B.story.flags.govIntro) govIntro(); }
     var lvl = B.level, next = nextXp();
     var pct = B.level >= MAX_LEVEL ? 100 : Math.min(100, Math.round((B.xp - XP_LEVELS[B.level - 1]) / Math.max(1, next - XP_LEVELS[B.level - 1]) * 100));
-    var tabsList = [['main', 'Обзор'], ['points', 'Точки'], ['staff', 'Люди'], ['licenses', 'Лицензии'], ['auto', 'Авто']];
+    var tabsList = [['main', 'Обзор'], ['daily', 'Задания'], ['points', 'Точки'], ['staff', 'Люди'], ['licenses', 'Лицензии'], ['auto', 'Авто']];
     if (isX8()) tabsList.push(['admin', 'Админ']);
     var tabs = tabsList.map(function (t) {
       return '<button class="bj-tab' + (jobTab === t[0] ? ' on' : '') + '" type="button" onclick="Biz.jobTab(\'' + t[0] + '\')">' + t[1] + '</button>';
     }).join('');
     var body = '';
-    if (jobTab === 'main') {
+    achCheck();
+    if (jobTab === 'daily') {
+      body = dailyHTML();
+    } else if (jobTab === 'main') {
       body = '<div class="bj-obj"><span>ТЕКУЩАЯ ЦЕЛЬ</span><b>' + esc(objective()) + '</b>' +
         (objectiveAction() ? '<button type="button" onclick="' + objectiveAction() + '">' + objectiveLabel() + '</button>' : '') + '</div>' +
         (isX8() ? '<button class="bj-lic-banner adm-banner" type="button" onclick="Biz.jobTab(\'admin\')"><i class="fa-solid fa-user-shield"></i><div><b>Админ-панель · X-8</b><span>выдать деньги</span></div><i class="fa-solid fa-chevron-right"></i></button>' : '') +
         (B.story.flags.govUnlocked ? '<button class="bj-lic-banner" type="button" onclick="Biz.jobTab(\'licenses\')"><i class="fa-solid fa-file-signature"></i><div><b>Лицензии</b><span>' + LICENSE_ORDER.length + ' направлений · от алкоголя до перевозок</span></div><i class="fa-solid fa-chevron-right"></i></button>' : '') +
         supplyTaskCard() +
+        adsBlockHTML() +
         '<div class="bj-stats"><div><b>' + B.stats.orders + '</b><span>заказов</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div><div><b>' + B.points.length + '</b><span>точек</span></div></div>' +
         '<div class="bj-rate"><span>Рейтинг</span><b>' + (B.stats.rating || 4.8) + '</b><span>· потеряно ' + (B.stats.missed || 0) + '</span></div>' +
         '<button class="bj-shift" type="button" onclick="Biz.shift()"><span class="bj-play"></span> Открыть смену</button>' +
@@ -2507,6 +2811,7 @@
       o.done = true;
       shift.done++;
       shift.revenue += o.price;
+      if (window.Sfx) Sfx.play('pop');
       processed++;
     });
     if (processed) renderShift();
@@ -2600,6 +2905,12 @@
     if (s.ratingHit) rating -= 0.05;
     B.stats.rating = Math.max(3, Math.min(5, Math.round(rating * 100) / 100));
     B.stats.revenue = (B.stats.revenue || 0) + Math.max(0, s.revenue);
+    if (window.Sfx) Sfx.play('cash');
+    dailyAdd('shifts', 1);
+    dailyAdd('orders', s.done || 0);
+    dailyAdd('revenue', Math.max(0, s.revenue || 0));
+    achCheck();
+    rivalMaybe();
     B.events.unshift({ t: 'shift', text: 'Смена: ' + s.done + ' из ' + s.total + ' · ' + fmt(net), time: nowTime() });
     var gained = Math.round(s.done * 3 + 12 + (ratio >= 0.8 ? 15 : 0));
     addXp(gained);
@@ -2632,7 +2943,9 @@
       var staffN = shiftStaffCount(p.id);
       var stock = pointStock(p);
       if (stock <= 0) return;
-      var n = Math.min(stock, Math.max(3, Math.round((5 + staffN * 4) * si.mult * (0.85 + (Number(B.stats.rating) || 4.8) / 20))));
+      var boost = (B.ads && B.ads.left > 0) ? ADS_BOOST : 1;
+      var hit = (B.rival && B.rival.on) ? RIVAL_HIT : 1;
+      var n = Math.min(stock, Math.max(3, Math.round((5 + staffN * 4) * si.mult * (0.85 + (Number(B.stats.rating) || 4.8) / 20) * boost * hit)));
       var titles = SHIFT_TITLES[p.type] || SHIFT_TITLES.pvz;
       for (var i = 0; i < n; i++) {
         var urgent = Math.random() < 0.18;
@@ -2646,6 +2959,11 @@
       return;
     }
     list.sort(function (a, b) { return (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || b.price - a.price; });
+    if (B.ads && B.ads.left > 0) B.ads.left -= 1;
+    if (B.rival && B.rival.on) {
+      B.rival.left -= 1;
+      if (B.rival.left <= 0) { B.rival.on = false; toast('Конкурент «' + (B.rival.name || 'Сетка') + '» закрылся'); }
+    }
     shift = { list: list, total: list.length, actions: 5 + B.staff.length * 2, done: 0, revenue: 0,
       endsAt: Date.now() + 10000, eventDone: false, eventCost: 0, paused: false, ev: null };
     shift.timer = setInterval(tickShift, 1000);
