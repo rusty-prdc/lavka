@@ -23,10 +23,17 @@ struct ProfileView: View {
 
                         dangerSection
 
+                        HStack(spacing: 6) {
+                            Image(systemName: AppCapabilities.liquidGlass ? "sparkles" : "circle.dashed")
+                            Text(AppCapabilities.liquidGlass ? "Liquid Glass · iOS 26" : "Material (iOS < 26)")
+                        }
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(AppCapabilities.liquidGlass ? AppTheme.green : Color.secondary)
+                        .padding(.top, 8)
+
                         Text("BankFake 2.5 · XPRODC")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
-                            .padding(.top, 8)
                     }
                     .padding(20)
                 }

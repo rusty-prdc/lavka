@@ -108,3 +108,14 @@ struct SecondaryButtonStyle: ButtonStyle {
             .opacity(configuration.isPressed ? 0.8 : 1)
     }
 }
+
+enum AppCapabilities {
+    static var liquidGlass: Bool {
+        #if compiler(>=6.2)
+        if #available(iOS 26.0, *) { return true }
+        return false
+        #else
+        return false
+        #endif
+    }
+}
