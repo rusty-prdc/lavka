@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths:
-      - 'BankFakeSwift/**'
-      - '.github/workflows/build-ipa.yml'
+    tags: ['v*']
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -66,9 +67,19 @@ jobs:
           zip -qry BankFake-2.5-unsigned.ipa Payload
           ls -lh BankFake-2.5-unsigned.ipa
 
-      - name: Upload IPA
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@v4
         with:
           name: BankFake-2.5-unsigned-ipa
           path: BankFakeSwift/BankFake-2.5-unsigned.ipa
           if-no-files-found: error
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: BankFake ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: BankFakeSwift/BankFake-2.5-unsigned.ipa
+          generate_release_notes: true
+          draft: false
