@@ -1578,3 +1578,23 @@ body.dark .store-get { color: #6ee7b7; }
 }
 
 .web-exit { background: #fee2e2 !important; color: #b91c1c !important; }
+
+/* паспорт игрока */
+.passport-screen { position: absolute; inset: 0; z-index: 120; display: flex; align-items: flex-start; justify-content: center;
+  padding: 24px 18px; overflow: auto; background: radial-gradient(120% 90% at 50% 0%, #0f3d2e 0%, #07120e 58%, #050a08 100%); }
+.passport-card { width: 100%; max-width: 360px; margin: auto 0; background: #f8faf9; color: #0f172a;
+  border-radius: 24px; padding: 22px 18px 18px; box-shadow: 0 30px 80px -28px rgba(0,0,0,.85); }
+.passport-mark { width: 48px; height: 48px; border-radius: 15px; display: grid; place-items: center;
+  background: linear-gradient(145deg,#34d399,#047857); color: #fff; font-size: 23px; font-weight: 900;
+  box-shadow: 0 12px 24px -12px rgba(16,185,129,.8); }
+.passport-kicker { margin-top: 15px; font-size: 8.5px; letter-spacing: .16em; text-transform: uppercase; color: #059669; font-weight: 800; }
+.passport-card h2 { margin-top: 3px; font-size: 25px; line-height: 1.05; letter-spacing: -.04em; font-weight: 900; }
+.passport-sub { margin-top: 7px; font-size: 11px; line-height: 1.45; color: #64748b; }
+.passport-label { display: block; margin-top: 11px; font-size: 8.5px; letter-spacing: .07em; text-transform: uppercase; color: #64748b; font-weight: 800; }
+.passport-label span { margin-left: 4px; font-size: 8px; letter-spacing: 0; text-transform: none; color: #94a3b8; font-weight: 500; }
+.passport-label .field { width: 100%; margin-top: 4px; height: 42px; border-radius: 12px; border: 1px solid #dbe5df;
+  background: #fff; color: #0f172a; font-size: 13px; padding: 0 12px; }
+.passport-label .field:focus { outline: 2px solid rgba(16,185,129,.35); border-color: #10b981; }
+.passport-card .btn { margin-top: 15px; height: 48px; border-radius: 14px; font-size: 13px; }
+.passport-cancel { display: block; width: 100%; margin-top: 7px; border: 0; background: none; color: #94a3b8; font-size: 11px; padding: 6px; }
+.passport-note { margin-top: 10px; font-size: 8.5px; line-height: 1.4; color: #94a3b8; text-align: center; }

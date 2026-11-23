@@ -3,6 +3,19 @@
   'use strict';
 
   var W = 720, H = 640;
+  var seed = 1;
+  var THEMES = [
+    { bg: '#edf6e9', grid: '#e1eddd', inner: '#eef6ea', blockStroke: '#cfe0c8', road: '#c9dac2', roadFill: '#ffffff', park: '#bfe0b0', parkStroke: '#a9d398', tree: ['#8fc97e', '#9bcf8a', '#a9d398', '#97cc86'], river: '#b7dcf4', riverStroke: '#9ecae8', label: '#8ea487', district: '#a3b59c', accent: '#7fb16f', block: ['#dbead5', '#d5e6ce', '#e0eeda', '#d9e8d2', '#e2efe0', '#d6e7cf'] },
+    { bg: '#f7f1e5', grid: '#eadfce', inner: '#fbf2e4', blockStroke: '#d8c2a4', road: '#d8c7ae', roadFill: '#fffaf1', park: '#c9d9a0', parkStroke: '#b4c785', tree: ['#9fb96e', '#b6c981', '#c4d694', '#a8bd78'], river: '#b8d8e8', riverStroke: '#9cc4d7', label: '#9a8f76', district: '#b0a488', accent: '#8c9a63', block: ['#e8d6bd', '#e3cdae', '#f0dfc8', '#dbc6a8', '#efdfc9', '#e6d2b7'] },
+    { bg: '#dbe6ee', grid: '#cddae4', inner: '#e6eef4', blockStroke: '#aebfcd', road: '#aebdca', roadFill: '#f3f8fb', park: '#b4cfa9', parkStroke: '#9dbd92', tree: ['#87aa7b', '#97b78a', '#a6c49b', '#7f9f74'], river: '#a9cce0', riverStroke: '#8fb8cf', label: '#7d8f9d', district: '#96a6b2', accent: '#6f8f86', block: ['#c5d5e0', '#b9cbd8', '#d2dfe8', '#b3c6d5', '#cbd9e3', '#c0d0dc'] }
+  ];
+  function rngFor(s) {
+    s = (Number(s) || 1) >>> 0;
+    return function () {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    };
+  }
 
   var SPOTS = {
     center1: { name: 'Тверская, 12', area: 'Центр', x: 280, y: 240, mult: 1.2 },
@@ -69,7 +82,7 @@
       '<g transform="translate(-11,-11) scale(0.9)">' + icon(kind) + '</g></g>';
   }
 
-  function buildings() {
+  function buildings(theme, R) {
     var blocks = [
       [16, 18, 62, 62, '#dbead5'], [118, 18, 100, 62, '#d5e6ce'], [258, 18, 100, 62, '#e0eeda'], [398, 18, 100, 62, '#d9e8d2'], [538, 18, 92, 62, '#e2efe0'], [672, 18, 32, 62, '#d6e7cf'],
       [16, 120, 62, 80, '#e3efe0'], [118, 120, 100, 80, '#d8e8d1'], [258, 120, 100, 80, '#e2efe0'], [398, 120, 100, 80, '#d9e8d2'], [538, 120, 92, 80, '#e0eeda'], [672, 120, 32, 80, '#d6e7cf'],
@@ -79,16 +92,17 @@
     ];
     var out = '';
     blocks.forEach(function (b, i) {
-      out += '<rect x="' + b[0] + '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '" rx="10" fill="' + b[4] + '" stroke="#cfe0c8" stroke-width="1.5"/>';
+      var fill = theme.block[Math.floor(R() * theme.block.length)];
+      out += '<rect x="' + b[0] + '" y="' + b[1] + '" width="' + b[2] + '" height="' + b[3] + '" rx="10" fill="' + fill + '" stroke="' + theme.blockStroke + '" stroke-width="1.5"/>';
       if (b[2] > 80 && b[3] > 55) {
-        out += '<rect x="' + (b[0] + 12) + '" y="' + (b[1] + 12) + '" width="' + (b[2] - 24) + '" height="' + (b[3] - 24) + '" rx="7" fill="#eef6ea" opacity=".78"/>';
-        if (i % 3 === 0) out += '<path d="M' + (b[0] + 24) + ' ' + (b[1] + 18) + 'v' + (b[3] - 36) + 'M' + (b[0] + b[2] - 24) + ' ' + (b[1] + 18) + 'v' + (b[3] - 36) + '" stroke="#dbe8d5" stroke-width="2"/>';
+        out += '<rect x="' + (b[0] + 12) + '" y="' + (b[1] + 12) + '" width="' + (b[2] - 24) + '" height="' + (b[3] - 24) + '" rx="7" fill="' + theme.inner + '" opacity=".78"/>';
+        if (i % 3 === 0) out += '<path d="M' + (b[0] + 24) + ' ' + (b[1] + 18) + 'v' + (b[3] - 36) + 'M' + (b[0] + b[2] - 24) + ' ' + (b[1] + 18) + 'v' + (b[3] - 36) + '" stroke="' + theme.blockStroke + '" stroke-width="2"/>';
       }
     });
     return out;
   }
 
-  function roads() {
+  function roads(theme) {
     var major = [
       'M0 100H720', 'M0 220H720', 'M0 340H720', 'M0 460H720', 'M0 560H720',
       'M100 0V640', 'M240 0V640', 'M380 0V640', 'M520 0V640', 'M650 0V640'
@@ -98,40 +112,40 @@
     var diag = 'M0 500L360 250L540 250';
     var casing = major.concat([ring, diag]).join(' ');
     var lanes = major.concat([ring]).join(' ');
-    return '<g stroke="#c9dac2" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+    return '<g stroke="' + theme.road + '" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="' + casing + '" stroke-width="34"/>' +
       '<path d="' + minor.join(' ') + '" stroke-width="18"/>' +
       '</g>' +
-      '<g stroke="#ffffff" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+      '<g stroke="' + theme.roadFill + '" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
       '<path d="' + casing + '" stroke-width="26"/>' +
       '<path d="' + minor.join(' ') + '" stroke-width="12"/>' +
       '</g>' +
-      '<g stroke="#dfe9dc" fill="none" stroke-width="1.7" stroke-dasharray="8 10" stroke-linecap="round">' +
+      '<g stroke="' + theme.grid + '" fill="none" stroke-width="1.7" stroke-dasharray="8 10" stroke-linecap="round">' +
       '<path d="' + lanes + '"/>' +
       '</g>' +
-      '<g stroke="#eef5eb" fill="none" stroke-width="1.3" stroke-dasharray="5 8" stroke-linecap="round">' +
+      '<g stroke="' + theme.inner + '" fill="none" stroke-width="1.3" stroke-dasharray="5 8" stroke-linecap="round">' +
       '<path d="' + minor.join(' ') + '"/></g>';
   }
 
-  function park() {
-    return '<path d="M14 350 Q120 330 170 380 Q210 430 150 462 Q80 500 16 470Z" fill="#bfe0b0" stroke="#a9d398" stroke-width="2"/>' +
-      '<path d="M52 448 Q120 420 156 392" fill="none" stroke="#e9f5e2" stroke-width="5" stroke-linecap="round"/>' +
-      '<circle cx="52" cy="382" r="12" fill="#8fc97e"/><circle cx="92" cy="402" r="10" fill="#9bcf8a"/><circle cx="132" cy="428" r="12" fill="#8fc97e"/><circle cx="70" cy="442" r="9" fill="#a9d398"/><circle cx="118" cy="458" r="8" fill="#97cc86"/>';
+  function park(theme) {
+    return '<path d="M14 350 Q120 330 170 380 Q210 430 150 462 Q80 500 16 470Z" fill="' + theme.park + '" stroke="' + theme.parkStroke + '" stroke-width="2"/>' +
+      '<path d="M52 448 Q120 420 156 392" fill="none" stroke="' + theme.inner + '" stroke-width="5" stroke-linecap="round"/>' +
+      '<circle cx="52" cy="382" r="12" fill="' + theme.tree[0] + '"/><circle cx="92" cy="402" r="10" fill="' + theme.tree[1] + '"/><circle cx="132" cy="428" r="12" fill="' + theme.tree[0] + '"/><circle cx="70" cy="442" r="9" fill="' + theme.tree[2] + '"/><circle cx="118" cy="458" r="8" fill="' + theme.tree[3] + '"/>';
   }
 
-  function river() {
-    return '<path d="M0 592 C120 560 220 624 340 602 C454 582 566 628 720 578 L720 640 L0 640Z" fill="#b7dcf4"/>' +
-      '<path d="M0 592 C120 560 220 624 340 602 C454 582 566 628 720 578" fill="none" stroke="#9ecae8" stroke-width="4"/>' +
-      '<path d="M0 612 C130 588 226 640 350 618 C470 598 584 640 720 600" fill="none" stroke="#cbe8f8" stroke-width="2" stroke-dasharray="10 12"/>';
+  function river(theme) {
+    return '<path d="M0 592 C120 560 220 624 340 602 C454 582 566 628 720 578 L720 640 L0 640Z" fill="' + theme.river + '"/>' +
+      '<path d="M0 592 C120 560 220 624 340 602 C454 582 566 628 720 578" fill="none" stroke="' + theme.riverStroke + '" stroke-width="4"/>' +
+      '<path d="M0 612 C130 588 226 640 350 618 C470 598 584 640 720 600" fill="none" stroke="' + theme.inner + '" stroke-width="2" stroke-dasharray="10 12"/>';
   }
 
-  function bridges() {
+  function bridges(theme) {
     var xs = [100, 240, 380, 520, 650];
-    return '<g stroke="#f8fafc" stroke-width="34" stroke-linecap="butt">' +
+    return '<g stroke="' + theme.roadFill + '" stroke-width="34" stroke-linecap="butt">' +
       xs.map(function (x) { return '<path d="M' + x + ' 574V640"/>'; }).join('') +
-      '</g><g stroke="#cbdcc4" stroke-width="2">' +
+      '</g><g stroke="' + theme.blockStroke + '" stroke-width="2">' +
       xs.map(function (x) { return '<path d="M' + (x - 19) + ' 578V640M' + (x + 19) + ' 578V640"/>'; }).join('') +
-      '</g><g stroke="#e2ecdd" stroke-width="1.6" stroke-dasharray="7 8">' +
+      '</g><g stroke="' + theme.grid + '" stroke-width="1.6" stroke-dasharray="7 8">' +
       xs.map(function (x) { return '<path d="M' + x + ' 578V640"/>'; }).join('') +
       '</g>';
   }
@@ -139,9 +153,12 @@
   function svg(markers, opts) {
     opts = opts || {};
     markers = markers || [];
+    var R = rngFor(seed);
+    var theme = THEMES[Math.floor(R() * THEMES.length)];
     var route = '';
     if (opts.route) {
-      route = '<path d="M360 320 Q' + ((360 + opts.route.x) / 2 + 34) + ' ' + ((320 + opts.route.y) / 2 - 34) + ' ' + opts.route.x + ' ' + opts.route.y + '" fill="none" stroke="#3b82f6" stroke-width="5" stroke-dasharray="10 9" stroke-linecap="round" opacity=".8"/>';
+      var sx = opts.you ? opts.you.x : W / 2, sy = opts.you ? opts.you.y : H / 2;
+      route = '<path d="M' + sx + ' ' + sy + ' Q' + ((sx + opts.route.x) / 2 + 34) + ' ' + ((sy + opts.route.y) / 2 - 34) + ' ' + opts.route.x + ' ' + opts.route.y + '" fill="none" stroke="#3b82f6" stroke-width="5" stroke-dasharray="10 9" stroke-linecap="round" opacity=".8"/>';
     }
 
     var you = opts.you
@@ -152,28 +169,28 @@
       : '';
 
     return '<svg class="cm-svg" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">' +
-      '<rect width="' + W + '" height="' + H + '" fill="#edf6e9"/>' +
+      '<rect width="' + W + '" height="' + H + '" fill="' + theme.bg + '"/>' +
       '<rect x="0" y="0" width="' + W + '" height="' + H + '" fill="url(#cm-grid)" opacity=".35"/>' +
-      '<defs><pattern id="cm-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="#e1eddd" stroke-width="1"/></pattern></defs>' +
-      river() +
-      park() +
-      '<path d="M560 18 Q620 12 668 28 Q690 60 676 92 Q640 110 584 96 Q552 70 560 18Z" fill="#c7e4b8" stroke="#b1d6a2" stroke-width="2"/>' +
-      '<path d="M572 76 Q610 50 652 60" fill="none" stroke="#e9f5e2" stroke-width="4" stroke-linecap="round"/>' +
-      '<circle cx="590" cy="54" r="11" fill="#8fc97e"/><circle cx="626" cy="42" r="9" fill="#9bcf8a"/><circle cx="652" cy="74" r="10" fill="#8fc97e"/>' +
-      buildings() +
-      roads() +
-      bridges() +
-      '<g font-family="Inter, sans-serif" fill="#8ea487" letter-spacing=".6">' +
+      '<defs><pattern id="cm-grid" width="24" height="24" patternUnits="userSpaceOnUse"><path d="M24 0H0V24" fill="none" stroke="' + theme.grid + '" stroke-width="1"/></pattern></defs>' +
+      river(theme) +
+      park(theme) +
+      '<path d="M560 18 Q620 12 668 28 Q690 60 676 92 Q640 110 584 96 Q552 70 560 18Z" fill="' + theme.park + '" stroke="' + theme.parkStroke + '" stroke-width="2"/>' +
+      '<path d="M572 76 Q610 50 652 60" fill="none" stroke="' + theme.inner + '" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="590" cy="54" r="11" fill="' + theme.tree[0] + '"/><circle cx="626" cy="42" r="9" fill="' + theme.tree[1] + '"/><circle cx="652" cy="74" r="10" fill="' + theme.tree[0] + '"/>' +
+      buildings(theme, R) +
+      roads(theme) +
+      bridges(theme) +
+      '<g font-family="Inter, sans-serif" fill="' + theme.label + '" letter-spacing=".6">' +
       '<text x="300" y="92" font-size="12">ТВЕРСКАЯ</text><text x="402" y="334" font-size="12">САДОВАЯ</text><text x="552" y="212" font-size="12">ЛЕНИНА</text>' +
       '<text x="20" y="330" font-size="12">НАБЕРЕЖНАЯ</text><text x="206" y="624" font-size="12">ПРИВОКЗАЛЬНАЯ</text>' +
-      '<text x="278" y="300" font-size="15" fill="#a3b59c" letter-spacing="2">ЦЕНТР</text>' +
-      '<text x="118" y="212" font-size="13" fill="#7fb16f" letter-spacing="1.4">ЭЛИТА</text>' +
-      '<text x="540" y="230" font-size="13" fill="#7fa36f" letter-spacing="1.2">СПАЛЬНЫЙ</text>' +
-      '<text x="26" y="490" font-size="13" fill="#79a36a" letter-spacing="1.4">ПАРК</text>' +
-      '<text x="544" y="506" font-size="13" fill="#829680" letter-spacing="1.2">ПРОМЗОНА</text>' +
-      '<text x="28" y="404" font-size="12" fill="#7b9180" letter-spacing="1.2">ВОКЗАЛ</text>' +
-      '<text x="612" y="620" font-size="12" fill="#7fa8c4" letter-spacing="1.2">ПОРТ</text>' +
-      '<text x="350" y="632" font-size="13" fill="#7fa8c4" letter-spacing="1.6">РЕКА</text>' +
+      '<text x="278" y="300" font-size="15" fill="' + theme.district + '" letter-spacing="2">ЦЕНТР</text>' +
+      '<text x="118" y="212" font-size="13" fill="' + theme.accent + '" letter-spacing="1.4">ЭЛИТА</text>' +
+      '<text x="540" y="230" font-size="13" fill="' + theme.accent + '" letter-spacing="1.2">СПАЛЬНЫЙ</text>' +
+      '<text x="26" y="490" font-size="13" fill="' + theme.accent + '" letter-spacing="1.4">ПАРК</text>' +
+      '<text x="544" y="506" font-size="13" fill="' + theme.district + '" letter-spacing="1.2">ПРОМЗОНА</text>' +
+      '<text x="28" y="404" font-size="12" fill="' + theme.district + '" letter-spacing="1.2">ВОКЗАЛ</text>' +
+      '<text x="612" y="620" font-size="12" fill="' + theme.riverStroke + '" letter-spacing="1.2">ПОРТ</text>' +
+      '<text x="350" y="632" font-size="13" fill="' + theme.riverStroke + '" letter-spacing="1.6">РЕКА</text>' +
       '</g>' +
       poi(160, 520, 'tree', '#16a34a') +
       poi(300, 120, 'train', '#0ea5e9') +
@@ -188,5 +205,9 @@
       '</svg>';
   }
 
-  window.CityMap = { SPOTS: SPOTS, svg: svg, W: W, H: H };
+  window.CityMap = {
+    SPOTS: SPOTS, svg: svg, W: W, H: H,
+    setSeed: function (n) { seed = (Number(n) || 1) >>> 0; },
+    getSeed: function () { return seed; }
+  };
 })();

@@ -12,10 +12,12 @@
   // СОСТОЯНИЕ
   // ============================================================
   var START_STOCK = 40;
+  var MAX_POINTS = 14;
   var DEFAULTS = {
     cash: 30000,
     level: 1, xp: 0,
     points: [], staff: [], factory: null,
+    realty: [],
     listings: [], nextListId: 0,
     licenses: { alcohol: false, tobacco: false, weapon: false, pharma: false, finance: false, transport: false },
     credit: { score: 50, loans: [], taken: 0 },
@@ -26,6 +28,8 @@
     tax: { due: 0, paid: 0 },
     rival: { on: false, left: 0, name: '' },
     nextId: 0,
+    mapSeed: 0,
+    pos: 'home',
     installed: { job: false, production: false },
     story: { step: 0, flags: {}, sms: [], calls: [], taxi: 0 },
     stats: { orders: 0, revenue: 0, shifts: 0, sold: 0, missed: 0, rating: 4.8 },
@@ -45,10 +49,15 @@
   B.credit.loans = B.credit.loans || [];
   if (B.credit.active) { B.credit.loans.push(B.credit.active); B.credit.active = null; }
   B.points.forEach(function (p) { if (p.stock == null) p.stock = START_STOCK; });
+  if (!B.mapSeed) {
+    B.mapSeed = 1 + Math.floor(Math.random() * 999999999);
+    save();
+  }
+  if (window.CityMap && CityMap.setSeed) CityMap.setSeed(B.mapSeed);
 
   function save() { try { LV.save(); } catch (e) {} }
   function nowTime() {
-    var d = new Date();
+    var d = (window.LV && LV.gameNow) ? LV.gameNow() : new Date();
     return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
   }
   function toast(m) { LV.toast(m); }
@@ -56,9 +65,11 @@
   function isX8() {
     var u = (S && S.user) || {};
     var norm = function (v) { return String(v || '').trim().replace(/^@/, '').toUpperCase(); };
-    var id = norm(u.xid), nm = norm(u.name);
-    if (id === 'X-8' || nm === 'X-8') return true;
-    return !id;
+    if (norm(u.xid) === 'X-8') return true;
+    if (!u.xid) return false;
+    var sess = null;
+    try { sess = JSON.parse(localStorage.getItem('xid_session') || 'null'); } catch (e) {}
+    return !!(sess && sess.isAdmin && String(sess.xid || '') === String(u.xid));
   }
 
   // ============================================================
@@ -109,6 +120,20 @@
     gym: 'dumbbell', boutique: 'shirt', electronics: 'phone', cinema: 'film',
     hotel: 'house', autosalon: 'car', mall: 'shop'
   };
+  var REALTY = [
+    { id: 'studio', name: 'Студия на Тверской', kind: 'Квартира', price: 750000, rent: 6500, level: 4, icon: 'fa-building', color: '#0ea5e9', desc: 'Аккуратная студия рядом с метро' },
+    { id: 'office', name: 'Офис в БЦ «Сити»', kind: 'Офис', price: 1800000, rent: 16000, level: 8, icon: 'fa-briefcase', color: '#8b5cf6', desc: 'Арендатор — IT-компания' },
+    { id: 'warehouse', name: 'Склад в Промзоне', kind: 'Склад', price: 3200000, rent: 28000, level: 12, icon: 'fa-warehouse', color: '#f59e0b', desc: 'Долгосрочный контракт на хранение' },
+    { id: 'penthouse', name: 'Пентхаус на Набережной', kind: 'Квартира', price: 7500000, rent: 70000, level: 20, icon: 'fa-city', color: '#10b981', desc: 'Премиальная аренда с видом на реку' }
+  ];
+  function realtyItem(id) {
+    for (var i = 0; i < REALTY.length; i++) if (REALTY[i].id === id) return REALTY[i];
+    return null;
+  }
+  function realtyRent() {
+    if (!Array.isArray(B.realty)) return 0;
+    return B.realty.reduce(function (sum, id) { var r = realtyItem(id); return sum + (r ? r.rent : 0); }, 0);
+  }
   var SERVICES = {
     hospital: { kind: 'cross', color: '#ef4444', icon: 'fa-hospital', label: 'Больница' },
     police: { kind: 'shield', color: '#3b82f6', icon: 'fa-shield-halved', label: 'Полиция' },
@@ -118,6 +143,11 @@
 
   var SPOTS = (window.CityMap && window.CityMap.SPOTS) || {};
   var LEGACY_SPOT = { center: 'center1', station: 'station', sleep: 'sleep2', elite: 'elite', park: 'park', industrial: 'industrial' };
+  if (!B.pos || (B.pos !== 'home' && Object.keys(SPOTS).length && !SPOTS[B.pos])) B.pos = 'home';
+  function mapYou() {
+    var sp = SPOTS[B.pos];
+    return sp ? { x: sp.x, y: sp.y } : MAP_YOU;
+  }
   function spotOf(p) { return (p && p.spot) || LEGACY_SPOT[p && p.district] || 'center1'; }
   function spotInfo(p) {
     var s = SPOTS[spotOf(p)] || {};
@@ -325,11 +355,11 @@
     'Восстанови разрушенные точки',
     'Открой мемориал Макса',
     'Запусти фонд имени Макса',
-    'Расширь сеть до 15 точек',
+    'Расширь сеть до 14 точек',
     'Дай интервью о своём пути',
     'Сюжет пройден — город помнит Макса',
     'Выслушай Романа из «Сетки»',
-    'Открой ещё две точки — конкурент следит',
+    'Держи сеть из 14 точек — конкурент следит',
     'Запусти рекламу сети',
     'Финал: ты выбираешь, каким будет город'
   ];
@@ -343,7 +373,7 @@
     save();
   }
 
-  function storyTick() {
+  function storyNext() {
     var st = B.story.step;
     var nxt = null;
     if (st === 0 && B.installed.job) nxt = 1;
@@ -392,13 +422,21 @@
     else if (st === 44 && B.story.flags.rebuilt) nxt = 45;
     else if (st === 45 && B.story.flags.memorial) nxt = 46;
     else if (st === 46 && B.story.flags.foundation) nxt = 47;
-    else if (st === 47 && B.points.length >= 15) nxt = 48;
+    else if (st === 47 && B.points.length >= MAX_POINTS) nxt = 48;
     else if (st === 48 && B.story.flags.interview) nxt = 49;
     else if (st === 49) { ensureRoman(); nxt = 50; }
     else if (st === 50 && B.story.flags.romanNo) nxt = 51;
-    else if (st === 51 && B.points.length >= 17) nxt = 52;
+    else if (st === 51 && B.rival && B.rival.left <= 0) nxt = 52;
     else if (st === 52 && B.ads && B.ads.left > 0) nxt = 53;
-    if (nxt !== null) advanceStory(nxt);
+    return nxt;
+  }
+
+  function storyTick() {
+    for (var i = 0; i < 6; i++) {
+      var nxt = storyNext();
+      if (nxt === null || nxt <= B.story.step) return;
+      advanceStory(nxt);
+    }
   }
 
   function advanceStory(step) {
@@ -678,7 +716,7 @@
       ] });
       addSms('Лиза', 'Фонд имени Макса — 50 000 ₽. Дальше город будет помнить его.');
     } else if (step === 47) {
-      addSms('Лиза', 'Империя должна расти. Открой 15 точек — и о тебе заговорят.');
+      addSms('Лиза', 'Империя должна расти. Открой 14 точек — и о тебе заговорят.');
     } else if (step === 48) {
       addSms('Лиза', 'Журналисты хотят интервью. Покажи городу, кем ты стал.');
     } else if (step === 49) {
@@ -763,6 +801,12 @@
   var lineIdx = 0;
   var callTimer = null;
   var callQueue = [];
+  var callGateTimer = null;
+
+  function callBlocked() {
+    if (window.LV && LV.isOnboarding && LV.isOnboarding()) return true;
+    return !!(document.querySelector('.passport-screen') || document.querySelector('.tutorial:not(.hidden)'));
+  }
 
   function queueCall(c) {
     c.id = 'call' + Date.now() + Math.floor(Math.random() * 999);
@@ -772,6 +816,13 @@
 
   function renderCall() {
     if (callEl || !callQueue.length) return;
+    if (callBlocked()) {
+      if (!callGateTimer) callGateTimer = setTimeout(function () {
+        callGateTimer = null;
+        renderCall();
+      }, 700);
+      return;
+    }
     curCall = callQueue.shift();
     lineIdx = 0;
     var phone = document.getElementById('phone');
@@ -890,6 +941,8 @@
   }
 
   window.Biz = window.Biz || {};
+  Biz.TYPES = TYPES;
+  Biz.SPOTS = SPOTS;
 
   Biz.callAnswer = function () { if (curCall) startDialogue(); };
   Biz.callDecline = function () { endCall(); };
@@ -926,7 +979,7 @@
   }
 
   function openMap(mode, opts) {
-    if (mapEl) return;
+    if (mapEl) closeMap();
     mapMode = mode || 'view';
     mapSel = null;
     var phone = document.getElementById('phone');
@@ -999,7 +1052,7 @@
   function renderMapCanvas() {
     var c = document.getElementById('mp-canvas');
     if (!c) return;
-    var svg = window.CityMap ? window.CityMap.svg(mapMarkers(), { you: MAP_YOU, route: mapRoutePoint() }) : '';
+    var svg = window.CityMap ? window.CityMap.svg(mapMarkers(), { you: mapYou(), route: mapRoutePoint() }) : '';
     c.innerHTML = svg + '<span class="mp-tag">Пункты выдачи Лавки</span>';
   }
 
@@ -1007,7 +1060,7 @@
     return '<div class="mp-head"><button class="mp-back" type="button" onclick="Biz.closeMap()"><i class="fa-solid fa-chevron-left"></i></button>' +
       '<div><b>' + mapTitle() + '</b><span>Москва · демо</span></div><span class="mp-cash">' + fmt(B.cash) + '</span></div>' +
       '<div class="mp-canvas" id="mp-canvas">' +
-      (window.CityMap ? window.CityMap.svg(mapMarkers(), { you: MAP_YOU, route: mapRoutePoint() }) : '') +
+      (window.CityMap ? window.CityMap.svg(mapMarkers(), { you: mapYou(), route: mapRoutePoint() }) : '') +
       '<span class="mp-tag">Пункты выдачи Лавки</span></div>' +
       '<div class="mp-legend"><span><i class="fa-solid fa-shop"></i> помещения</span><span><i class="fa-solid fa-taxi"></i> такси</span><span><i class="fa-solid fa-hospital"></i> службы</span><span><i class="fa-solid fa-file-signature"></i> контракт</span></div>' +
       '<div class="mp-sheet" id="mp-sheet"></div>';
@@ -1102,6 +1155,12 @@
     }
     var p = pointAtSpot(id);
     if (mapMode === 'rent' && !p) {
+      if (B.pos !== id) {
+        el.innerHTML = '<div class="mp-sheet-h">' + s.name + ' <span>' + s.area + '</span></div>' +
+          '<p class="mp-sheet-note">Вы не на месте. До помещения можно доехать на такси — 300 ₽.</p>' +
+          '<button class="mp-go" type="button" onclick="Biz.taxiToSpot(\'' + id + '\')">Вызвать такси · 300 ₽</button>';
+        return;
+      }
       var rows = Object.keys(TYPES).map(function (t) {
         var ty = TYPES[t], un = typeUnlocked(t);
         return '<button class="mp-type' + (un ? '' : ' locked') + '" type="button" ' + (un ? 'onclick="Biz.mapPickType(\'' + t + '\')"' : '') + '>' +
@@ -1114,6 +1173,12 @@
     } else if (mapMode === 'factory') {
       if (id !== 'industrial') {
         el.innerHTML = '<div class="mp-sheet-h">' + s.name + '</div><p class="mp-sheet-note">Завод можно построить только в Промзоне — на «Заводской, 1».</p>';
+        return;
+      }
+      if (B.pos !== id) {
+        el.innerHTML = '<div class="mp-sheet-h">Заводская, 1 <span>Промзона</span></div>' +
+          '<p class="mp-sheet-note">Вы не на площадке. Доехать на такси — 300 ₽.</p>' +
+          '<button class="mp-go" type="button" onclick="Biz.taxiToSpot(\'industrial\')">Вызвать такси · 300 ₽</button>';
         return;
       }
       el.innerHTML = '<div class="mp-sheet-h">Заводская, 1 <span>Промзона</span></div>' +
@@ -1144,9 +1209,12 @@
   Biz.openPointAt = function (type) {
     var t = TYPES[type];
     if (!t || !mapSel || !SPOTS[mapSel]) return;
+    if (B.story.flags.sold) { toast('Сеть продана — новые точки не открываются'); return; }
+    if (B.pos !== mapSel) { toast('Сначала доедьте до помещения на такси'); return; }
     if (!typeUnlocked(type)) { toast('Закрыто: ' + (typeLockReason(type) || 'этот тип ещё недоступен')); return; }
     if (pointAtSpot(mapSel)) { toast('Помещение уже занято'); return; }
     if (B.tax && B.tax.due > 60000) { toast('Долг по налогам ' + fmt(B.tax.due) + ' — оплатите в Job'); return; }
+    if (B.points.length >= MAX_POINTS) { toast('Максимум ' + MAX_POINTS + ' точек — сеть укомплектована'); return; }
     if (B.cash < t.cost) { toast('Не хватает денег'); return; }
     B.cash -= t.cost;
     B.points.push({ id: 'p' + (++B.nextId), type: type, spot: mapSel, orders: 0, stock: START_STOCK, opened: Date.now() });
@@ -1162,6 +1230,12 @@
       setTimeout(opgScene, 700);
     }
     if (LV.current && LV.current.id === 'job' && jobHost) renderJob();
+  };
+
+  Biz.taxiToSpot = function (id) {
+    if (!SPOTS[id]) return;
+    mapSel = id;
+    Biz.taxiGo();
   };
 
   function opgScene() {
@@ -1183,6 +1257,7 @@
   function opgPay() {
     if (B.cash < 5000) {
       B.story.flags.opg = 'debt';
+      B.story.flags.opgRaid = true;
       B.events.unshift({ t: 'opg', text: 'ОПГ: денег не нашлось', time: nowTime() });
       save();
       toast('Не хватает 5 000 ₽');
@@ -1191,6 +1266,7 @@
     }
     B.cash -= 5000;
     B.story.flags.opg = 'paid';
+    B.story.flags.opgRaid = false;
     B.events.unshift({ t: 'opg', text: 'ОПГ: дань 5 000 ₽', time: nowTime() });
     save();
     toast('Заплачено 5 000 ₽');
@@ -1199,6 +1275,7 @@
 
   function opgRefuse() {
     B.story.flags.opg = 'refused';
+    B.story.flags.opgRaid = true;
     B.events.unshift({ t: 'opg', text: 'ОПГ: отказ платить', time: nowTime() });
     B.stats.rating = Math.max(3, Math.round(((Number(B.stats.rating) || 4.8) - 0.1) * 100) / 100);
     save();
@@ -1227,10 +1304,12 @@
   function shiftPay() {
     if (B.cash < 5000) {
       B.story.flags.extort = 'debt';
+      B.story.flags.opgRaid = true;
       addSms('Тима', 'Денег нет? Ладно. Должок растёт, бизнесмен.');
     } else {
       B.cash -= 5000;
       B.story.flags.extort = 'paid';
+      B.story.flags.opgRaid = false;
       addSms('Тима', 'Красавчик. Пока не трогаем. Но мы вернёмся проверить.');
     }
     B.events.unshift({ t: 'opg', text: 'ОПГ: дань на смене', time: nowTime() });
@@ -1242,6 +1321,7 @@
 
   function shiftRefuse() {
     B.story.flags.extort = 'refused';
+    B.story.flags.opgRaid = true;
     B.story.flags.extortDone = true;
     B.events.unshift({ t: 'opg', text: 'ОПГ: отказ на смене', time: nowTime() });
     B.stats.rating = Math.max(3, Math.round(((Number(B.stats.rating) || 4.8) - 0.1) * 100) / 100);
@@ -1528,6 +1608,9 @@
   }
 
   Biz.romanTalk = function () {
+    if (B.story.flags.sold) { toast('Сеть уже продана'); return; }
+    if (B.story.flags.romanNo) { toast('Вы уже отказались от предложения'); return; }
+    if (B.story.step < 50) { toast('Роман ещё не делал предложение'); return; }
     showCutscene({
       kicker: 'Вечер · офис «Сетки»',
       scene: 'street',
@@ -1614,7 +1697,7 @@
       var staffN = B.staff.filter(function (s) { return s.pointId === p.id; }).length;
       slides = [
         { who: 'Управляющий', ini: 'У', color: t.color || '#22c55e', text: 'Приехали. «' + t.name + '» на ' + name + '. Это ваша точка.' },
-        { who: 'Управляющий', ini: 'У', color: t.color || '#22c55e', text: 'Заказов в очереди: ' + (p.orders || 0) + '. Сотрудников: ' + staffN + '. Аренда: ' + fmt(t.rent || 0) + ' за смену. Товар: ' + pointStock(p) + ' шт.' },
+        { who: 'Управляющий', ini: 'У', color: t.color || '#22c55e', text: 'Выполнено заказов: ' + (p.orders || 0) + '. Сотрудников: ' + staffN + '. Аренда: ' + fmt(t.rent || 0) + ' за смену. Товар: ' + pointStock(p) + ' шт.' },
         { who: 'Управляющий', ini: 'У', color: t.color || '#22c55e', text: staffN ? 'Команда на месте. Можно провести смену и забрать выручку.' : 'Людей нет — смену придётся тянуть самому. Наймите сотрудника.' }
       ];
       choices = [
@@ -1645,13 +1728,17 @@
   }
 
   Biz.taxiGo = function () {
+    if (shift) { toast('Сначала закончите смену'); return; }
     if (B.cash < 300) { toast('Не хватает 300 ₽ на такси'); return; }
     var dest = mapSel;
     if (!dest) { toast('Выберите точку на карте'); return; }
+    var spot = dest === 'contract' ? 'bc' : dest;
+    if (!SPOTS[spot]) { toast('Некуда ехать'); return; }
+    if (B.pos === spot) { toast('Вы уже на месте'); return; }
     B.cash -= 300;
     save();
     closeMap();
-    var destName = dest === 'contract' || dest === 'bc' ? 'БЦ «Сити»' : dest === 'gov' ? 'Правительство' : (SPOTS[dest] ? SPOTS[dest].name : 'город');
+    var destName = spot === 'bc' ? 'БЦ «Сити»' : spot === 'gov' ? 'Правительство' : SPOTS[spot].name;
     showCall({
       incoming: false, from: 'Такси Лавка', number: CONTACTS.taxi.number, ini: 'Т', color: '#facc15',
       lines: [
@@ -1660,14 +1747,17 @@
         'Таксист: Понял. По пробкам минут двадцать.'
       ],
       onEnd: function () {
-        if (!B.story.flags.contract && B.story.step >= 5 && (dest === 'contract' || dest === 'bc')) {
+        B.pos = spot;
+        B.story.taxi = (B.story.taxi || 0) + 1;
+        save();
+        if (!B.story.flags.contract && B.story.step >= 5 && spot === 'bc') {
           setTimeout(contractScene, 400);
-        } else if (dest === 'bc' || dest === 'contract') {
+        } else if (spot === 'bc') {
           setTimeout(function () { if (typeof arkadyOffice === 'function') arkadyOffice(); }, 400);
-        } else if (dest === 'gov') {
+        } else if (spot === 'gov') {
           setTimeout(govScene, 400);
         } else {
-          setTimeout(function () { arrivalScene(dest); }, 400);
+          setTimeout(function () { arrivalScene(spot); }, 400);
         }
         if (LV.current && LV.current.id === 'job' && jobHost) renderJob();
       }
@@ -1884,7 +1974,7 @@
     cafe: [
       { id: 'beans', name: 'Кофе в зёрнах', desc: 'Арабика, 20 кг', qty: 20, price: 9000, icon: 'fa-mug-saucer', color: '#78350f' },
       { id: 'milk', name: 'Молоко', desc: 'Для латте и капучино', qty: 40, price: 4800, icon: 'fa-cow', color: '#64748b' },
-      { id: 'pastry', name: 'Выпечка', desc: 'Круассаны и десерты', qty: 60, price: 5400, icon: 'fa-croissant', color: '#d97706' }
+      { id: 'pastry', name: 'Выпечка', desc: 'Круассаны и десерты', qty: 60, price: 5400, icon: 'fa-bread-slice', color: '#d97706' }
     ],
     barbershop: [
       { id: 'consumables', name: 'Расходники', desc: 'Лезвия, воротнички, салфетки', qty: 40, price: 3600, icon: 'fa-scissors', color: '#f59e0b' },
@@ -1959,7 +2049,7 @@
     hotel: [
       { id: 'linen', name: 'Бельё', desc: 'Комплекты на 40 номеров', qty: 40, price: 16000, icon: 'fa-bed', color: '#06b6d4' },
       { id: 'amenities', name: 'Косметика', desc: 'Мини-наборы для гостей', qty: 60, price: 9000, icon: 'fa-pump-soap', color: '#ec4899' },
-      { id: 'breakfast', name: 'Завтраки', desc: 'Продукты на неделю', qty: 50, price: 12500, icon: 'fa-croissant', color: '#d97706' }
+      { id: 'breakfast', name: 'Завтраки', desc: 'Продукты на неделю', qty: 50, price: 12500, icon: 'fa-bread-slice', color: '#d97706' }
     ],
     autosalon: [
       { id: 'cars', name: 'Автомобили', desc: 'Новые, 3 шт', qty: 3, price: 900000, icon: 'fa-car', color: '#f97316' },
@@ -1986,14 +2076,12 @@
   }
   function supplyPointObj(type) {
     var list = supplyPoints(type);
-    var p = list.filter(function (x) { return x.id === supplySel; })[0];
-    if (!p) p = list[0] || null;
-    supplySel = p ? p.id : null;
-    return p;
+    return list.filter(function (x) { return x.id === supplySel; })[0] || list[0] || null;
   }
   function optPoints(type) {
     var pts = type ? supplyPoints(type) : B.points;
     if (!pts.length) return '<p class="opt-empty">' + (type ? 'Точек этого бизнеса пока нет.' : 'Точек пока нет.') + '</p>';
+    if (!supplySel) supplySel = pts[0].id;
     return '<div class="opt-points">' + pts.map(function (p) {
       var t = TYPES[p.type], si = spotInfo(p);
       return '<button class="opt-point' + (p.id === supplySel ? ' on' : '') + '" type="button" onclick="Biz.supplySelect(\'' + p.id + '\')">' +
@@ -2034,18 +2122,21 @@
       '<div class="opt-stats"><div><b>' + B.points.length + '</b><span>точек</span></div><div><b>' + types.length + '</b><span>бизнесов</span></div><div><b>' + fmt(B.cash) + '</b><span>на счёте</span></div></div>' +
       '<div class="opt-sub">Мои бизнесы</div>' + cats +
       '<div class="opt-sub">Мои точки</div>' + optPoints('') +
-      '<p class="opt-note">Товар приходит сразу на точку. Смена списывает проданное.</p>';
+      '<p class="opt-note">' + (window.Growth && Growth.hasWarehouse && Growth.hasWarehouse() ? 'Товар идёт на склад — доставь его в приложении «Склад».' : 'Товар приходит сразу на точку. Смена списывает проданное.') + '</p>';
   }
   function supplyTick() {
+    var toWarehouse = !!(window.Growth && Growth.hasWarehouse && Growth.hasWarehouse());
     if (B.story.flags.supplyFood && !B.story.flags.supplyFoodMsg) {
       B.story.flags.supplyFoodMsg = true;
-      addSms('Макс', 'Товар пришёл. Он уже на точке — проверь Job → Точки.');
+      addSms('Макс', toWarehouse ? 'Товар пришёл на склад — доставь его в приложении «Склад».' : 'Товар пришёл. Он уже на точке — проверь Job → Точки.');
     }
-    if (B.story.flags.supplyFood && B.story.flags.supplyWeapon && !B.story.flags.supplyDone) {
+    if (B.story.flags.supplyFood && (B.story.flags.supplyWeapon || !B.licenses.weapon) && !B.story.flags.supplyDone) {
       B.story.flags.supplyDone = true;
       B.cash += 5000;
       addXp(50);
-      addSms('Макс', 'Оружие приняли. Полный цикл собран: склад → точка → смена. Держи 5 000 ₽.');
+      addSms('Макс', B.story.flags.supplyWeapon
+        ? 'Оружие приняли. Полный цикл собран: склад → точка → смена. Держи 5 000 ₽.'
+        : 'Товар пришёл. Цикл собран: склад → точка → смена. Держи 5 000 ₽.');
       toast('Задание «Поставки» выполнено · +5 000 ₽');
     }
     save();
@@ -2058,18 +2149,21 @@
     if (type === 'weapon' && !B.licenses.weapon) { toast('Нужна лицензия на оружие'); return; }
     var price = goodPrice(g);
     if (B.cash < price) { toast('Не хватает ' + fmt(price - B.cash)); return; }
+    var toWarehouse = !!(window.Growth && Growth.hasWarehouse && Growth.hasWarehouse());
+    if (toWarehouse && Growth.warehouseSpace() < g.qty) { toast('Склад заполнен'); return; }
     B.cash -= price;
-    p.stock = pointStock(p) + g.qty;
+    if (toWarehouse) Growth.receiveSupply(type, g.qty);
+    else p.stock = pointStock(p) + g.qty;
     B.stats.supplied = (B.stats.supplied || 0) + 1;
     dailyAdd('supply', 1);
-    B.events.unshift({ t: 'supply', text: 'Поставка: ' + g.name + ' → ' + TYPES[p.type].name, time: nowTime() });
+    B.events.unshift({ t: 'supply', text: 'Поставка: ' + g.name + ' → ' + (toWarehouse ? 'склад' : TYPES[p.type].name), time: nowTime() });
     if (type === 'weapon') B.story.flags.supplyWeapon = true;
     else B.story.flags.supplyFood = true;
     save();
     supplyTick();
     if (jobHost) renderJob();
     if (window.Web && document.getElementById('web-scroll')) Web.refresh();
-    toast('+' + g.qty + ' шт · ' + g.name);
+    toast(toWarehouse ? '+' + g.qty + ' шт · на склад' : '+' + g.qty + ' шт · ' + g.name);
   }
   function supplyIntro() {
     if (B.story.flags.supplyIntro) return;
@@ -2090,12 +2184,14 @@
   function supplyTaskCard() {
     if (!B.story.flags.supplyIntro) return '';
     var food = !!B.story.flags.supplyFood, weapon = !!B.story.flags.supplyWeapon;
-    var done = food && weapon;
+    var needWeapon = !!(B.licenses && B.licenses.weapon);
+    var done = food && (!needWeapon || weapon);
     var line = done ? 'Выполнено · +5 000 ₽' : (!food ? 'Закажи партию на «Опте»' : 'Закажи оружие на «Опте»');
     return '<button class="bj-supply' + (done ? ' done' : '') + '" type="button" onclick="Biz.openOpt()">' +
       '<span class="bj-supply-ic"><i class="fa-solid fa-truck-fast"></i></span>' +
       '<div><b>Задание Макса · поставки</b><span>' + line + '</span></div>' +
-      '<span class="bj-supply-flags"><i class="fa-solid ' + (food ? 'fa-circle-check' : 'fa-circle') + '"></i><i class="fa-solid ' + (weapon ? 'fa-circle-check' : 'fa-circle') + '"></i></span>' +
+      '<span class="bj-supply-flags"><i class="fa-solid ' + (food ? 'fa-circle-check' : 'fa-circle') + '"></i>' +
+      (needWeapon ? '<i class="fa-solid ' + (weapon ? 'fa-circle-check' : 'fa-circle') + '"></i>' : '') + '</span>' +
       '<i class="fa-solid fa-chevron-right"></i></button>';
   }
   Biz.supplySelect = function (id) {
@@ -2416,6 +2512,7 @@
     B.cash -= a.price;
     B.ads.left = (B.ads.left || 0) + a.shifts;
     B.events.unshift({ t: 'ads', text: 'Реклама на ' + a.shifts + ' смен', time: nowTime() });
+    storyTick();
     save();
     if (window.Sfx) Sfx.play('click');
     toast('Реклама: +35% заказов на ' + a.shifts + ' смен');
@@ -2429,6 +2526,7 @@
     B.ads.left = (B.ads.left || 0) + 3;
     if (B.rival) { B.rival.on = false; B.rival.left = 0; }
     B.events.unshift({ t: 'ads', text: 'Акция против конкурента', time: nowTime() });
+    storyTick();
     save();
     if (window.Sfx) Sfx.play('reward');
     toast('Конкурент отступил, реклама на 3 смены');
@@ -2486,6 +2584,15 @@
     if (!B.daily) B.daily = { day: '', cur: {}, done: {}, streak: 0, lastAll: '' };
     var k = dayKey();
     if (B.daily.day !== k) {
+      var rentDay = (B.points || []).reduce(function (a, p) {
+        var t = TYPES[p.type];
+        return a + (t ? t.rent : 0);
+      }, 0);
+      if (rentDay > 0) {
+        var fee = Math.round(rentDay * 0.3);
+        B.cash = Math.max(0, B.cash - fee);
+        B.events.unshift({ t: 'tax', text: 'Аренда за день · ' + fmt(fee), time: nowTime() });
+      }
       B.daily = { day: k, cur: {}, done: {}, streak: B.daily.streak || 0, lastAll: B.daily.lastAll || '' };
       save();
     }
@@ -2706,8 +2813,10 @@
         taxBlockHTML() +
         '<div class="bj-stats"><div><b>' + B.stats.orders + '</b><span>заказов</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div><div><b>' + B.points.length + '</b><span>точек</span></div></div>' +
         '<div class="bj-rate"><span>Рейтинг</span><b>' + (B.stats.rating || 4.8) + '</b><span>· потеряно ' + (B.stats.missed || 0) + '</span></div>' +
-        '<button class="bj-shift" type="button" onclick="Biz.shift()"><span class="bj-play"></span> Открыть смену</button>' +
-        '<p class="bj-note">10 секунд: заказы, сотрудники и события</p>' +
+        (B.story.flags.sold
+          ? '<div class="bj-note">Сеть продана · смены и новые точки закрыты</div>'
+          : '<button class="bj-shift" type="button" onclick="Biz.shift()"><span class="bj-play"></span> Открыть смену</button>' +
+            '<p class="bj-note">10 секунд: заказы, сотрудники и события</p>') +
         '<div class="bj-sec"><b>События</b><span>сегодня</span></div>' +
         (B.events.length ? B.events.slice(0, 5).map(function (e) { return '<div class="bj-event"><i class="fa-solid fa-circle"></i><div><b>' + esc(e.text) + '</b><span>' + e.time + '</span></div></div>'; }).join('') : '<p class="bj-empty">Пока тихо. Открой точку и проведи смену.</p>');
     } else if (jobTab === 'points') {
@@ -2739,8 +2848,8 @@
           '<button class="bj-hire" type="button" onclick="Biz.hire(\'' + c.id + '\')">Нанять</button></div>';
       }).join('');
       body = (hired ? '<div class="bj-sec"><b>Команда</b><span>' + B.staff.length + '</span></div>' + hired : '<p class="bj-empty">Команды пока нет.</p>') +
-        '<div class="bj-sec"><b>Кандидаты</b><span>' + (free.length ? free.length + ' свободных точек' : 'нет свободных точек') + '</span></div>' +
-        (free.length ? pool : '<p class="bj-empty">Сначала откройте точку — сотрудника нужно куда-то поставить.</p>') +
+        '<div class="bj-sec"><b>Кандидаты</b><span>' + (B.points.length ? B.points.length + ' точек' : 'нет точек') + '</span></div>' +
+        (B.points.length ? pool : '<p class="bj-empty">Сначала откройте точку — сотрудника нужно куда-то поставить.</p>') +
         '<p class="bj-note">Найм — 3 000 ₽. Зарплата списывается каждую смену.</p>';
     }
     jobHost.innerHTML = '<div class="bj">' +
@@ -2809,8 +2918,10 @@
       phone.appendChild(shiftEl);
     }
     var left = Math.max(0, Math.ceil((shift.endsAt - Date.now()) / 1000));
+    var shiftPoint = shift.pointId ? B.points.filter(function (p) { return p.id === shift.pointId; })[0] : null;
+    var where = shiftPoint ? (TYPES[shiftPoint.type].name + ' · ' + (SPOTS[shiftPoint.spot] ? SPOTS[shiftPoint.spot].name : '')) : (B.points.length + ' точек');
     shiftEl.innerHTML = '<div class="shift">' +
-      '<header class="shift-top"><div><b>СМЕНА</b><span>' + shift.total + ' заказов · ' + B.points.length + ' точек</span></div>' +
+      '<header class="shift-top"><div><b>СМЕНА</b><span>' + shift.total + ' заказов · ' + where + '</span></div>' +
       '<span class="shift-clock" id="shift-clock">00:' + String(left).padStart(2, '0') + '</span></header>' +
       '<div class="shift-stats"><div><b>' + shift.done + '</b><span>выполнено</span></div>' +
       '<div><b>' + fmt(shift.revenue) + '</b><span>выручка</span></div>' +
@@ -2923,17 +3034,22 @@
     shift = null;
     if (shiftEl && shiftEl.parentNode) shiftEl.parentNode.removeChild(shiftEl);
     shiftEl = null;
-    var rent = B.points.reduce(function (a, p) { return a + TYPES[p.type].rent; }, 0);
+    var shiftPoint = s.pointId ? B.points.filter(function (p) { return p.id === s.pointId; })[0] : null;
+    var rent = shiftPoint ? TYPES[shiftPoint.type].rent : B.points.reduce(function (a, p) { return a + TYPES[p.type].rent; }, 0);
     if (!B.tax) B.tax = { due: 0, paid: 0 };
     var taxSum = Math.round(rent * 0.5);
     B.tax.due = (B.tax.due || 0) + taxSum;
     if (!silent && taxSum > 0) B.events.unshift({ t: 'tax', text: 'Начислен налог · ' + fmt(taxSum), time: nowTime() });
-    var salaries = B.staff.reduce(function (a, x) { return a + x.salary; }, 0);
-    var net = s.revenue - rent - salaries - (s.eventCost || 0);
+    var shiftStaff = shiftPoint ? B.staff.filter(function (x) { return x.pointId === shiftPoint.id; }) : B.staff;
+    var salaries = shiftStaff.reduce(function (a, x) { return a + x.salary; }, 0);
+    var realtyIncome = realtyRent();
+    var growthIncome = (window.Growth && Growth.shiftIncome) ? Growth.shiftIncome(s) : { total: 0, rows: [] };
+    var net = s.revenue - rent - salaries - (s.eventCost || 0) + realtyIncome + (growthIncome.total || 0);
     B.cash = Math.max(0, B.cash + net);
     creditCharge(net);
     B.stats.shifts = (B.stats.shifts || 0) + 1;
     B.stats.orders = (B.stats.orders || 0) + s.done;
+    B.stats.sold = (B.stats.sold || 0) + s.done;
     B.stats.missed = (B.stats.missed || 0) + Math.max(0, s.total - s.done);
     var ratio = s.done / Math.max(1, s.total);
     var rating = Number(B.stats.rating) || 4.8;
@@ -2948,18 +3064,27 @@
     dailyAdd('revenue', Math.max(0, s.revenue || 0));
     achCheck();
     rivalMaybe();
+    if (realtyIncome > 0) B.events.unshift({ t: 'realty', text: 'Недвижимость · +' + fmt(realtyIncome), time: nowTime() });
+    if (growthIncome.total > 0) B.events.unshift({ t: 'growth', text: 'Франшизы и биржа · +' + fmt(growthIncome.total), time: nowTime() });
     B.events.unshift({ t: 'shift', text: 'Смена: ' + s.done + ' из ' + s.total + ' · ' + fmt(net), time: nowTime() });
     var gained = Math.round(s.done * 3 + 12 + (ratio >= 0.8 ? 15 : 0));
     addXp(gained);
     storyTick();
     var soldByPoint = {};
     s.list.forEach(function (o) { if (o.done) soldByPoint[o.pointId] = (soldByPoint[o.pointId] || 0) + 1; });
-    B.points.forEach(function (p) { if (soldByPoint[p.id]) p.stock = Math.max(0, pointStock(p) - soldByPoint[p.id]); });
+    B.points.forEach(function (p) {
+      if (!soldByPoint[p.id]) return;
+      p.orders = (Number(p.orders) || 0) + soldByPoint[p.id];
+      p.stock = Math.max(0, pointStock(p) - soldByPoint[p.id]);
+    });
+    if (window.Growth && Growth.onShiftEnd) Growth.onShiftEnd(s, net);
     save();
     if (jobHost) renderJob();
     var rows = '<div class="bj-shift-row"><div><b>Выполнено заказов</b><span>' + s.done + ' из ' + s.total + '</span></div><div class="bj-shift-sum"><b>+' + fmt(s.revenue) + '</b></div></div>' +
       '<div class="bj-shift-row"><div><b>Аренда</b><span>' + B.points.length + ' точек</span></div><div class="bj-shift-sum"><b class="minus">−' + fmt(rent) + '</b></div></div>' +
       '<div class="bj-shift-row"><div><b>Зарплата</b><span>' + B.staff.length + ' сотрудников</span></div><div class="bj-shift-sum"><b class="minus">−' + fmt(salaries) + '</b></div></div>' +
+      (realtyIncome ? '<div class="bj-shift-row"><div><b>Недвижимость</b><span>пассивный доход</span></div><div class="bj-shift-sum"><b class="plus">+' + fmt(realtyIncome) + '</b></div></div>' : '') +
+      (growthIncome.rows || []).join('') +
       (s.eventCost ? '<div class="bj-shift-row"><div><b>Событие</b><span>ремонт и расходы</span></div><div class="bj-shift-sum"><b class="minus">−' + fmt(s.eventCost) + '</b></div></div>' : '') +
       '<div class="bj-shift-total"><span>Итого на счёт</span><b class="' + (net >= 0 ? 'plus' : 'minus') + '">' + (net >= 0 ? '+' : '') + fmt(net) + '</b></div>' +
       '<p class="bj-note">Рейтинг: ' + B.stats.rating + ' · +' + gained + ' XP</p>' +
@@ -2972,28 +3097,31 @@
 
   Biz.shift = function () {
     if (shift) return;
+    if (B.story.flags.sold) { toast('Сеть продана — смены больше не проводятся'); return; }
     if (B.story.step === 28 && !B.story.flags.extortDone) { shiftExtortion(); return; }
     if (!B.points.length) { toast('Сначала откройте точку'); openMap('rent'); return; }
-    var list = [];
-    B.points.forEach(function (p) {
-      var t = TYPES[p.type], si = spotInfo(p);
-      var staffN = shiftStaffCount(p.id);
-      var stock = pointStock(p);
-      if (stock <= 0) return;
-      var boost = (B.ads && B.ads.left > 0) ? ADS_BOOST : 1;
-      var hit = (B.rival && B.rival.on) ? RIVAL_HIT : 1;
-      var n = Math.min(stock, Math.max(3, Math.round((5 + staffN * 4) * si.mult * (0.85 + (Number(B.stats.rating) || 4.8) / 20) * boost * hit)));
-      var titles = SHIFT_TITLES[p.type] || SHIFT_TITLES.pvz;
-      for (var i = 0; i < n; i++) {
-        var urgent = Math.random() < 0.18;
-        var price = Math.round(t.avg * (0.9 + Math.random() * 1.2) * (urgent ? 1.3 : 1) / 10) * 10;
-        list.push({ id: 'o' + i + '_' + Date.now() + Math.floor(Math.random() * 99), pointId: p.id, title: titles[Math.floor(Math.random() * titles.length)], price: price, urgent: urgent, done: false });
-      }
-    });
-    if (!list.length) {
-      var needBoxes = B.points.length > 0 && B.points.every(function (p) { return p.type === 'pvz'; });
-      toast(needBoxes ? 'Нет коробок. Закажи их на сайте «Опт»' : 'Нет товара. Закажи поставку на сайте «Опт»');
+    if (B.tax && B.tax.due > 60000) { toast('Налоговый долг ' + fmt(B.tax.due) + ' — оплатите в Job'); return; }
+    var p = B.points.filter(function (x) { return x.spot === B.pos; })[0];
+    if (!p) { toast('Вы не на точке. Вызовите такси и приезжайте'); openMap('taxi'); return; }
+    var t = TYPES[p.type], si = spotInfo(p);
+    var staffN = shiftStaffCount(p.id);
+    var staffEff = B.staff.reduce(function (a, x) { return x.pointId === p.id ? a + (Number(x.eff) || 0) : a; }, 0);
+    if (window.Growth && Growth.beforeShift) Growth.beforeShift(p);
+    var stock = pointStock(p);
+    if (stock <= 0) {
+      toast(p.type === 'pvz' ? 'Нет коробок. Закажи их на сайте «Опт»' : 'Нет товара. Закажи поставку на сайте «Опт»');
       return;
+    }
+    var boost = (B.ads && B.ads.left > 0) ? ADS_BOOST : 1;
+    var hit = (B.rival && B.rival.on) ? RIVAL_HIT : 1;
+    var demand = (window.Growth && Growth.demandMult) ? Growth.demandMult(p) : 1;
+    var n = Math.min(stock, Math.max(3, Math.round((5 + staffN * 2 + staffEff * 15) * si.mult * (0.85 + (Number(B.stats.rating) || 4.8) / 20) * boost * hit * demand)));
+    var titles = SHIFT_TITLES[p.type] || SHIFT_TITLES.pvz;
+    var list = [];
+    for (var i = 0; i < n; i++) {
+      var urgent = Math.random() < 0.18;
+      var price = Math.round(t.avg * (0.9 + Math.random() * 1.2) * (urgent ? 1.3 : 1) / 10) * 10;
+      list.push({ id: 'o' + i + '_' + Date.now() + Math.floor(Math.random() * 99), pointId: p.id, title: titles[Math.floor(Math.random() * titles.length)], price: price, urgent: urgent, done: false });
     }
     list.sort(function (a, b) { return (b.urgent ? 1 : 0) - (a.urgent ? 1 : 0) || b.price - a.price; });
     if (B.ads && B.ads.left > 0) B.ads.left -= 1;
@@ -3001,8 +3129,15 @@
       B.rival.left -= 1;
       if (B.rival.left <= 0) { B.rival.on = false; toast('Конкурент «' + (B.rival.name || 'Сетка') + '» закрылся'); }
     }
-    shift = { list: list, total: list.length, actions: 5 + B.staff.length * 2, done: 0, revenue: 0,
-      endsAt: Date.now() + 10000, eventDone: false, eventCost: 0, paused: false, ev: null };
+    var raid = false;
+    if (B.story.flags.opgRaid) {
+      raid = true;
+      B.story.flags.opgRaid = false;
+      B.events.unshift({ t: 'opg', text: 'ОПГ: налёт на точку · ремонт 10 000 ₽', time: nowTime() });
+    }
+    shift = { list: list, total: list.length, actions: 5 + staffN * 2, done: 0, revenue: 0, pointId: p.id,
+      endsAt: Date.now() + 10000, eventDone: false, eventCost: raid ? 10000 : 0, paused: false, ev: null };
+    save();
     shift.timer = setInterval(tickShift, 1000);
     shift.staffTimer = setInterval(staffTick, 2000);
     renderShift();
@@ -3028,6 +3163,7 @@
   }
 
   function startAuto() {
+    if (B.story.flags.sold) { toast('Сеть продана — автосмены недоступны'); return; }
     if (!B.points.length) { toast('Сначала откройте точку'); return; }
     if (!B.auto.left) { toast('Сначала купите пакет автосмен'); return; }
     B.auto.on = true;
@@ -3040,15 +3176,22 @@
 
   function runAutoShift() {
     if (!B.auto.on) return;
+    if (B.story.flags.sold) { stopAuto(true); return; }
     if (shift) return;
     if (B.auto.left <= 0) { stopAuto(true); return; }
+    if (B.tax && B.tax.due > 60000) { stopAuto(true); toast('Автосмены остановлены: налоговый долг'); return; }
+    var boost = (B.ads && B.ads.left > 0) ? ADS_BOOST : 1;
+    var hit = (B.rival && B.rival.on) ? RIVAL_HIT : 1;
     var list = [];
     B.points.forEach(function (p) {
       var t = TYPES[p.type], si = spotInfo(p);
+      if (window.Growth && Growth.beforeShift) Growth.beforeShift(p);
       var stock = pointStock(p);
       if (stock <= 0) return;
       var staffN = shiftStaffCount(p.id);
-      var n = Math.min(stock, Math.max(3, Math.round((5 + staffN * 4) * si.mult * (0.85 + (Number(B.stats.rating) || 4.8) / 20))));
+      var staffEff = B.staff.reduce(function (a, x) { return x.pointId === p.id ? a + (Number(x.eff) || 0) : a; }, 0);
+      var demand = (window.Growth && Growth.demandMult) ? Growth.demandMult(p) : 1;
+      var n = Math.min(stock, Math.max(3, Math.round((5 + staffN * 2 + staffEff * 15) * si.mult * (0.85 + (Number(B.stats.rating) || 4.8) / 20) * boost * hit * demand)));
       var titles = SHIFT_TITLES[p.type] || SHIFT_TITLES.pvz;
       for (var i = 0; i < n; i++) {
         var price = Math.round(t.avg * (0.9 + Math.random() * 1.2) / 10) * 10;
@@ -3056,9 +3199,20 @@
       }
     });
     if (!list.length) { stopAuto(true); toast('Автосмена остановлена: нет товара'); return; }
+    if (B.ads && B.ads.left > 0) B.ads.left -= 1;
+    if (B.rival && B.rival.on) {
+      B.rival.left -= 1;
+      if (B.rival.left <= 0) { B.rival.on = false; toast('Конкурент «' + (B.rival.name || 'Сетка') + '» закрылся'); }
+    }
+    var raid = false;
+    if (B.story.flags.opgRaid) {
+      raid = true;
+      B.story.flags.opgRaid = false;
+      B.events.unshift({ t: 'opg', text: 'ОПГ: налёт на точку · ремонт 10 000 ₽', time: nowTime() });
+    }
     var revenue = list.reduce(function (a, o) { return a + o.price; }, 0);
-    shift = { list: list, total: list.length, actions: 0, done: list.length, revenue: revenue,
-      endsAt: Date.now(), eventDone: true, eventCost: 0, paused: false, ev: null };
+    shift = { list: list, total: list.length, actions: 0, done: list.length, revenue: revenue, pointId: null,
+      endsAt: Date.now(), eventDone: true, eventCost: raid ? 10000 : 0, paused: false, ev: null };
     B.auto.left--;
     finishShift(true);
   }
@@ -3087,6 +3241,7 @@
   Biz.autoBuy = function (id) {
     var p = AUTO_PACKS.filter(function (x) { return x.id === id; })[0];
     if (!p) return;
+    if (B.story.flags.sold) { toast('Сеть продана — автоматизация не нужна'); return; }
     if (!B.points.length) { toast('Сначала откройте точку'); return; }
     if (B.cash < p.price) { toast('Не хватает ' + fmt(p.price - B.cash)); return; }
     B.cash -= p.price;
@@ -3101,6 +3256,7 @@
   Biz.hire = function (cid) {
     var c = STAFF_POOL.filter(function (x) { return x.id === cid; })[0];
     if (!c) return;
+    if (B.story.flags.sold) { toast('Сеть продана — команда больше не нужна'); return; }
     if (!B.points.length) { toast('Сначала откройте точку'); return; }
     var free = B.points.filter(function (p) { return !B.staff.some(function (s) { return s.pointId === p.id; }); });
     if (B.cash < 3000) { toast('Найм стоит 3 000 ₽'); return; }
@@ -3187,7 +3343,7 @@
     return Math.max(1, Math.round(item.cost * (1 - off) * (1 - lvl)));
   }
   function wholesalePrice(item) {
-    return Math.max(item.cost + 1, Math.round(item.price * 0.6));
+    return Math.max(1, Math.round(item.cost * 0.75));
   }
   function prodStockTotal() {
     var f = B.factory;
@@ -3323,7 +3479,7 @@
         '<div class="pr-lines">' + lineHTML + '</div>' +
         selHTML + '</div>' +
         marketBlock +
-        '<div class="pr-stats"><div><b>' + (B.stats.sold || 0) + '</b><span>опт. сделок</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div><div><b>' + stockTotal + '</b><span>на складе</span></div></div>' +
+        '<div class="pr-stats"><div><b>' + (B.stats.sold || 0) + '</b><span>продано, шт</span></div><div><b>' + fmt(B.stats.revenue) + '</b><span>выручка</span></div><div><b>' + stockTotal + '</b><span>на складе</span></div></div>' +
         '<p class="pr-note">Себестоимость падает с уровнем и размером партии. Товар можно продать в Лавке или сдать оптом.</p>';
     }
     prodHost.innerHTML = '<div class="pr">' +
@@ -3411,7 +3567,8 @@
     });
     if (!units) { closeSheet(); return; }
     B.cash += total;
-    B.stats.sold = (B.stats.sold || 0) + 1;
+    B.stats.sold = (B.stats.sold || 0) + units;
+    B.stats.revenue = (B.stats.revenue || 0) + total;
     f.goods = {};
     prodStockTotal();
     B.events.unshift({ t: 'sold', text: 'Опт: ' + units + ' шт · +' + fmt(total), time: nowTime() });
@@ -3439,7 +3596,7 @@
     showSheet('<div class="bj-sheet-grab"></div><h3>Выставить в Лавку</h3>' +
       '<p class="bj-sheet-sub">Товар появится в магазине. Покупатели увидят его в разделе «Мой завод».</p>' +
       '<label class="pr-field"><span>Товар</span><select class="field" id="lst-line" onchange="Biz.listingFill()">' + opts + '</select></label>' +
-      '<label class="pr-field"><span>Цена за штуку, ₽</span><input class="field" id="lst-price" type="number" value="' + pick.price + '" min="100" step="10"></label>' +
+      '<label class="pr-field"><span>Цена за штуку, ₽</span><input class="field" id="lst-price" type="number" value="' + pick.price + '" min="100" max="' + Math.max(100, Math.round(pick.price * 2)) + '" step="10"></label>' +
       '<label class="pr-field"><span id="lst-have">Количество · на складе ' + have + ' шт</span>' +
       '<input class="field" id="lst-qty" type="number" value="' + Math.min(100, have) + '" min="1" max="' + have + '"></label>' +
       '<button class="btn btn-primary btn-block" style="margin-top:10px" type="button" onclick="Biz.listAdd()">Выставить</button>' +
@@ -3456,7 +3613,7 @@
     var pr = document.getElementById('lst-price');
     var qt = document.getElementById('lst-qty');
     var lbl = document.getElementById('lst-have');
-    if (pr) pr.value = item.price;
+    if (pr) { pr.value = item.price; pr.max = Math.max(100, Math.round(item.price * 2)); }
     if (lbl) lbl.textContent = 'Количество · на складе ' + have + ' шт';
     if (qt) {
       qt.max = have;
@@ -3476,6 +3633,8 @@
     var price = Math.round(Number(pr ? pr.value : item.price) || item.price);
     var qty = Math.round(Number(qt ? qt.value : 0) || 0);
     if (price < 100) { toast('Цена — не меньше 100 ₽'); return; }
+    var maxPrice = Math.max(100, Math.round(item.price * 2));
+    if (price > maxPrice) { toast('Цена не выше ' + fmt(maxPrice) + ' — иначе Лавка не пропустит'); return; }
     if (qty < 1) { toast('Укажите количество'); return; }
     if (qty > have) { toast('На складе только ' + have + ' шт'); return; }
     var same = activeListings().filter(function (l) { return (prodItem(l.line) || PROD_ITEMS[0]).id === item.id; })[0];
@@ -3538,6 +3697,7 @@
     B.cash += earned;
     B.stats.orders = (B.stats.orders || 0) + sold;
     B.stats.revenue = (B.stats.revenue || 0) + earned;
+    B.stats.sold = (B.stats.sold || 0) + sold;
     B.events.unshift({ t: 'sold', text: 'Продажа через Лавку · +' + fmt(earned), time: nowTime() });
     addXp(Math.min(120, 20 + sold * 2));
     storyTick();
@@ -3548,16 +3708,27 @@
   };
 
   Biz.resetState = function () {
+    if (autoTimer) { clearInterval(autoTimer); autoTimer = null; }
+    if (shift) {
+      clearInterval(shift.timer);
+      clearInterval(shift.staffTimer);
+      shift = null;
+      if (shiftEl && shiftEl.parentNode) shiftEl.parentNode.removeChild(shiftEl);
+      shiftEl = null;
+    }
     var fresh = JSON.parse(JSON.stringify(DEFAULTS));
     Object.keys(B).forEach(function (k) { delete B[k]; });
     Object.keys(fresh).forEach(function (k) { B[k] = fresh[k]; });
+    if (Biz.syncVisibility) Biz.syncVisibility();
     try { save(); } catch (e) {}
     if (prodHost) { try { renderProd(); } catch (e) {} }
     if (jobHost) { try { renderJob(); } catch (e) {} }
   };
 
   Biz.buildFactory = function () {
+    if (B.story.flags.sold) { toast('Сеть продана — завод больше не нужен'); return; }
     if (B.factory && B.factory.built) { toast('Завод уже построен'); return; }
+    if (B.pos !== 'industrial') { toast('Завод строят только в Промзоне — доедьте на такси'); return; }
     if (B.cash < 150000) { toast('Нужно 150 000 ₽. Проведите ещё смены'); return; }
     B.cash -= 150000;
     B.factory = { built: true, district: 'industrial', stock: 0, goods: {}, cat: 'home', line: 'home_set', batch: 50 };
@@ -3593,7 +3764,8 @@
     var base = 40000 + B.level * 8000 + (B.stats.revenue || 0) * 0.15;
     var mult = 0.5 + B.credit.score / 100;
     var lim = Math.round(base * mult / 1000) * 1000;
-    return Math.max(0, lim - creditDebt());
+    var penalty = (B.credit.loans || []).reduce(function (s, a) { return s + (Number(a.missed) || 0) * 5000; }, 0);
+    return Math.max(0, lim - creditDebt() - penalty);
   }
   function creditCalc(amount, term) {
     var total = Math.round((amount || 0) * (1 + creditRate(amount)));
@@ -3617,7 +3789,13 @@
     if (!loans.length) return;
     var pot = Math.round(Math.max(0, net || 0) * CREDIT_SHARE);
     if (pot <= 0) {
-      B.events.unshift({ t: 'credit', text: 'Платёж по кредитам перенесён', time: nowTime() });
+      loans.forEach(function (a) {
+        if (a.paid < a.total) {
+          a.missed = (Number(a.missed) || 0) + 1;
+          B.credit.score = Math.max(0, B.credit.score - 2);
+        }
+      });
+      B.events.unshift({ t: 'credit', text: 'Просрочка по кредитам', time: nowTime() });
       save();
       if (crHost) renderCredit();
       return;
@@ -3705,6 +3883,8 @@
   Biz.creditTake = function () {
     if (B.credit.score < 30) { toast('Кредитная оценка слишком низкая'); return; }
     if (B.credit.loans.length >= CREDIT_MAX_LOANS) { toast('Уже три кредита — больше не дадим'); return; }
+    var overdue = B.credit.loans.some(function (a) { return (Number(a.missed) || 0) >= 2 && a.paid < a.total; });
+    if (overdue) { toast('Есть просрочки — банк не выдаёт новый кредит'); return; }
     var lim = creditLimit();
     var amount = Math.min(crForm.amount, lim);
     if (amount < 5000) { toast('Минимум 5 000 ₽'); return; }
@@ -3926,9 +4106,17 @@
     if (!S.removed) S.removed = [];
     if (S.removed.indexOf(id) < 0) S.removed.push(id);
   }
-  if (!B.installed.job) ensureRemoved('job');
-  if (!B.installed.production && !B.story.flags.prodUnlocked) ensureRemoved('production');
-
+  function ensureInstalled(id) {
+    if (!S.removed) return;
+    var i = S.removed.indexOf(id);
+    if (i >= 0) S.removed.splice(i, 1);
+  }
+  Biz.syncVisibility = function () {
+    if (B.installed.job) ensureInstalled('job'); else ensureRemoved('job');
+    if (B.installed.production || B.story.flags.prodUnlocked) ensureInstalled('production');
+    else ensureRemoved('production');
+  };
+  Biz.syncVisibility();
   var origInstall = LV.installApp;
   LV.installApp = function (id) {
     origInstall(id);
@@ -3941,6 +4129,75 @@
       B.installed.production = true;
       save();
     }
+  };
+
+  // ============================================================
+  // НЕДВИЖИМОСТЬ
+  // ============================================================
+  var rtHost = null;
+
+  function realtyCard(r, owned) {
+    var can = B.level >= r.level;
+    return '<div class="rt-card">' +
+      '<span class="rt-ic" style="background:' + r.color + '"><i class="fa-solid ' + r.icon + '"></i></span>' +
+      '<div class="rt-info"><b>' + esc(r.name) + '</b><span>' + esc(r.kind) + ' · ' + esc(r.desc) + '</span>' +
+      '<div class="rt-meta"><span>' + fmt(r.price) + '</span><span>+' + fmt(r.rent) + ' / смена</span><span>' + r.level + '+ ур.</span></div></div>' +
+      (owned
+        ? '<button class="rt-btn sell" type="button" onclick="Biz.sellRealty(\'' + r.id + '\')">Продать</button>'
+        : '<button class="rt-btn" type="button" ' + (can ? '' : 'disabled') + ' onclick="Biz.buyRealty(\'' + r.id + '\')">' + (can ? 'Купить' : 'Нужен ' + r.level + ' ур.') + '</button>') +
+      '</div>';
+  }
+
+  function renderRealty() {
+    if (!rtHost) return;
+    var owned = Array.isArray(B.realty) ? B.realty : [];
+    var income = realtyRent();
+    var ownedCards = owned.map(function (id) { var r = realtyItem(id); return r ? realtyCard(r, true) : ''; }).join('');
+    var market = REALTY.filter(function (r) { return owned.indexOf(r.id) < 0; });
+    var marketCards = market.map(function (r) { return realtyCard(r, false); }).join('');
+    rtHost.innerHTML = '<div class="rt">' +
+      '<header class="rt-top"><button class="rt-back" type="button" data-back><i class="fa-solid fa-chevron-left"></i></button>' +
+      '<div class="rt-title"><b>Недвижимость</b><span>пассивный доход</span></div></header>' +
+      '<div class="rt-cash"><small>На счету</small><b>' + fmt(B.cash) + '</b></div>' +
+      '<div class="rt-stats"><div class="rt-stat"><b>' + owned.length + '</b><span>объектов</span></div><div class="rt-stat"><b>+' + fmt(income) + '</b><span>за смену</span></div></div>' +
+      '<div class="rt-sec"><b>Мои объекты</b><span>' + owned.length + '</span></div>' +
+      (ownedCards || '<p class="rt-empty">Пока пусто. Купи первый объект — и он начнёт приносить доход.</p>') +
+      '<div class="rt-sec"><b>На рынке</b><span>' + market.length + '</span></div>' +
+      (marketCards || '<p class="rt-empty">Все объекты уже твои.</p>') +
+      '<p class="rt-note">Доход начисляется в конце каждой смены. Продажа — 85% цены покупки.</p>' +
+      '</div>';
+  }
+
+  Biz.buyRealty = function (id) {
+    var r = realtyItem(id);
+    if (!r) return;
+    if (!Array.isArray(B.realty)) B.realty = [];
+    if (B.realty.indexOf(id) >= 0) { toast('Этот объект уже куплен'); return; }
+    if (B.level < r.level) { toast('Нужен ' + r.level + ' уровень'); return; }
+    if (B.cash < r.price) { toast('Не хватает ' + fmt(r.price - B.cash)); return; }
+    B.cash -= r.price;
+    B.realty.push(id);
+    B.events.unshift({ t: 'realty', text: 'Куплена недвижимость: ' + r.name, time: nowTime() });
+    save();
+    renderRealty();
+    if (jobHost) renderJob();
+    toast('Куплено: ' + r.name);
+  };
+
+  Biz.sellRealty = function (id) {
+    if (!Array.isArray(B.realty)) return;
+    var i = B.realty.indexOf(id);
+    if (i < 0) return;
+    var r = realtyItem(id);
+    if (!r) return;
+    var back = Math.round(r.price * 0.85);
+    B.realty.splice(i, 1);
+    B.cash += back;
+    B.events.unshift({ t: 'realty', text: 'Продана недвижимость: ' + r.name + ' · +' + fmt(back), time: nowTime() });
+    save();
+    renderRealty();
+    if (jobHost) renderJob();
+    toast('Продано · +' + fmt(back));
   };
 
   LV.registerApp({
@@ -3989,8 +4246,18 @@
   });
 
   LV.registerApp({
+    id: 'realty', name: 'Недвижимость', icon: 'fa-building', bg: 'linear-gradient(140deg,#0f766e,#064e3b)',
+    page: 2, status: 'white', desc: 'Квартиры, офисы и склады', visible: function () { return B.level >= 4; },
+    mount: function (body) {
+      rtHost = body;
+      renderRealty();
+      return function () { rtHost = null; };
+    }
+  });
+
+  LV.registerApp({
     id: 'admin', name: 'Админ', icon: 'fa-user-shield', bg: 'linear-gradient(140deg,#111827,#065f46)',
-    page: isX8() ? 1 : null, status: 'white', desc: 'Выдача денег · X-8',
+    page: 1, visible: function () { return isX8(); }, status: 'white', desc: 'Выдача денег · X-8',
     mount: function (body) {
       adminHost = body;
       body.innerHTML = adminPanelHTML();

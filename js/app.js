@@ -6,7 +6,7 @@
 
   var DEFAULTS = {
     v: 1,
-    user: { name: '', xid: '', joined: '', tg: '', email: '' },
+    user: { name: '', xid: '', joined: '', tg: '', email: '', passport: null },
     tutorial: true,
     theme: 'light',
     cart: {},
@@ -16,6 +16,7 @@
       { id: 1, title: 'Список покупок', text: 'Кофе в зёрнах\nСыр\nОливковое масло\nПеченье к чаю', date: '2026-11-16' }
     ],
     settings: { notify: true, sound: true, saver: false },
+    gameClock: { realStart: 0, gameStart: 0, scale: 60 },
     balance: 24800,
     page: 0,
     webFav: ['lavka', 'bankfake'],
@@ -64,7 +65,13 @@
   function xidLsGet(k, d) { try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
 
   function xidSessionSave(sess) { xidLsSet('xid_session', sess); }
-  function xidSessionClear() { try { localStorage.removeItem('xid_session'); } catch (e) {} }
+  function xidSessionClear() {
+    try { localStorage.removeItem('xid_session'); } catch (e) {}
+    var paths = ['/', '/market/', (location.pathname || '/').replace(/[^/]*$/, '')];
+    paths.forEach(function (p) {
+      try { document.cookie = 'xprodc_session=; Max-Age=0; path=' + p; } catch (e) {}
+    });
+  }
 
   async function xidPickBase() {
     var cached = xidLsGet('xid_base', '');
@@ -127,10 +134,11 @@
 
   function xidApplyMe(me) {
     lavkaHold = true;
+    if (state.user.xid && me.xid && state.user.xid !== me.xid) state.user.nameOwn = false;
     state.user.xid = me.xid || state.user.xid;
-    state.user.name = me.username || state.user.name;
+    if (!state.user.nameOwn) state.user.name = me.username || state.user.name;
     state.user.email = me.email || '';
-    state.user.tg = me.tg_username ? '@' + String(me.tg_username).replace(/^@+/, '') : '';
+    state.user.tg = me.tg_username ? '@' + String(me.tg_username).replace(/^@+/, '') : (state.user.tg || '');
     state.user.joined = me.created_at ? String(me.created_at).slice(0, 10) : (state.user.joined || '');
     state.user.bankLinked = true;
     save();
@@ -162,6 +170,7 @@
     var me = await xidMe();
     xidApplyMe(me);
     updateHomeUser();
+    renderApps();
     try { await bankReload(); } catch (e) {}
     lavkaPull().catch(function () {});
     return me;
@@ -183,6 +192,7 @@
     var me = await xidMe();
     xidApplyMe(me);
     updateHomeUser();
+    renderApps();
     try { await bankReload(); } catch (e) {}
     lavkaPull().catch(function () {});
     return me;
@@ -198,12 +208,14 @@
       } catch (e) {}
     }
     xidSessionClear();
+    bankForgetLocal();
     state.user.name = '';
     state.user.xid = '';
     state.user.email = '';
     state.user.tg = '';
     state.user.joined = '';
     state.user.bankLinked = false;
+    state.user.nameOwn = false;
     state.balance = DEFAULTS.balance;
     save();
     updateHomeUser();
@@ -217,12 +229,8 @@
     state.user.tg = '';
     state.user.joined = '';
     state.user.bankLinked = false;
-    bankRaw = null;
-    bankBalance = 0;
-    bankCards = [];
-    bankSource = '';
-    bankVersion = 0;
-    state.balance = DEFAULTS.balance;
+    state.user.nameOwn = false;
+    bankForgetLocal();
     try { save(); } catch (e) {}
     updateHomeUser();
   }
@@ -280,6 +288,15 @@
       if (!raw) return false;
       return bankApply(JSON.parse(raw), 'local');
     } catch (e) { return false; }
+  }
+  function bankForgetLocal() {
+    bankRaw = null;
+    bankBalance = 0;
+    bankCards = [];
+    bankPaymentCardId = 'balance';
+    bankSource = '';
+    bankVersion = 0;
+    state.balance = DEFAULTS.balance;
   }
   function bankCardLast4(c) {
     var n = String((c && (c.number || c.fullNumber || c.last4)) || '').replace(/\D/g, '');
@@ -429,6 +446,22 @@
   function clockStr(d) {
     return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
   }
+
+  function gameClockInit() {
+    if (!state.gameClock || !state.gameClock.realStart) {
+      var d = new Date();
+      d.setHours(9, 0, 0, 0);
+      state.gameClock = { realStart: Date.now(), gameStart: d.getTime(), scale: 60 };
+      save();
+    }
+  }
+
+  function gameNow() {
+    var c = state.gameClock;
+    if (!c || !c.realStart) return new Date();
+    var scale = Number(c.scale) || 60;
+    return new Date(c.gameStart + (Date.now() - c.realStart) * scale);
+  }
   function initials(name) {
     var parts = String(name || '').replace(/[^\wа-яА-ЯёЁ\s-]/g, ' ').split(/[\s-]+/).filter(Boolean);
     var a = (parts[0] || 'Л')[0] || 'Л';
@@ -562,6 +595,24 @@
           try { var e = await r.json(); detail = (e && e.detail) || e; } catch (e2) {}
           if (detail && detail.server_version !== undefined) {
             lavkaVersion = Number(detail.server_version) || lavkaVersion;
+            var sv = null, sTs = 0;
+            try {
+              var pv = JSON.parse(detail.server_value);
+              sv = pv && pv.data ? pv.data : pv;
+              sTs = Number(pv && pv.updatedAt) || 0;
+            } catch (e3) { sv = null; }
+            if (sv && sTs > stamp) {
+              lavkaQuiet = true;
+              lavkaDeep(state, sv);
+              lavkaQuiet = false;
+              lavkaTsSet(sTs);
+              lavkaOwnerSet(xid);
+              try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e4) {}
+              try { document.body.classList.toggle('dark', state.theme === 'dark'); } catch (e6) {}
+              updateHomeUser();
+              if (window.Biz && Biz.migrateStory) { try { Biz.migrateStory(false); } catch (e5) {} }
+              break;
+            }
             continue;
           }
         }
@@ -584,6 +635,12 @@
     state.removed = d.removed;
     state.balance = d.balance;
     state.page = 0;
+    state.theme = d.theme;
+    state.tutorial = d.tutorial;
+    state.settings = d.settings;
+    ['reminders', 'shots', 'records', 'podcast', 'podPlayed', 'gameBest', 'onlineWait', 'smart'].forEach(function (k) {
+      try { delete state[k]; } catch (e) {}
+    });
     if (window.Biz && Biz.resetState) { try { Biz.resetState(); } catch (e) {} }
     lavkaQuiet = false;
     try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
@@ -626,6 +683,9 @@
         var oldStory = !!(cloud && cloud.biz && cloud.biz.story && cloud.biz.story.v2 === undefined);
         lavkaQuiet = true;
         lavkaDeep(state, cloud);
+        ['reminders', 'shots', 'records', 'podcast', 'podPlayed', 'gameBest', 'onlineWait', 'smart'].forEach(function (k) {
+          if (!(k in (cloud || {}))) { try { delete state[k]; } catch (e) {} }
+        });
         if (window.Biz && Biz.migrateStory) { try { Biz.migrateStory(oldStory); } catch (e) {} }
         lavkaQuiet = false;
         ['xid', 'name', 'email', 'tg', 'joined', 'bankLinked'].forEach(function (k) {
@@ -635,6 +695,7 @@
         lavkaOwnerSet(xid);
         lavkaTsSet(cloudTs);
         try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {}
+        try { document.body.classList.toggle('dark', state.theme === 'dark'); } catch (e) {}
         updateHomeUser();
         if (window.LV && LV.renderApps) LV.renderApps();
         applied = true;
@@ -654,6 +715,12 @@
     lavkaVersion = 0;
     lavkaHold = false;
     lavkaRefreshHome();
+  }
+  function lavkaResetAll() {
+    lavkaForgetLocal();
+    try { document.body.classList.remove('dark'); } catch (e) {}
+    if (!readXidSession()) return Promise.resolve(false);
+    return lavkaPush();
   }
   function lavkaRefreshHome() {
     try { updateHomeUser(); } catch (e) {}
@@ -695,7 +762,14 @@
       var n = cartCount();
       return n ? String(n) : '';
     }
-    if (id === 'messages') return '2';
+    if (id === 'messages' && window.UnreadMessages) {
+      var msgU = window.UnreadMessages();
+      return msgU ? String(msgU) : '';
+    }
+    if (id === 'mail' && window.UnreadMail) {
+      var mu = window.UnreadMail();
+      return mu ? String(mu) : '';
+    }
     if (id === 'mail' && window.BizUnreadSms) {
       var u = window.BizUnreadSms();
       return u ? String(u) : '';
@@ -741,6 +815,7 @@
     var pages = {};
     APPS.forEach(function (a) {
       if (a.page === null || a.page === undefined) return;
+      if (a.visible && !a.visible()) return;
       if (!a.dock && !isInstalled(a.id)) return;
       var p = a.page || 0;
       (pages[p] = pages[p] || []).push(a);
@@ -782,8 +857,92 @@
     if (!silent) { save(); }
   }
 
+  var passportEl = null;
+  var onboardingActive = false;
+
+  function passportData() {
+    return (state.user && state.user.passport) || {};
+  }
+
+  function passportComplete() {
+    var p = passportData();
+    return !!(p.surname && p.name && p.birth);
+  }
+
+  function passportName() {
+    var p = passportData();
+    if (state.user.name) return state.user.name;
+    if (p.name || p.surname) return [p.name, p.surname].filter(Boolean).join(' ');
+    return 'Гость';
+  }
+
+  function showPassport(force) {
+    if (!force && passportComplete()) return;
+    if (passportEl) return;
+    onboardingActive = true;
+    var p = passportData();
+    var editing = passportComplete();
+    passportEl = document.createElement('div');
+    passportEl.className = 'passport-screen';
+    passportEl.id = 'passport-screen';
+    passportEl.innerHTML = '<div class="passport-card">' +
+      '<div class="passport-mark">Л</div>' +
+      '<div class="passport-kicker">Лавка · вход в игру</div>' +
+      '<h2>Паспорт игрока</h2>' +
+      '<p class="passport-sub">Имя и фамилия будут видны в игре. Отчество можно не заполнять.</p>' +
+      '<label class="passport-label">Фамилия<input class="field" id="pass-surname" maxlength="40" autocomplete="family-name" value="' + esc(p.surname || '') + '"></label>' +
+      '<label class="passport-label">Имя<input class="field" id="pass-name" maxlength="40" autocomplete="given-name" value="' + esc(p.name || '') + '"></label>' +
+      '<label class="passport-label">Отчество <span>необязательно</span><input class="field" id="pass-patronymic" maxlength="40" autocomplete="additional-name" value="' + esc(p.patronymic || '') + '"></label>' +
+      '<label class="passport-label">Дата рождения<input class="field" id="pass-birth" type="date" max="' + new Date().toISOString().slice(0, 10) + '" value="' + esc(p.birth || '') + '"></label>' +
+      '<button class="btn btn-primary btn-block" type="button" onclick="Passport.save()">' + (editing ? 'Сохранить' : 'Продолжить') + '</button>' +
+      (editing ? '<button class="passport-cancel" type="button" onclick="Passport.close()">Отмена</button>' : '') +
+      '<p class="passport-note">Это игровые данные. Они хранятся только в Лавке и не являются настоящим документом.</p>' +
+      '</div>';
+    var host = document.getElementById('phone') || document.body;
+    host.appendChild(passportEl);
+    setTimeout(function () {
+      var f = document.getElementById('pass-surname');
+      if (f) f.focus();
+    }, 80);
+  }
+
+  function savePassport() {
+    var surname = (document.getElementById('pass-surname') || {}).value || '';
+    var name = (document.getElementById('pass-name') || {}).value || '';
+    var patronymic = (document.getElementById('pass-patronymic') || {}).value || '';
+    var birth = (document.getElementById('pass-birth') || {}).value || '';
+    surname = surname.trim();
+    name = name.trim();
+    patronymic = patronymic.trim();
+    if (surname.length < 2) { toast('Введите фамилию'); return; }
+    if (name.length < 2) { toast('Введите имя'); return; }
+    if (!birth) { toast('Укажите дату рождения'); return; }
+    var bd = new Date(birth + 'T12:00:00');
+    if (isNaN(bd.getTime()) || bd.getTime() > Date.now()) { toast('Проверьте дату рождения'); return; }
+    state.user.passport = { surname: surname, name: name, patronymic: patronymic, birth: birth };
+    state.user.name = name + ' ' + surname;
+    save();
+    updateHomeUser();
+    if (passportEl && passportEl.parentNode) passportEl.parentNode.removeChild(passportEl);
+    passportEl = null;
+    onboardingActive = state.tutorial !== false;
+    toast('Паспорт заполнен');
+    if (state.tutorial !== false) setTimeout(startTutorial, 500);
+    if (currentApp && currentApp.id === 'profile') openApp('profile');
+  }
+
+  window.Passport = {
+    open: function () { showPassport(true); },
+    save: savePassport,
+    close: function () {
+      if (passportEl && passportEl.parentNode) passportEl.parentNode.removeChild(passportEl);
+      passportEl = null;
+      onboardingActive = false;
+    }
+  };
+
   function updateHomeUser() {
-    var n = state.user.name || 'Гость';
+    var n = passportName();
     var av = document.getElementById('home-avatar');
     var nm = document.getElementById('home-name');
     var xid = document.getElementById('home-xid');
@@ -793,13 +952,13 @@
       xid.textContent = state.user.xid || 'Войти в ID';
       xid.classList.toggle('off', !state.user.xid);
     }
-    var h = new Date().getHours();
+    var h = gameNow().getHours();
     var hi = document.querySelector('.home-hi');
     if (hi) hi.textContent = h < 5 ? 'Доброй ночи' : h < 12 ? 'Доброе утро' : h < 18 ? 'Добрый день' : 'Добрый вечер';
   }
 
   function tick() {
-    var d = new Date();
+    var d = gameNow();
     var t = clockStr(d);
     var sb = document.getElementById('sb-time');
     var ht = document.getElementById('home-time');
@@ -916,6 +1075,7 @@
 
   function startTutorial() {
     if (!tutEl) return;
+    onboardingActive = true;
     tutStep = 0;
     tutEl.classList.remove('hidden');
     tutGoto(0);
@@ -924,7 +1084,8 @@
   function endTutorial() {
     clearTimeout(tutTimer);
     if (tutEl) tutEl.classList.add('hidden');
-    state.tutorial = true;
+    onboardingActive = false;
+    state.tutorial = false;
     save();
     closeApp();
     setPage(0);
@@ -1017,10 +1178,18 @@
 
     if (state.theme === 'dark') document.body.classList.add('dark');
     xidBoot().then(function () { return lavkaPull(); }).catch(function () { lavkaHold = false; });
+    gameClockInit();
     updateHomeUser();
     renderApps();
+    var needPassport = !passportComplete();
+    onboardingActive = needPassport || (state.tutorial !== false && !/^#(web|app)=/i.test(location.hash || ''));
+    if (needPassport) {
+      setTimeout(function () { showPassport(false); }, 300);
+    } else if (state.tutorial !== false && !/^#(web|app)=/i.test(location.hash || '')) {
+      setTimeout(startTutorial, 900);
+    }
     tick();
-    setInterval(tick, 15000);
+    setInterval(tick, 1000);
 
     // страховка: SVG-иконки статус-бара даже при старой разметке
     (function statusIcons() {
@@ -1163,6 +1332,8 @@
     dateFull: dateFull,
     todayISO: todayISO,
     clockStr: clockStr,
+    gameNow: gameNow,
+    isOnboarding: function () { return onboardingActive; },
     initials: initials,
     svgArt: svgArt,
     hash: hash,
@@ -1178,7 +1349,7 @@
     xidRegister: xidRegister,
     xidLogout: xidLogout,
     bankReload: bankReload,
-    cloud: { pull: lavkaPull, push: lavkaPush, reset: lavkaForgetLocal },
+    cloud: { pull: lavkaPull, push: lavkaPush, reset: lavkaForgetLocal, clear: lavkaResetAll },
     startTutorial: startTutorial,
     copyText: copyText,
     openSettingsTo: openSettingsTo,

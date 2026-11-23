@@ -72,7 +72,12 @@
       var p = PODCASTS.filter(function (x) { return x.id === id; })[0];
       if (!p) return;
       if (st.id === id && st.playing) { st.playing = false; }
-      else { st.id = id; st.playing = true; if (st.pos >= p.dur) st.pos = 0; }
+      else {
+        if (st.id !== id) st.pos = 0;
+        st.id = id;
+        st.playing = true;
+        if (st.pos >= p.dur) st.pos = 0;
+      }
       save();
       renderPodcasts();
     }
@@ -250,6 +255,8 @@
       shotsEnsure().unshift({ id: Date.now(), hue: hue, date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
       save();
       renderShots();
+      var t = el('cm-title');
+      if (t) t.textContent = 'Галерея · ' + shotsEnsure().length;
       LV.toast('Снимок сохранён');
     },
     open: function (id) {
@@ -266,7 +273,7 @@
       body.innerHTML = LV.appbar({ title: 'Камера', sub: 'галерея Лавки' }) + scroll(
         '<div class="cm-view"><div class="cm-frame"></div><span class="cm-hint">нажмите, чтобы снять</span>' +
         '<button class="cm-shutter" type="button" onclick="AppsReal2.cam.snap()"></button></div>' +
-        '<div class="cm-title">Галерея · ' + shotsEnsure().length + '</div>' +
+        '<div class="cm-title" id="cm-title">Галерея · ' + shotsEnsure().length + '</div>' +
         '<div class="cm-grid" id="cm-gal"></div>'
       );
       renderShots();
@@ -282,10 +289,113 @@
     { id: 3, folder: 'doc', name: 'Налоговая декларация.xlsx', size: '96 КБ', date: '01.11', body: 'Квартальная декларация: выручка, аренда, зарплаты, налог на имущество. Отправлена в ФНС.' },
     { id: 4, folder: 'down', name: 'Поставка · коробки.pdf', size: '64 КБ', date: '18.11', body: 'Накладная: 200 коробок, 3 рулона скотча, упаковка. Оплачено через «Опт».' },
     { id: 5, folder: 'down', name: 'Смета завода.xlsx', size: '128 КБ', date: '16.11', body: 'Смета запуска производства: оборудование, сырьё, персонал. Итого 1 240 000 ₽.' },
-    { id: 6, folder: 'img', name: 'Витрина ПВЗ.png', size: '1,4 МБ', date: '15.11', body: 'Фото витрины пункта выдачи. Используется в карточке точки.' },
-    { id: 7, folder: 'img', name: 'Вывеска Лавка.png', size: '860 КБ', date: '11.11', body: 'Макет вывески для нового магазина. Зелёный фон, белый знак.' }
+    { id: 6, folder: 'img', name: 'Витрина ПВЗ.jpg', size: '688 КБ', date: '15.11', img: 'img/pvz-window.jpg', body: 'Фото витрины пункта выдачи. Используется в карточке точки.' },
+    { id: 7, folder: 'img', name: 'Вывеска Лавка.jpg', size: '922 КБ', date: '11.11', img: 'img/lavka-sign.jpg', body: 'Макет вывески для нового магазина. Зелёный фон, белый знак.' }
   ];
   var FILE_FOLDERS = [['all', 'Все'], ['doc', 'Документы'], ['down', 'Загрузки'], ['img', 'Фото']];
+
+  var DOCS = {
+    1: {
+      kicker: 'ДОГОВОР АРЕНДЫ',
+      title: 'Договор аренды № АР-12/26',
+      sub: 'г. Москва · 12 ноября 2026 года',
+      rows: [
+        ['Арендодатель', 'ООО «Городская недвижимость»'],
+        ['Арендатор', 'ООО «Лавка»'],
+        ['Помещение', 'ул. Тверская, 12 · 18 м²'],
+        ['Срок аренды', '11 месяцев'],
+        ['Ставка', '900 ₽ за смену'],
+        ['Депозит', '25 000 ₽']
+      ],
+      note: 'Арендатор использует помещение для розничной торговли и своевременно вносит арендную плату.',
+      signer: 'А. В. Соколов',
+      role: 'Арендодатель'
+    },
+    2: {
+      kicker: 'АДМИНИСТРАЦИЯ ГОРОДА · КОМИТЕТ ПО ЛИЦЕНЗИРОВАНИЮ',
+      title: 'ЛИЦЕНЗИЯ № АЛ-4821',
+      sub: 'на осуществление розничной продажи алкогольной продукции',
+      rows: [
+        ['Лицензиат', 'ООО «Лавка» · ИНН 7712345678'],
+        ['Адрес', 'г. Москва, ул. Тверская, 12'],
+        ['Вид деятельности', 'Розничная продажа алкогольной продукции'],
+        ['Срок действия', 'с 09.11.2022 по 09.11.2027'],
+        ['Орган выдачи', 'Комитет по лицензированию города Москвы']
+      ],
+      note: 'Лицензия действительна при соблюдении требований законодательства и условий, указанных в приложении.',
+      signer: 'И. С. Петров',
+      role: 'Председатель комитета',
+      stamp: true
+    },
+    3: {
+      kicker: 'ФЕДЕРАЛЬНАЯ НАЛОГОВАЯ СЛУЖБА',
+      title: 'НАЛОГОВАЯ ДЕКЛАРАЦИЯ',
+      sub: 'за IV квартал 2026 года',
+      rows: [
+        ['Налогоплательщик', 'ООО «Лавка»'],
+        ['ИНН / КПП', '7712345678 / 771201001'],
+        ['Вид декларации', 'Налог на прибыль организаций'],
+        ['Доходы', '2 480 000 ₽'],
+        ['Расходы', '1 760 000 ₽'],
+        ['Налог к уплате', '144 000 ₽']
+      ],
+      note: 'Декларация подписана усиленной квалифицированной электронной подписью.',
+      signer: 'И. И. Лавров',
+      role: 'Генеральный директор'
+    },
+    4: {
+      kicker: 'ООО «ЛАВКА» · СКЛАД',
+      title: 'НАКЛАДНАЯ № 4821',
+      sub: 'поставка на пункт выдачи · 18 ноября 2026',
+      rows: [
+        ['Поставщик', 'Опт «Город»'],
+        ['Получатель', 'ПВЗ Тверская, 12'],
+        ['Коробки', '200 шт'],
+        ['Упаковка', '3 рулона скотча, 200 пакетов'],
+        ['Сумма', '48 600 ₽'],
+        ['Оплата', 'Бизнес-счёт · оплачено']
+      ],
+      note: 'Товар принят без повреждений. Претензий по количеству и качеству нет.',
+      signer: 'К. А. Смирнов',
+      role: 'Кладовщик'
+    },
+    5: {
+      kicker: 'ООО «ЛАВКА» · ПРОИЗВОДСТВО',
+      title: 'СМЕТА ЗАПУСКА',
+      sub: 'производственный цех · 16 ноября 2026',
+      rows: [
+        ['Оборудование', '640 000 ₽'],
+        ['Сырьё и материалы', '280 000 ₽'],
+        ['Персонал', '180 000 ₽'],
+        ['Ремонт помещения', '140 000 ₽'],
+        ['Итого', '1 240 000 ₽']
+      ],
+      note: 'Смета утверждена директором. Срок запуска линии — 30 дней с момента оплаты.',
+      signer: 'А. В. Соколов',
+      role: 'Директор'
+    }
+  };
+
+  function documentHTML(f) {
+    var d = DOCS[f.id];
+    if (!d) return '';
+    var rows = d.rows.map(function (r) {
+      return '<div class="doc-row"><span>' + esc(r[0]) + '</span><b>' + esc(r[1]) + '</b></div>';
+    }).join('');
+    return '<div class="fl-doc"><div class="doc-paper">' +
+      '<div class="doc-watermark">ИГРОВОЙ ДОКУМЕНТ</div>' +
+      '<div class="doc-kicker">' + esc(d.kicker) + '</div>' +
+      '<div class="doc-title">' + esc(d.title) + '</div>' +
+      (d.sub ? '<div class="doc-sub">' + esc(d.sub) + '</div>' : '') +
+      '<div class="doc-rows">' + rows + '</div>' +
+      (d.note ? '<p class="doc-note">' + esc(d.note) + '</p>' : '') +
+      '<div class="doc-sign">' +
+      (d.stamp ? '<div class="doc-stamp"><b>КОМИТЕТ<br>ПО ЛИЦЕНЗИРОВАНИЮ</b><span>М.П.</span></div>' : '') +
+      '<div class="doc-sign-box"><svg viewBox="0 0 220 50" aria-hidden="true"><path d="M4 34 C18 8 32 44 48 20 C62 2 70 42 86 24 C98 10 112 40 128 22 C142 6 154 38 170 24 C184 12 196 32 212 18" fill="none" stroke="#1e3a8a" stroke-width="2.2" stroke-linecap="round"/><path d="M92 36 C112 28 130 40 150 32" fill="none" stroke="#1e3a8a" stroke-width="1.4" stroke-linecap="round" opacity=".65"/></svg>' +
+      '<span>' + esc(d.role) + '</span><b>' + esc(d.signer) + '</b></div></div>' +
+      '<div class="doc-foot">Игровой документ · не имеет юридической силы</div>' +
+      '</div></div>';
+  }
 
   AppsReal2.files = {
     folder: 'all',
@@ -295,8 +405,13 @@
     open: function (id) {
       var f = FILES.filter(function (x) { return x.id === id; })[0];
       if (!f) return;
-      sheet('<div class="fl-prev"><i class="fa-solid fa-file-lines"></i><b>' + esc(f.name) + '</b>' +
-        '<small>' + esc(f.size) + ' · ' + esc(f.date) + '</small><p>' + esc(f.body) + '</p>' +
+      var preview = f.img
+        ? '<img src="' + f.img + '" alt="' + esc(f.name) + '" style="display:block;width:100%;max-height:320px;object-fit:cover;border-radius:13px;margin-bottom:11px">'
+        : (DOCS[f.id] ? documentHTML(f) : '<i class="fa-solid fa-file-lines"></i>');
+      var desc = (f.img || DOCS[f.id]) ? '' : '<p>' + esc(f.body) + '</p>';
+      sheet('<div class="fl-prev">' + preview +
+        '<b>' + esc(f.name) + '</b>' +
+        '<small>' + esc(f.size) + ' · ' + esc(f.date) + '</small>' + desc +
         '<button class="btn btn-primary" type="button" onclick="document.getElementById(\'ar-sheet\').remove()">Закрыть</button></div>');
     }
   };

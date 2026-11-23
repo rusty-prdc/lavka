@@ -159,9 +159,41 @@
     }
   };
 
+  var ARENA_LOOKS = [
+    { floor: '#eef6ea', wall: '#b9cbb2', shelf: '#8fb07f', shelfEdge: '#6f9560', counter: '#b08968' },
+    { floor: '#f3ece1', wall: '#c7b8a2', shelf: '#a88f6c', shelfEdge: '#806a4d', counter: '#9a6138' },
+    { floor: '#e8eef5', wall: '#a9b9ca', shelf: '#8499b1', shelfEdge: '#637a94', counter: '#8b6448' },
+    { floor: '#f1e9ee', wall: '#c4b0bc', shelf: '#a98799', shelfEdge: '#806173', counter: '#9c5e57' }
+  ];
+  var ARENA_DISTRICTS = ['Центр', 'Заречье', 'Складской район', 'Спальный', 'Порт', 'Вокзал'];
+
+  function arenaVariant(base) {
+    var sc = JSON.parse(JSON.stringify(base));
+    var look = ARENA_LOOKS[Math.floor(Math.random() * ARENA_LOOKS.length)];
+    Object.keys(look).forEach(function (k) { sc[k] = look[k]; });
+    sc.sub = base.sub + ' · ' + ARENA_DISTRICTS[Math.floor(Math.random() * ARENA_DISTRICTS.length)];
+    sc.obstacles = sc.obstacles.map(function (b) {
+      var x = Math.max(12, Math.min(348 - b[2], b[0] + (Math.random() * 18 - 9)));
+      var y = Math.max(70, Math.min(492 - b[3], b[1] + (Math.random() * 18 - 9)));
+      var w = Math.max(28, b[2] + (Math.random() * 14 - 7));
+      var h = Math.max(20, b[3] + (Math.random() * 12 - 6));
+      return [Math.round(x), Math.round(y), Math.round(w), Math.round(h)];
+    });
+    var crates = 1 + Math.floor(Math.random() * 2);
+    for (var i = 0; i < crates; i++) {
+      var w = 36 + Math.round(Math.random() * 26);
+      var h = 22 + Math.round(Math.random() * 18);
+      var x = 24 + Math.round(Math.random() * (312 - w));
+      var y = 270 + Math.round(Math.random() * 120);
+      if (x < 230 && x + w > 130 && y > 380) continue;
+      sc.obstacles.push([x, y, w, h]);
+    }
+    return sc;
+  }
+
   function shooter(opts) {
     opts = opts || {};
-    var sc = SCENES[opts.scene] || SCENES.shop;
+    var sc = arenaVariant(SCENES[opts.scene] || SCENES.shop);
     var box = open('act-game act-shooter');
     if (!box) return;
     box.innerHTML =
@@ -599,6 +631,9 @@
       '</div></div>' +
       '<div class="ag-tip">A / D или стрелки — руль · Пробел — газ</div>';
 
+    var hospitalImg = new Image();
+    hospitalImg.src = 'img/hospital-entrance.jpg';
+
     var cv = box.querySelector('#ad-cv');
     var ctx = cv.getContext('2d');
     var W = 360, H = 520;
@@ -739,14 +774,28 @@
       drawAmbulance(car.x, car.y, car.flash > 0);
 
       // финиш у больницы
-      if (progress > 92) {
-        ctx.globalAlpha = Math.min(1, (progress - 92) / 8);
-        ctx.fillStyle = '#f8fafc';
-        ctx.fillRect(roadX, 210, roadW, 70);
-        ctx.fillStyle = '#ef4444';
+      if (progress > 90) {
+        ctx.globalAlpha = Math.min(1, (progress - 90) / 10);
+        var px = roadX, py = 158, pw = roadW, ph = 138;
+        if (hospitalImg.complete && hospitalImg.width) {
+          var ir = Math.max(pw / hospitalImg.width, ph / hospitalImg.height);
+          var sw = pw / ir, sh = ph / ir;
+          ctx.save();
+          ctx.beginPath();
+          roundRect(ctx, px, py, pw, ph, 12);
+          ctx.clip();
+          ctx.drawImage(hospitalImg, (hospitalImg.width - sw) / 2, (hospitalImg.height - sh) / 2, sw, sh, px, py, pw, ph);
+          ctx.fillStyle = 'rgba(2,6,23,.48)';
+          ctx.fillRect(px, py, pw, ph);
+          ctx.restore();
+        } else {
+          ctx.fillStyle = '#f8fafc';
+          ctx.fillRect(px, py + 34, pw, 70);
+        }
+        ctx.fillStyle = '#fff';
         ctx.font = '800 18px Inter, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText('БОЛЬНИЦА', W / 2, 252);
+        ctx.fillText('БОЛЬНИЦА', W / 2, py + ph / 2 + 6);
         ctx.textAlign = 'left';
         ctx.globalAlpha = 1;
       }
@@ -812,7 +861,7 @@
       cancelAnimationFrame(raf);
       msgEl.classList.remove('hidden');
       if (win) {
-        msgEl.innerHTML = '<div class="ag-card win"><i class="fa-solid fa-hospital"></i><b>Больница</b><span>Вы довезли Макса. Врачи уже у входа.</span>' +
+        msgEl.innerHTML = '<div class="ag-card win"><div style="width:100%;height:108px;border-radius:12px;overflow:hidden;margin-bottom:10px"><img src="img/hospital-entrance.jpg" alt="Городская больница" style="width:100%;height:100%;object-fit:cover;display:block"></div><i class="fa-solid fa-hospital"></i><b>Больница</b><span>Вы довезли Макса. Врачи уже у входа.</span>' +
           '<button type="button" id="ad-next">Дальше</button></div>';
         msgEl.querySelector('#ad-next').onclick = function () {
           cleanup();

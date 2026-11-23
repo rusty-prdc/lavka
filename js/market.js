@@ -370,7 +370,8 @@
       '<div class="mkt-search" id="mkt-search" style="margin:10px 14px 0">' +
       '<i class="fa-solid fa-magnifying-glass"></i>' +
       '<input id="mkt-q" value="' + LV.esc(q) + '" placeholder="Искать в Лавке" autocomplete="off" oninput="Market.q(this.value)" onkeydown="if(event.key===\'Enter\')Market.searchNow()">' +
-      (q ? '<button class="ms-clear" type="button" onclick="Market.clearQ()" aria-label="Очистить"><i class="fa-solid fa-xmark"></i></button>' : '') +
+      (q ? '<button class="ms-clear" type="button" onclick="Market.clearQ()" aria-label="Очистить"><i class="fa-solid fa-xmark"></i></button>' :
+        '<button class="ms-clear" type="button" onclick="Market.clearQ()" aria-label="Очистить" style="display:none"><i class="fa-solid fa-xmark"></i></button>') +
       '</div>' +
       sortChips(params.sort || 'pop') +
       '<div id="mkt-list">' + searchListHTML(params) + '</div></div>';
@@ -430,7 +431,7 @@
       '<div class="seller" style="margin-top:12px">' +
       '<span class="seller-ava">' + LV.esc(LV.initials(p.seller)) + '</span>' +
       '<div style="flex:1"><b>' + LV.esc(p.seller) + '</b><span>Проверенный продавец · рейтинг ' + Number(p.rating).toFixed(1) + '</span></div>' +
-      '<span class="pill green">' + (p.free ? 'Доставка бесплатно' : 'Доставка ' + LV.fmt(299)) + '</span></div>' +
+      '<span class="pill green">Доставка 299 ₽ · от 3 000 ₽ бесплатно</span></div>' +
       '<div class="pill-row" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
       '<span class="pill"><i class="fa-solid fa-truck-fast"></i> ' + (p.delivery === 1 ? 'Завтра' : p.delivery + ' дн.') + '</span>' +
       '<span class="pill"><i class="fa-solid fa-box"></i> ' + (p.stock < 6 ? 'Осталось ' + p.stock + ' шт.' : 'В наличии') + '</span>' +
@@ -466,7 +467,7 @@
     if (!p) return '';
     return '<div class="prod-buy">' +
       favBtn(p) +
-      '<div class="pb-price"><b>' + LV.fmt(p.price) + '</b><span>' + (p.free ? 'Бесплатная доставка' : 'Доставка ' + LV.fmt(299)) + '</span></div>' +
+      '<div class="pb-price"><b>' + LV.fmt(p.price) + '</b><span>299 ₽ · от 3 000 ₽ бесплатно</span></div>' +
       '<button class="btn btn-primary" type="button" style="padding:13px 20px" onclick="Market.add(' + p.id + ')">В корзину</button>' +
       '</div>';
   }
@@ -503,6 +504,17 @@
       '<div class="summary-total"><span>Итого</span><b>' + LV.fmt(t.total) + '</b></div></div>' +
       '<div class="cart-cta"><button class="btn btn-primary btn-block" type="button" onclick="Market.checkout()">Оформить заказ</button>' +
       '<p class="center tiny muted" style="margin-top:9px">Оплата при получении или картой</p></div>';
+  }
+
+  function refreshOrders() {
+    var today = LV.todayISO();
+    var changed = false;
+    (S.orders || []).forEach(function (o) {
+      var eta = o.eta || o.date;
+      var st = (eta && eta <= today) ? 'done' : 'way';
+      if (o.status !== st) { o.status = st; changed = true; }
+    });
+    if (changed) { try { LV.save(); } catch (e) {} }
   }
 
   function ordersHTML() {
@@ -566,13 +578,13 @@
     if (!DATA) return '<div class="spinner"></div>';
     var list = S.fav.map(function (id) { return BY_ID[id]; }).filter(Boolean);
     if (!list.length) {
-      return '<div class="empty" style="padding-top:60px"><i class="fa-regular fa-heart"></i>' +
+      return '<div id="mkt-list"><div class="empty" style="padding-top:60px"><i class="fa-regular fa-heart"></i>' +
         '<div class="empty-title">В избранном пусто</div>' +
         '<div class="empty-text">Нажимай на сердечко в карточке товара — всё сохранится здесь.</div>' +
-        '<button class="btn btn-primary" onclick="Market.tab(\'catalog\')">В каталог</button></div>';
+        '<button class="btn btn-primary" onclick="Market.tab(\'catalog\')">В каталог</button></div></div>';
     }
-    return '<div style="height:12px"></div><div class="mkt-note"><i class="fa-solid fa-heart" style="color:#ef4444"></i> ' + list.length + ' товаров в избранном</div>' +
-      '<div class="pgrid" style="margin-top:10px" id="fav-grid">' + list.map(pcardHTML).join('') + '</div><div style="height:20px"></div>';
+    return '<div id="mkt-list"><div style="height:12px"></div><div class="mkt-note"><i class="fa-solid fa-heart" style="color:#ef4444"></i> ' + list.length + ' товаров в избранном</div>' +
+      '<div class="pgrid" style="margin-top:10px" id="fav-grid">' + list.map(pcardHTML).join('') + '</div><div style="height:20px"></div></div>';
   }
 
   function doneHTML(params) {
@@ -582,7 +594,7 @@
       '<div class="success-ico"><i class="fa-solid fa-check"></i></div>' +
       '<div style="font-size:19px;font-weight:900;letter-spacing:-.4px">Заказ оформлен</div>' +
       '<p class="tiny muted" style="margin-top:6px">' + (o ? 'Номер ' + LV.esc(o.num) + ' · ' + LV.fmt(o.total) : '') + '</p>' +
-      '<p class="tiny muted" style="margin-top:3px">' + (o ? 'Доставка: ' + LV.dateRu(o.date) + ' — ' + LV.esc(o.address) : '') + '</p>' +
+      '<p class="tiny muted" style="margin-top:3px">' + (o ? 'Доставка: ' + LV.dateRu(o.eta || o.date) + ' — ' + LV.esc(o.address) : '') + '</p>' +
       '<div style="padding:22px 14px 0"><button class="btn btn-primary btn-block" type="button" onclick="Market.tab(\'orders\')">Мои заказы</button>' +
       '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="Market.tab(\'home\')">Продолжить покупки</button></div></div>';
   }
@@ -590,6 +602,7 @@
   // ---------- chrome ----------
   function viewBody() {
     syncBiz();
+    refreshOrders();
     var cur = stack[stack.length - 1] || { name: 'home', params: {} };
     var p = cur.params || {};
     switch (cur.name) {
@@ -812,6 +825,9 @@
     var cur = stack[stack.length - 1];
     if (!cur) return;
     cur.params.q = '';
+    cur.params.limit = 30;
+    var inp = document.getElementById('mkt-q');
+    if (inp) { inp.value = ''; try { inp.focus(); } catch (e) {} }
     render();
   }
 
@@ -903,6 +919,10 @@
       };
     }).filter(function (x) { return x.qty > 0; });
     var bizItems = items.filter(function (x) { return x.biz > 0; });
+    if (bizItems.length && paySrc.indexOf('bank:') !== 0) {
+      LV.toast('Товары своего завода — только оплата с BankFake');
+      return;
+    }
     if (bizItems.length && window.Biz && Biz.checkStock) {
       var out = bizItems.filter(function (x) { return !Biz.checkStock(x.biz, x.qty); })[0];
       if (out) {
@@ -922,7 +942,9 @@
       }
       var btn = document.getElementById('ord-submit');
       if (btn) { btn.disabled = true; btn.textContent = 'Оплата…'; }
-      var res = await Bank.pay(t.total, paySrc.slice(5));
+      var res;
+      try { res = await Bank.pay(t.total, paySrc.slice(5)); }
+      catch (e) { res = { ok: false, reason: 'sync' }; }
       if (btn) { btn.disabled = false; btn.textContent = 'Подтвердить заказ · ' + LV.fmt(t.total); }
       if (!res || !res.ok) {
         var reason = res && res.reason;
@@ -933,10 +955,17 @@
       }
       payLabel = 'BankFake · ' + res.label;
     }
+    var maxDays = items.reduce(function (m, x) {
+      var p = BY_ID[x.id];
+      return Math.max(m, p && p.delivery ? p.delivery : 1);
+    }, 1);
+    var eta = new Date();
+    eta.setDate(eta.getDate() + maxDays);
     var order = {
       id: Date.now(),
       num: 'LV-' + String(100000 + Math.floor(Math.random() * 899999)),
       date: LV.todayISO(),
+      eta: eta.toISOString().slice(0, 10),
       address: city + ', ' + street + (apt ? ', кв. ' + apt : ''),
       pay: payLabel,
       xid: S.user.xid || '',

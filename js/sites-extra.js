@@ -262,7 +262,7 @@
     chrome: function (body) {
       return '<div class="edk"><header class="edk-top">' +
         '<button class="edk-logo" type="button" onclick="Web.sitePage(\'edok\',\'index\')">едок</button>' +
-        '<button class="edk-cart" type="button" onclick="Web.sitePage(\'edok\',\'cart\')"><i class="fa-solid fa-basket-shopping"></i><span data-edk-qty>0</span></button>' +
+        '<button class="edk-cart" type="button" onclick="Web.sitePage(\'edok\',\'cart\')"><i class="fa-solid fa-basket-shopping"></i><span data-edk-qty>' + edokQty() + '</span></button>' +
         '</header><div class="edk-body">' + body + '</div></div>';
     },
     pages: {
@@ -300,7 +300,7 @@
               '<div class="edk-dish-info"><b>' + d[0] + '</b><span>' + d[1] + '</span><small>' + fmt(d[2]) + '</small></div>' +
               '<button type="button" onclick="Web.edokAdd(event,\'' + d[0] + '\',' + d[2] + ')"><i class="fa-solid fa-plus"></i></button></div>';
           }).join('') +
-          '<div class="edk-bar"><div><span>Корзина</span><b data-edk-sum>0 ₽</b></div><button type="button" onclick="Web.sitePage(\'edok\',\'cart\')">Перейти <span data-edk-qty>0</span></button></div>';
+          '<div class="edk-bar"><div><span>Корзина</span><b data-edk-sum>' + fmt(edokSum()) + '</b></div><button type="button" onclick="Web.sitePage(\'edok\',\'cart\')">Перейти <span data-edk-qty>' + edokQty() + '</span></button></div>';
       },
       cart: function () {
         var items = edokItems();
@@ -685,4 +685,661 @@
       if (window.Web && document.getElementById('web-scroll')) Web.refresh();
     }
   };
+
+  /* ============================================================
+     ГОРОДОК.NET — городской портал образца 2003 года
+     ============================================================ */
+  function gorodokMenu(page) {
+    var items = [['index', 'Главная'], ['news', 'Новости'], ['afisha', 'Афиша'], ['guestbook', 'Гостевая'], ['links', 'Ссылки']];
+    return items.map(function (it) {
+      return '<button class="old-menu-btn' + (it[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'gorodok\',\'' + it[0] + '\')">' + it[1] + '</button>';
+    }).join('');
+  }
+
+  W.sites.push({
+    id: 'gorodok', name: 'Городок', host: 'gorodok.net', cat: 'news', custom: true,
+    era: 'old', manualAds: true,
+    icon: 'fa-newspaper', color: '#1e3a8a',
+    slogan: 'Городской портал: новости, афиша, гостевая книга',
+    nav: [['index', 'Главная'], ['news', 'Новости'], ['afisha', 'Афиша'], ['guestbook', 'Гостевая'], ['links', 'Ссылки']],
+    chrome: function (body, page) {
+      page = page || 'index';
+      return '<div class="old-site old-gorodok">' +
+        '<div class="old-top">' +
+        '<div class="old-brand"><span class="old-logo">Городок<span>.net</span></span>' +
+        '<span class="old-since">в сети с 2001 года</span></div>' +
+        '<div class="old-top-right"><span>Погода: −7 °C, снег</span><span>Курс $: 29,45 ₽</span></div>' +
+        '</div>' +
+        '<div class="old-strip"><span>★ Добро пожаловать на Городок.net! ★ Лучший городской сайт по версии конкурса «Сеть-2003» ★</span></div>' +
+        '<div class="old-banner-row">' + W.ad('old', 0) + '</div>' +
+        '<div class="old-layout">' +
+        '<div class="old-side">' +
+        '<div class="old-box"><div class="old-box-h">Меню</div>' + gorodokMenu(page) + '</div>' +
+        '<div class="old-box"><div class="old-box-h">Статистика</div>' +
+        '<div class="old-small">Вы посетитель №</div><div class="old-counter">148 271</div>' +
+        '<div class="old-small">Сейчас на сайте: 12 чел.</div></div>' +
+        '<div class="old-box"><div class="old-box-h">Наш баннер</div>' +
+        '<div class="old-btn88"><b>GORODOK</b><span>NET</span></div>' +
+        '<div class="old-small">Поставь к себе на сайт!</div></div>' +
+        '<div class="old-small old-center">Best viewed in<br><b>Internet Explorer 6.0</b><br>1024×768</div>' +
+        '</div>' +
+        '<div class="old-main">' + body + '</div>' +
+        '</div>' +
+        '<div class="old-foot">© 2001—2004 Городок.net · При использовании материалов ссылка обязательна<br>' +
+        'e-mail: admin@gorodok.net · ICQ 148-271-336 · Сайт работает на Apache/1.3.29 (Unix)</div>' +
+        '</div>';
+    },
+    pages: {
+      index: function () {
+        var news = [
+          ['14.10.2004', 'Открыт торговый центр «Северный»', 'В субботу состоялось торжественное открытие. Мэр перерезал ленточку, а вечером на площади играл духовой оркестр.'],
+          ['12.10.2004', 'На Ленина меняют трамвайные пути', 'Ремонт продлится до конца месяца. Трамваи №3 и №7 пущены в объезд через Вокзальную.'],
+          ['09.10.2004', 'Городские школы переходят на новую программу', 'С начала четверти в пяти школах вводят уроки информатики на новом оборудовании.'],
+          ['05.10.2004', 'Фотоконкурс «Осень в городе»', 'Присылайте снимки на admin@gorodok.net до 25 октября. Победитель получит принтер.']
+        ];
+        return '<div class="old-h1">Новости города</div>' +
+          '<div class="old-date">Сегодня: 14 октября 2004, четверг · обновлено в 09:12</div>' +
+          news.map(function (n) {
+            return '<div class="old-news"><div class="old-news-date">' + n[0] + '</div>' +
+              '<div><b>' + n[1] + '</b><p>' + n[2] + '</p></div></div>';
+          }).join('') +
+          '<div class="old-h2">Погода</div>' +
+          '<table class="old-table"><tr><th>Сегодня</th><th>Завтра</th><th>Послезавтра</th></tr>' +
+          '<tr><td>−7 °C, снег</td><td>−4 °C, облачно</td><td>−2 °C, ясно</td></tr></table>' +
+          '<div class="old-h2">Опрос</div>' +
+          '<div class="old-poll">Как вам новый торговый центр?<br>' +
+          '<button class="old-link" type="button" onclick="LV.toast(\'Спасибо, ваш голос учтён\')">Отлично, буду ходить</button>' +
+          '<button class="old-link" type="button" onclick="LV.toast(\'Спасибо, ваш голос учтён\')">Обычный, как все</button>' +
+          '<button class="old-link" type="button" onclick="LV.toast(\'Спасибо, ваш голос учтён\')">Не пойду, дорого</button>' +
+          '</div><div class="old-small">Всего проголосовало: 1 204</div>';
+      },
+      news: function () {
+        return '<div class="old-h1">Открыт торговый центр «Северный»</div>' +
+          '<div class="old-date">14.10.2004 · автор: Редакция · просмотров: 3 482</div>' +
+          '<div class="old-photo"><span>фото: архив редакции</span></div>' +
+          '<p class="old-p">В субботу, 9 октября, на улице Северной открылся торговый центр «Северный». На церемонии присутствовали представители администрации, строители и первые покупатели.</p>' +
+          '<p class="old-p">Мэр города отметил, что новый центр даст городу 400 рабочих мест, а жители северных микрорайонов смогут покупать продукты рядом с домом.</p>' +
+          '<p class="old-p">В день открытия работали фонтан, детская площадка и выставка ретро-автомобилей. Вечером на площади выступил духовой оркестр.</p>' +
+          '<div class="old-small">Обсудить новость можно в <button class="old-link inline" type="button" onclick="Web.sitePage(\'gorodok\',\'guestbook\')">гостевой книге</button>.</div>';
+      },
+      afisha: function () {
+        var ev = [
+          ['15.10—20.10', 'Выставка «Ретро-техника»', 'Дом культуры, 10:00—18:00', 'вход 20 руб.'],
+          ['16.10', 'Концерт городского оркестра', 'Филармония, 19:00', 'билеты от 80 руб.'],
+          ['17.10', 'Ярмарка мёда', 'Площадь Ленина, 9:00—16:00', 'бесплатно'],
+          ['23.10', 'Кинопоказ «Ночной дозор»', 'Кинотеатр «Луч», 21:30', 'билет 120 руб.']
+        ];
+        return '<div class="old-h1">Афиша на неделю</div>' +
+          '<table class="old-table"><tr><th>Дата</th><th>Событие</th><th>Место и время</th><th>Цена</th></tr>' +
+          ev.map(function (e) {
+            return '<tr><td>' + e[0] + '</td><td><b>' + e[1] + '</b></td><td>' + e[2] + '</td><td>' + e[3] + '</td></tr>';
+          }).join('') + '</table>' +
+          '<div class="old-small">Афиша обновляется каждую пятницу. Присылайте свои события на admin@gorodok.net.</div>';
+      },
+      guestbook: function () {
+        var msg = [
+          ['Людмила', '12.10.2004', 'Спасибо за новости! Наконец-то узнала, когда откроют «Северный».'],
+          ['Сергей', '11.10.2004', 'А почему про трамваи ничего не писали? Я час добирался до работы.'],
+          ['admin', '11.10.2004', 'Сергей, писали 12 октября. Смотрите архив новостей.'],
+          ['Ольга', '10.10.2004', 'Кто знает, где можно скачать фотографии с открытия?'],
+          ['Дмитрий', '09.10.2004', 'Сайт хороший, но грузится медленно. Поставьте счётчик получше.']
+        ];
+        return '<div class="old-h1">Гостевая книга</div>' +
+          '<div class="old-small">Всего записей: 2 481 · страница 1 из 249</div>' +
+          msg.map(function (m) {
+            return '<div class="old-msg"><div class="old-msg-head"><b>' + m[0] + '</b><span>' + m[1] + '</span></div><p>' + m[2] + '</p></div>';
+          }).join('') +
+          '<div class="old-h2">Оставить запись</div>' +
+          '<div class="old-form"><input placeholder="Ваше имя"><textarea rows="3" placeholder="Сообщение"></textarea>' +
+          '<button class="old-submit" type="button" onclick="LV.toast(\'Запись отправлена на проверку администратору\')">Отправить</button></div>' +
+          '<div class="old-small">Сообщения публикуются после проверки. Реклама в гостевой запрещена.</div>';
+      },
+      links: function () {
+        var links = [
+          ['Пульс', 'Дневники и сообщества', 'pulse'],
+          ['Лавка', 'Магазин с доставкой', 'lavka'],
+          ['Афиша', 'Куда пойти в выходные', 'afisha'],
+          ['Городская библиотека', 'Каталог книг и читальный зал', ''],
+          ['Почта города', 'Отделения и график работы', '']
+        ];
+        return '<div class="old-h1">Ссылки</div>' +
+          '<div class="old-small">Мы обмениваемся ссылками с интересными сайтами. Пишите на admin@gorodok.net.</div>' +
+          links.map(function (l) {
+            return '<div class="old-link-row"><b>' + (l[2]
+              ? '<button class="old-link inline" type="button" onclick="Web.open(\'' + l[2] + '\')">' + l[0] + '</button>'
+              : '<button class="old-link inline" type="button" onclick="LV.toast(\'Сайт временно недоступен\')">' + l[0] + '</button>') +
+              '</b><span>' + l[1] + '</span></div>';
+          }).join('') +
+          '<div class="old-h2">Наши кнопки 88×31</div>' +
+          '<div class="old-btn-row"><span class="old-btn88 alt"><b>GORODOK</b><span>NET</span></span>' +
+          '<span class="old-btn88 alt2"><b>СЕТЬ</b><span>2003</span></span>' +
+          '<span class="old-btn88 alt3"><b>RU</b><span>TOP</span></span></div>';
+      }
+    }
+  });
+
+  /* ============================================================
+     БАРАХОЛКА.NET — доска объявлений образца 2007 года
+     ============================================================ */
+  function baraholkaNav(page) {
+    var items = [['index', 'Все объявления'], ['list', 'Свежие'], ['add', 'Подать объявление'], ['rules', 'Правила']];
+    return items.map(function (it) {
+      return '<button class="bh-tab' + (it[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'baraholka\',\'' + it[0] + '\')">' + it[1] + '</button>';
+    }).join('');
+  }
+
+  W.sites.push({
+    id: 'baraholka', name: 'Барахолка', host: 'baraholka.net', cat: 'shop', custom: true,
+    era: 'old', manualAds: true, hidden: true,
+    icon: 'fa-tags', color: '#b45309',
+    slogan: 'Бесплатные объявления: продам, куплю, обменяю',
+    nav: [['index', 'Все объявления'], ['list', 'Свежие'], ['add', 'Подать'], ['rules', 'Правила']],
+    chrome: function (body, page) {
+      page = page || 'index';
+      return '<div class="bh">' +
+        '<div class="bh-top">' +
+        '<b class="bh-logo">БАРАХОЛКА<span>.net</span></b>' +
+        '<span class="bh-since">бесплатные объявления с 2003 года</span>' +
+        '<span class="bh-count">объявлений: 4 812</span>' +
+        '</div>' +
+        '<div class="bh-nav">' + baraholkaNav(page) +
+        '<button class="bh-post" type="button" onclick="Web.sitePage(\'baraholka\',\'add\')">+ Подать объявление</button></div>' +
+        '<div class="old-banner-row">' + W.ad('old', 1) + '</div>' +
+        '<div class="bh-body">' + body + '</div>' +
+        '<div class="bh-foot">© 2003—2007 Барахолка.net · Администрация не несёт ответственности за содержание объявлений<br>' +
+        'По вопросам рекламы: reklama@baraholka.net · тел. 8 (912) 000-00-00</div>' +
+        '</div>';
+    },
+    pages: {
+      index: function () {
+        var cats = [['Авто', '1 204'], ['Электроника', '986'], ['Мебель', '612'], ['Одежда', '455'], ['Животные', '128'], ['Дом и дача', '701']];
+        var ads = [
+          ['Nokia 3310, б/у, отличное состояние', '1 200 ₽', 'Центр', 'сегодня'],
+          ['Холодильник «Бирюса», рабочий', '3 500 ₽', 'Спальный', 'сегодня'],
+          ['Системный блок Pentium 4, 512 МБ', '6 800 ₽', 'Вокзал', 'вчера'],
+          ['Диван-кровать, кожзам', '2 000 ₽', 'Парк', 'вчера'],
+          ['Котята в добрые руки', 'бесплатно', 'Промзона', '12.11'],
+          ['DVD-плеер Samsung', '1 450 ₽', 'Центр', '11.11']
+        ];
+        return '<div class="bh-h1">Все объявления</div>' +
+          '<div class="bh-cats">' + cats.map(function (c) {
+            return '<button class="bh-cat" type="button" onclick="LV.toast(\'Раздел «' + c[0] + '»: ' + c[1] + ' объявлений\')">' + c[0] + '<span>' + c[1] + '</span></button>';
+          }).join('') + '</div>' +
+          '<div class="bh-h2">Последние объявления</div>' +
+          '<table class="bh-table"><tr><th>Объявление</th><th>Цена</th><th>Район</th><th>Дата</th></tr>' +
+          ads.map(function (a) {
+            return '<tr><td><button class="bh-ad-link" type="button" onclick="Web.sitePage(\'baraholka\',\'list\')">' + a[0] + '</button></td>' +
+              '<td><b>' + a[1] + '</b></td><td>' + a[2] + '</td><td>' + a[3] + '</td></tr>';
+          }).join('') + '</table>' +
+          '<div class="bh-note">Хотите продать быстрее? <button class="old-link inline" type="button" onclick="Web.sitePage(\'baraholka\',\'add\')">Подайте объявление</button> — это бесплатно.</div>';
+      },
+      list: function () {
+        var ads = [
+          ['Nokia 3310', '1 200 ₽', 'Центр', 'сегодня, 14:20', 'Продам легендарный телефон. Работает без нареканий, заряд держит неделю. Чехол и зарядка в комплекте.', '8-912-XXX-XX-45', '128'],
+          ['Холодильник «Бирюса»', '3 500 ₽', 'Спальный', 'сегодня, 11:05', 'Двухкамерный, 240 л. Морозилка работает. Самовывоз, помогу погрузить.', '8-912-XXX-XX-12', '96'],
+          ['Pentium 4, 512 МБ', '6 800 ₽', 'Вокзал', 'вчера, 19:40', 'Собран в 2004 году. Windows XP, Office. Монитор 17" отдам за 1 500.', '8-912-XXX-XX-77', '204'],
+          ['Диван-кровать', '2 000 ₽', 'Парк', 'вчера, 16:12', 'Раскладывается, кожзам без трещин. Причина продажи — переезд.', '8-912-XXX-XX-03', '61']
+        ];
+        return '<div class="bh-h1">Свежие объявления</div>' +
+          '<div class="bh-small">Показано 4 из 4 812 · сортировка по дате</div>' +
+          ads.map(function (a) {
+            return '<div class="bh-item"><div class="bh-item-head"><button class="bh-ad-link" type="button" onclick="LV.toast(\'Телефон скрыт до подтверждения\')">' + a[0] + '</button>' +
+              '<b>' + a[1] + '</b></div>' +
+              '<div class="bh-item-meta">' + a[2] + ' · ' + a[3] + ' · просмотров: ' + a[6] + '</div>' +
+              '<p>' + a[4] + '</p><div class="bh-item-foot">тел. ' + a[5] +
+              ' <button class="old-submit small" type="button" onclick="LV.toast(\'Номер скопирован\')">Показать номер</button></div></div>';
+          }).join('') +
+          '<div class="bh-note">Объявление № 4 812 · пожаловаться на нарушение: help@baraholka.net</div>';
+      },
+      add: function () {
+        return '<div class="bh-h1">Подать объявление</div>' +
+          '<div class="bh-small">Заполните форму. Объявление появится после проверки модератором — обычно в течение часа.</div>' +
+          '<div class="bh-form">' +
+          '<label>Раздел<select><option>Электроника</option><option>Авто</option><option>Мебель</option><option>Одежда</option><option>Животные</option></select></label>' +
+          '<label>Заголовок<input placeholder="Например: Nokia 3310, б/у"></label>' +
+          '<label>Цена, ₽<input placeholder="1 200"></label>' +
+          '<label>Город / район<input placeholder="Центр"></label>' +
+          '<label>Телефон<input placeholder="8-912-000-00-00"></label>' +
+          '<label>Описание<textarea rows="4" placeholder="Состояние, комплект, причина продажи"></textarea></label>' +
+          '<button class="old-submit" type="button" onclick="LV.toast(\'Объявление отправлено на проверку\')">Отправить</button>' +
+          '</div>' +
+          '<div class="bh-note">Публикация бесплатная. Платное выделение — 50 ₽ за 7 дней.</div>';
+      },
+      rules: function () {
+        return '<div class="bh-h1">Правила доски</div>' +
+          '<ul class="bh-rules">' +
+          '<li>Одно объявление — один товар. Не дублируйте объявления.</li>' +
+          '<li>Запрещены оружие, лекарства, алкоголь и всё, что запрещено законом.</li>' +
+          '<li>Указывайте реальную цену и состояние товара.</li>' +
+          '<li>Не размещайте чужие фотографии и контакты без согласия.</li>' +
+          '<li>Модератор может отклонить объявление без объяснения причин.</li>' +
+          '</ul>' +
+          '<div class="bh-note">Нарушения — на help@baraholka.net. Среднее время проверки: 40 минут.</div>';
+      }
+    }
+  });
+
+  /* ============================================================
+     МИР ПК — компьютерный журнал образца 2004 года
+     ============================================================ */
+  function mirpkNav(page) {
+    var items = [['index', 'Журнал'], ['articles', 'Статьи'], ['soft', 'Софт'], ['hosting', 'Хостинг'], ['forum', 'Форум']];
+    return items.map(function (it) {
+      return '<button class="mpk-tab' + (it[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'mirpk\',\'' + it[0] + '\')">' + it[1] + '</button>';
+    }).join('');
+  }
+
+  W.sites.push({
+    id: 'mirpk', name: 'Мир ПК', host: 'mirpk.net', cat: 'service', custom: true,
+    era: 'old', manualAds: true, hidden: true,
+    icon: 'fa-computer', color: '#334155',
+    slogan: 'Компьютерный журнал: железо, софт, интернет',
+    nav: [['index', 'Журнал'], ['articles', 'Статьи'], ['soft', 'Софт'], ['hosting', 'Хостинг'], ['forum', 'Форум']],
+    chrome: function (body, page) {
+      page = page || 'index';
+      return '<div class="mpk">' +
+        '<div class="mpk-top">' +
+        '<b class="mpk-logo">МИР <span>ПК</span></b>' +
+        '<span class="mpk-issue">№11 (128) · ноябрь 2004</span>' +
+        '<span class="mpk-price">цена: 65 руб.</span>' +
+        '</div>' +
+        '<div class="mpk-nav">' + mirpkNav(page) + '</div>' +
+        '<div class="old-banner-row">' + W.ad('old', 0) + '</div>' +
+        '<div class="mpk-body">' + body + '</div>' +
+        '<div class="mpk-foot">© 1998—2004 «Мир ПК» · тираж 42 000 экз. · редакция: Москва, ул. Правды, 24<br>' +
+        'При перепечатке ссылка на mirpk.net обязательна</div>' +
+        '</div>';
+    },
+    pages: {
+      index: function () {
+        var t = [
+          ['12', 'Как выбрать DVD-ROM', 'Скорости, форматы и подводные камни привода за 1 500 рублей.'],
+          ['18', 'Windows XP: 10 советов', 'Настройка системы, чтобы компьютер не тормозил.'],
+          ['26', 'Собираем компьютер за 15 000 руб.', 'Три конфигурации: для дома, учёбы и игр.'],
+          ['34', 'Интернет по карточкам', 'Как сэкономить на dial-up и не попасть на «дозвон».'],
+          ['40', 'Цифровые фотоаппараты', 'Тест пяти моделей до 300 долларов.']
+        ];
+        return '<div class="mpk-cover"><div class="mpk-cover-top">МИР ПК</div>' +
+          '<div class="mpk-cover-sub">ноябрь 2004</div>' +
+          '<div class="mpk-cover-tag">DVD-ROM<br>Windows XP<br>Интернет</div>' +
+          '<div class="mpk-cover-bottom">128 страниц · 65 руб.</div></div>' +
+          '<div class="mpk-h1">В номере</div>' +
+          '<table class="mpk-content">' + t.map(function (x) {
+            return '<tr><td class="mpk-page">' + x[0] + '</td><td><b>' + x[1] + '</b><span>' + x[2] + '</span></td></tr>';
+          }).join('') + '</table>' +
+          '<div class="mpk-note">Свежий номер можно купить в киосках «Роспечать» или заказать с доставкой по почте.</div>';
+      },
+      articles: function () {
+        return '<div class="mpk-h1">Как выбрать DVD-ROM</div>' +
+          '<div class="mpk-meta">Автор: А. Смирнов · рубрика «Железо» · 12 ноября 2004</div>' +
+          '<p class="old-p">Скорость чтения DVD — не главный параметр. Куда важнее поддержка форматов DVD±R/RW и качество привода. В бюджетном сегменте (до 1 500 руб.) стоит смотреть на NEC, LG и Samsung.</p>' +
+          '<p class="old-p">Проверьте, чтобы привод читал CD-R с записью на высокой скорости: дешёвые модели часто «спотыкаются» на дисках, записанных в домашних условиях.</p>' +
+          '<p class="old-p">Не забудьте про гарантию: в большинстве магазинов она составляет 12 месяцев, но при покупке «с рук» её может не быть вовсе.</p>' +
+          '<div class="mpk-h2">Обсуждение</div>' +
+          '<div class="mpk-comment"><b>Vladimir</b><span>12.11.2004</span><p>У меня NEC 3500 — уже год, полёт нормальный.</p></div>' +
+          '<div class="mpk-comment"><b>Kostya</b><span>13.11.2004</span><p>А про прошивку забыли? Без неё некоторые диски не читает.</p></div>' +
+          '<div class="mpk-note">Всего комментариев: 14 · <button class="old-link inline" type="button" onclick="LV.toast(\'Добавление комментариев доступно после регистрации\')">Добавить комментарий</button></div>';
+      },
+      soft: function () {
+        var files = [
+          ['WinRAR 3.42', 'архиватор', '1,1 МБ', '1 240'],
+          ['ICQ 2003b', 'мессенджер', '4,8 МБ', '8 512'],
+          ['AIDA32', 'диагностика', '3,2 МБ', '2 104'],
+          ['Total Commander 6.03', 'файловый менеджер', '1,7 МБ', '3 908'],
+          ['Opera 7.54', 'браузер', '3,9 МБ', '1 672']
+        ];
+        return '<div class="mpk-h1">Софт</div>' +
+          '<div class="mpk-note">Скачать можно бесплатно. Скорость ограничена — пожалуйста, не качайте в несколько потоков.</div>' +
+          '<table class="old-table mpk-soft"><tr><th>Программа</th><th>Назначение</th><th>Размер</th><th>Скачали</th><th></th></tr>' +
+          files.map(function (f) {
+            return '<tr><td><b>' + f[0] + '</b></td><td>' + f[1] + '</td><td>' + f[2] + '</td><td>' + f[3] + '</td>' +
+              '<td><button class="old-submit small" type="button" onclick="LV.toast(\'Загрузка начнётся через 10 секунд\')">Скачать</button></td></tr>';
+          }).join('') + '</table>' +
+          '<div class="mpk-note">Зеркало: ftp.mirpk.net/pub/ · Логин: guest · Пароль: guest</div>';
+      },
+      hosting: function () {
+        var plans = [
+          ['Старт', '5 $', '100 МБ', 'PHP, MySQL, 1 почтовый ящик'],
+          ['Бизнес', '10 $', '300 МБ', 'PHP, MySQL, 5 ящиков, статистика'],
+          ['Профи', '20 $', '1 ГБ', 'CGI, MySQL, SSL, резервные копии']
+        ];
+        return '<div class="mpk-h1">Хостинг RUnet</div>' +
+          '<div class="mpk-note">Надёжный хостинг для вашего сайта. Регистрация домена — бесплатно при оплате за год.</div>' +
+          '<table class="old-table"><tr><th>Тариф</th><th>Цена</th><th>Место</th><th>Возможности</th></tr>' +
+          plans.map(function (p) {
+            return '<tr><td><b>' + p[0] + '</b></td><td>' + p[1] + '/мес.</td><td>' + p[2] + '</td><td>' + p[3] + '</td></tr>';
+          }).join('') + '</table>' +
+          '<div class="mpk-plans">' + plans.map(function (p) {
+            return '<button class="mpk-plan" type="button" onclick="LV.toast(\'Заявка на тариф «' + p[0] + '» отправлена\')">' +
+              '<b>' + p[0] + '</b><span>' + p[1] + ' в месяц</span><em>' + p[2] + '</em></button>';
+          }).join('') + '</div>' +
+          '<div class="mpk-note">Оплата: электронные деньги, банковский перевод или карта в офисе.</div>';
+      },
+      forum: function () {
+        var th = [
+          ['Какой привод DVD купить?', '14 ответов', '1 204 просмотра', 'сегодня'],
+          ['Windows XP SP2: проблему с сетью решил', '8 ответов', '640 просмотров', 'вчера'],
+          ['Собираю компьютер за 15 тысяч — помогите', '32 ответа', '2 108 просмотров', 'вчера'],
+          ['Где скачать драйверы для Sound Blaster?', '3 ответа', '318 просмотров', '13.11'],
+          ['Dial-up: как ускорить загрузку страниц', '21 ответ', '1 512 просмотров', '12.11']
+        ];
+        return '<div class="mpk-h1">Форум</div>' +
+          '<div class="mpk-note">Всего тем: 12 481 · сообщений: 148 902 · зарегистрировано: 8 214</div>' +
+          th.map(function (x) {
+            return '<div class="mpk-thread"><b>' + x[0] + '</b><span>' + x[1] + ' · ' + x[2] + '</span><time>' + x[3] + '</time></div>';
+          }).join('') +
+          '<div class="mpk-note">Чтобы ответить, <button class="old-link inline" type="button" onclick="LV.toast(\'Регистрация временно закрыта\')">зарегистрируйтесь</button> или войдите.</div>';
+      }
+    }
+  });
+
+  /* ============================================================
+     КВАНТ — ИИ-ассистент, 2026
+     ============================================================ */
+  function kvantNav(page) {
+    var items = [['index', 'Главная'], ['chat', 'Чат'], ['pricing', 'Тарифы'], ['about', 'О нас']];
+    return items.map(function (it) {
+      return '<button class="kv-tab' + (it[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'kvant\',\'' + it[0] + '\')">' + it[1] + '</button>';
+    }).join('');
+  }
+
+  W.sites.push({
+    id: 'kvant', name: 'Квант', host: 'kvant.ai', cat: 'service', custom: true,
+    era: 'modern', manualAds: true,
+    icon: 'fa-wand-magic-sparkles', color: '#6366f1',
+    slogan: 'ИИ-ассистент для текста, таблиц и кода',
+    nav: [['index', 'Главная'], ['chat', 'Чат'], ['pricing', 'Тарифы'], ['about', 'О нас']],
+    chrome: function (body, page) {
+      page = page || 'index';
+      return '<div class="kv">' +
+        '<header class="kv-top">' +
+        '<button class="kv-logo" type="button" onclick="Web.sitePage(\'kvant\',\'index\')">квант<span>·ai</span></button>' +
+        '<nav class="kv-nav">' + kvantNav(page) + '</nav>' +
+        '<span class="kv-status"><i></i> онлайн</span>' +
+        '</header>' +
+        '<div class="kv-body">' + body + '</div>' +
+        '<footer class="kv-foot">© 2026 Квант · ООО «Квант» · help@kvant.ai<br>Сервис работает в тестовом режиме, ответы могут содержать ошибки.</footer>' +
+        '</div>';
+    },
+    pages: {
+      index: function () {
+        var feats = [
+          ['fa-pen-nib', 'Текст', 'Письма, посты, описания товаров и коммерческие предложения.'],
+          ['fa-table', 'Таблицы', 'Сметы, отчёты и формулы для Excel — по описанию задачи.'],
+          ['fa-code', 'Код', 'Пишет и объясняет код на Python, JS и SQL, ищет ошибки.'],
+          ['fa-image', 'Картинки', 'Обложки, баннеры и иллюстрации для соцсетей.']
+        ];
+        return '<section class="kv-hero">' +
+          '<span class="kv-kicker">квант 3.1 · новая модель</span>' +
+          '<h1>Спроси. Сделай.<br>Проверь.</h1>' +
+          '<p>Ассистент, который помогает с работой: от письма клиенту до таблицы на 200 строк. Без регистрации — 20 запросов в подарок.</p>' +
+          '<div class="kv-prompt"><i class="fa-solid fa-wand-magic-sparkles"></i>' +
+          '<input placeholder="Например: составь смету на открытие точки" onkeydown="if(event.key===\'Enter\')Web.sitePage(\'kvant\',\'chat\')">' +
+          '<button type="button" onclick="Web.sitePage(\'kvant\',\'chat\')">Спросить</button></div>' +
+          '<div class="kv-chips">' +
+          ['Напиши письмо клиенту', 'Сделай таблицу расходов', 'Проверь договор', 'Придумай название'].map(function (c) {
+            return '<button class="kv-chip" type="button" onclick="Web.sitePage(\'kvant\',\'chat\')">' + c + '</button>';
+          }).join('') + '</div>' +
+          '<div class="kv-trust"><span><b>1,2 млн</b> запросов в день</span><span><b>99,9%</b> аптайм</span><span><b>4,8</b> оценка</span></div>' +
+          '</section>' +
+          '<section class="kv-feats">' + feats.map(function (f) {
+            return '<div class="kv-feat"><i class="fa-solid ' + f[0] + '"></i><b>' + f[1] + '</b><span>' + f[2] + '</span></div>';
+          }).join('') + '</section>' +
+          '<section class="kv-sect"><div class="kv-sect-head"><h2>Модели</h2><span>выберите под задачу</span></div>' +
+          '<div class="kv-models">' +
+          '<div class="kv-model on"><b>Квант 3.1</b><span>Универсальная</span><em>от 490 ₽/мес</em></div>' +
+          '<div class="kv-model"><b>Квант mini</b><span>Быстрая и дешёвая</span><em>бесплатно</em></div>' +
+          '<div class="kv-model"><b>Квант Код</b><span>Для разработчиков</span><em>от 990 ₽/мес</em></div>' +
+          '</div></section>' +
+          '<div class="web-ad-slot">' + W.ad('video', 3) + '</div>' +
+          '<section class="kv-sect kv-cookie"><i class="fa-solid fa-cookie-bite"></i><div><b>Мы используем cookie</b>' +
+          '<span>Чтобы запоминать диалоги и улучшать ответы. Продолжая, вы соглашаетесь с политикой.</span></div>' +
+          '<button type="button" onclick="LV.toast(\'Настройки cookie сохранены\')">Принять</button></section>';
+      },
+      chat: function () {
+        return '<div class="kv-chat">' +
+          '<div class="kv-chat-top"><b>Новый диалог</b><span>Квант 3.1 · контекст 32k</span></div>' +
+          '<div class="kv-msg user"><div>Составь смету на открытие пункта выдачи в спальном районе.</div></div>' +
+          '<div class="kv-msg bot"><div class="kv-ava">к</div><div>Хорошо. Вот черновик сметы на 30 дней:<br><br>' +
+          '1. Аренда 25 м² — 45 000 ₽<br>2. Ремонт и мебель — 120 000 ₽<br>3. Оборудование — 80 000 ₽<br>4. Первая партия товара — 60 000 ₽<br>5. Реклама на старте — 15 000 ₽<br><br>' +
+          '<b>Итого: 320 000 ₽</b>. Могу разложить по месяцам или добавить зарплату сотрудника.</div></div>' +
+          '<div class="kv-msg user"><div>Добавь зарплату и посчитай точку безубыточности.</div></div>' +
+          '<div class="kv-msg bot"><div class="kv-ava">к</div><div>Сотрудник 2/2 — 38 000 ₽/мес. При средней выручке 240 000 ₽ и марже 22% точка выходит в ноль на третий месяц.' +
+          '<span class="kv-code">payback = 320000 / (240000 * 0.22) ≈ 6.1 мес.</span></div></div>' +
+          '<div class="kv-input"><input placeholder="Спросите что-нибудь ещё" onkeydown="if(event.key===\'Enter\')LV.toast(\'Это демо-диалог\')">' +
+          '<button type="button" onclick="LV.toast(\'Это демо-диалог\')"><i class="fa-solid fa-paper-plane"></i></button></div>' +
+          '<div class="kv-note">Квант может ошибаться. Проверяйте важные цифры и документы.</div>' +
+          '</div>';
+      },
+      pricing: function () {
+        var plans = [
+          ['Старт', '0 ₽', '20 запросов в месяц', ['Квант mini', 'История 7 дней', 'Без карты']],
+          ['Про', '490 ₽', 'в месяц', ['Квант 3.1', 'Безлимит текста', 'Файлы до 20 МБ', 'История 90 дней']],
+          ['Бизнес', '1 990 ₽', 'в месяц', ['Всё из «Про»', '5 сотрудников', 'API и интеграции', 'Приоритетная поддержка']]
+        ];
+        return '<div class="kv-sect"><h1>Тарифы</h1><p class="kv-sub">Оплата картой или с баланса LAVKA PAY. Отмена в один клик.</p>' +
+          '<div class="kv-plans">' + plans.map(function (p, i) {
+            return '<div class="kv-plan' + (i === 1 ? ' hot' : '') + '">' +
+              (i === 1 ? '<span class="kv-hot">выбирают чаще</span>' : '') +
+              '<b>' + p[0] + '</b><div class="kv-price">' + p[1] + '<span>' + p[2] + '</span></div>' +
+              '<ul>' + p[3].map(function (f) { return '<li><i class="fa-solid fa-check"></i>' + f + '</li>'; }).join('') + '</ul>' +
+              '<button type="button" onclick="LV.toast(\'Тариф «' + p[0] + '» подключён (демо)\')">' + (i === 0 ? 'Начать бесплатно' : 'Подключить') + '</button></div>';
+          }).join('') + '</div>' +
+          '<div class="web-ad-slot">' + W.ad('tile', 0) + '</div>' +
+          '<div class="kv-faq"><b>Частые вопросы</b>' +
+          '<div><span>Можно оплатить с карты?</span><em>Да, картой или с баланса LAVKA PAY.</em></div>' +
+          '<div><span>Что с моими данными?</span><em>Диалоги хранятся 90 дней, их можно удалить в настройках.</em></div>' +
+          '<div><span>Есть API?</span><em>Да, на тарифе «Бизнес» — 100 запросов в минуту.</em></div></div></div>';
+      },
+      about: function () {
+        return '<div class="kv-sect"><h1>О Кванте</h1>' +
+          '<p class="kv-sub">Квант — российский ИИ-ассистент. Команда 34 человека, офисы в Москве и Екатеринбурге. Модель обучена на открытых данных и текстах партнёров.</p>' +
+          '<div class="kv-stats"><div><b>2023</b><span>год основания</span></div><div><b>34</b><span>человека в команде</span></div>' +
+          '<div><b>1,2 млн</b><span>запросов в день</span></div><div><b>99,9%</b><span>аптайм</span></div></div>' +
+          '<h2>Контакты</h2><p class="kv-sub">Пресса: press@kvant.ai · Поддержка: help@kvant.ai · Партнёрам: partners@kvant.ai<br>' +
+          'Москва, Пресненская набережная, 12 · Екатеринбург, ул. Малышева, 51</p>' +
+          '<div class="kv-note">ООО «Квант», ИНН 7700000000. Сервис не является медицинским или юридическим консультантом.</div></div>';
+      }
+    }
+  });
+
+  /* ============================================================
+     ГОРОД 24 — городское медиа, 2026
+     ============================================================ */
+  function gorod24Nav(page) {
+    var items = [['index', 'Лента'], ['article', 'Главное'], ['live', 'Онлайн'], ['about', 'Редакция']];
+    return items.map(function (it) {
+      return '<button class="g24-tab' + (it[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'gorod24\',\'' + it[0] + '\')">' + it[1] + '</button>';
+    }).join('');
+  }
+
+  W.sites.push({
+    id: 'gorod24', name: 'Город 24', host: 'gorod24.live', cat: 'news', custom: true,
+    era: 'modern', manualAds: true,
+    icon: 'fa-tower-broadcast', color: '#0ea5e9',
+    slogan: 'Городские новости без воды · 24/7',
+    nav: [['index', 'Лента'], ['article', 'Главное'], ['live', 'Онлайн'], ['about', 'Редакция']],
+    chrome: function (body, page) {
+      page = page || 'index';
+      return '<div class="g24">' +
+        '<header class="g24-top">' +
+        '<button class="g24-logo" type="button" onclick="Web.sitePage(\'gorod24\',\'index\')">ГОРОД<span>24</span></button>' +
+        '<span class="g24-live"><i></i> прямой эфир</span>' +
+        '<nav class="g24-nav">' + gorod24Nav(page) + '</nav>' +
+        '<button class="g24-sub" type="button" onclick="LV.toast(\'Вы подписаны на уведомления Города 24\')">Подписаться</button>' +
+        '</header>' +
+        '<div class="g24-body">' + body + '</div>' +
+        '<footer class="g24-foot">© 2026 Город 24 · сетевое издание · 16+<br>Главный редактор: А. Воронцова · redakciya@gorod24.live</footer>' +
+        '</div>';
+    },
+    pages: {
+      index: function () {
+        var feed = [
+          ['Транспорт', 'Автобусы №14 и №21 пустят по новому маршруту с 1 декабря', 'Маршрут продлят до нового микрорайона — время в пути вырастет на 7 минут.', '18 мин назад', '3 мин'],
+          ['Город', 'На набережной закончили ремонт: открыли велодорожку и освещение', 'Работы шли с августа, подрядчик обещает гарантию на пять лет.', '1 час назад', '4 мин'],
+          ['Экономика', 'Средняя ставка по ипотеке в регионе снизилась до 17,4%', 'Банки пересматривают условия после решения регулятора.', '2 часа назад', '2 мин'],
+          ['Культура', 'В «Луче» покажут ретроспективу советского кино', 'В программе — восемь фильмов и лекции кинокритиков.', '3 часа назад', '5 мин']
+        ];
+        return '<section class="g24-lead">' +
+          '<div class="g24-lead-art"><span>фото · Дмитрий Орлов</span></div>' +
+          '<div class="g24-lead-body"><span class="g24-cat">Главное</span>' +
+          '<h1>Город получил 120 новых автобусов: что изменится на маршрутах</h1>' +
+          '<p>Первые 40 машин выйдут на линии уже в понедельник. Новые автобусы — низкопольные, с кондиционерами и зарядками для телефонов.</p>' +
+          '<div class="g24-meta"><span>Ирина Ковалёва</span><time>14:20</time><span>4 мин чтения</span></div></div>' +
+          '</section>' +
+          '<div class="web-ad-slot">' + W.ad('ticker', 1) + '</div>' +
+          '<div class="g24-sect-head"><h2>Лента</h2><span>обновляется каждые 10 минут</span></div>' +
+          '<div class="g24-feed">' + feed.map(function (f) {
+            return '<button class="g24-item" type="button" onclick="Web.sitePage(\'gorod24\',\'article\')">' +
+              '<span class="g24-cat">' + f[0] + '</span><b>' + f[1] + '</b><p>' + f[2] + '</p>' +
+              '<span class="g24-item-meta">' + f[3] + ' · ' + f[4] + '</span></button>';
+          }).join('') + '</div>' +
+          '<div class="g24-sect-head"><h2>Сейчас читают</h2></div>' +
+          '<ol class="g24-top5">' +
+          '<li><button type="button" onclick="Web.sitePage(\'gorod24\',\'article\')">Что изменится в оплате ЖКХ с декабря</button></li>' +
+          '<li><button type="button" onclick="Web.sitePage(\'gorod24\',\'live\')">Онлайн: как проходит открытие нового моста</button></li>' +
+          '<li><button type="button" onclick="Web.sitePage(\'gorod24\',\'article\')">Пять новых кофеен в центре — обзор</button></li>' +
+          '<li><button type="button" onclick="Web.sitePage(\'gorod24\',\'article\')">Куда поехать на выходных: 6 идей</button></li>' +
+          '</ol>';
+      },
+      article: function () {
+        return '<article class="g24-article">' +
+          '<span class="g24-cat">Главное</span>' +
+          '<h1>Город получил 120 новых автобусов: что изменится на маршрутах</h1>' +
+          '<div class="g24-meta"><span>Ирина Ковалёва</span><time>21 ноября, 14:20</time><span>4 мин чтения</span></div>' +
+          '<div class="g24-art-art"><span>фото · Дмитрий Орлов</span></div>' +
+          '<p class="g24-lead-p">Первые 40 машин выйдут на линии уже в понедельник. Новые автобусы — низкопольные, с кондиционерами и зарядками для телефонов.</p>' +
+          '<p>Всего город получил 120 машин по программе обновления транспорта. Из них 60 — большого класса, которые пойдут на маршруты №14, №21 и №37, ещё 60 — средней вместимости для спальных районов.</p>' +
+          '<blockquote>«Это первое такое обновление за восемь лет. Старые автобусы мы передадим на баланс техникумов», — рассказал заместитель мэра по транспорту.</blockquote>' +
+          '<p>Оплата останется прежней: 35 ₽ за поездку картой и 40 ₽ наличными. В салонах появятся валидаторы с поддержкой оплаты телефоном.</p>' +
+          '<h2>Что ещё изменится</h2>' +
+          '<ul><li>интервал на маршруте №14 сократится с 18 до 12 минут;</li>' +
+          '<li>на маршруте №21 появится остановка у нового микрорайона;</li>' +
+          '<li>до конца года запустят онлайн-карту движения.</li></ul>' +
+          '<div class="g24-tags"><span>#транспорт</span><span>#город</span><span>#автобусы</span></div>' +
+          '<div class="web-ad-slot">' + W.ad('hero', 4) + '</div>' +
+          '<div class="g24-sect-head"><h2>Читайте также</h2></div>' +
+          '<div class="g24-more"><button type="button" onclick="Web.sitePage(\'gorod24\',\'article\')">Стоимость проезда в 2027 году</button>' +
+          '<button type="button" onclick="Web.sitePage(\'gorod24\',\'live\')">Онлайн: открытие моста</button></div>' +
+          '</article>';
+      },
+      live: function () {
+        var up = [
+          ['14:42', 'Мост официально открыт. По нему проехал первый троллейбус.', 'прямой эфир'],
+          ['14:31', 'Мэр поблагодарил строителей и вручил награды.', ''],
+          ['14:12', 'На месте работают 12 журналистов и три съёмочные группы.', ''],
+          ['13:55', 'Очередь на вход: около 300 человек.', ''],
+          ['13:20', 'Движение по мосту обещают открыть сразу после церемонии.', '']
+        ];
+        return '<div class="g24-livefeed"><div class="g24-live-head"><span class="g24-live-dot"><i></i> Онлайн</span>' +
+          '<h1>Открытие нового моста через реку</h1><p>Следим за церемонией и первыми рейсами.</p></div>' +
+          up.map(function (u) {
+            return '<div class="g24-update' + (u[2] ? ' hot' : '') + '"><time>' + u[0] + '</time><div><b>' + u[1] + '</b>' +
+              (u[2] ? '<span>' + u[2] + '</span>' : '') + '</div></div>';
+          }).join('') +
+          '<div class="g24-note">Трансляция закончится в 17:00. Обновления — каждые 5–10 минут.</div></div>';
+      },
+      about: function () {
+        return '<div class="g24-about"><h1>Редакция</h1>' +
+          '<p>«Город 24» — независимое городское медиа. Пишем о транспорте, стройке, культуре и людях. Не публикуем непроверенные новости.</p>' +
+          '<div class="g24-team"><div><b>Анна Воронцова</b><span>главный редактор</span></div>' +
+          '<div><b>Ирина Ковалёва</b><span>город и транспорт</span></div>' +
+          '<div><b>Павел Гринь</b><span>экономика и ЖКХ</span></div>' +
+          '<div><b>Мария Ли</b><span>культура</span></div></div>' +
+          '<h2>Как с нами связаться</h2>' +
+          '<p>Новости: news@gorod24.live · Реклама: ads@gorod24.live · Телефон: 8 (343) 000-24-24<br>Екатеринбург, ул. Ленина, 24, офис 305.</p>' +
+          '<div class="g24-note">Учредитель: ООО «Город 24». Свидетельство СМИ ЭЛ № ФС 00-00000 от 12.01.2026.</div></div>';
+      }
+    }
+  });
+
+  /* ============================================================
+     ПОТОК — короткие видео, 2026
+     ============================================================ */
+  function potokNav(page) {
+    var items = [['index', 'Для вас'], ['trends', 'Тренды'], ['profile', 'Мой канал']];
+    return items.map(function (it) {
+      return '<button class="pt-tab' + (it[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'potok\',\'' + it[0] + '\')">' + it[1] + '</button>';
+    }).join('');
+  }
+
+  W.sites.push({
+    id: 'potok', name: 'Поток', host: 'potok.video', cat: 'social', custom: true,
+    era: 'modern', manualAds: true,
+    icon: 'fa-play', color: '#111827',
+    slogan: 'Короткие видео города · 2026',
+    nav: [['index', 'Для вас'], ['trends', 'Тренды'], ['profile', 'Мой канал']],
+    chrome: function (body, page) {
+      page = page || 'index';
+      return '<div class="pt">' +
+        '<header class="pt-top">' +
+        '<button class="pt-logo" type="button" onclick="Web.sitePage(\'potok\',\'index\')">поток</button>' +
+        '<nav class="pt-nav">' + potokNav(page) + '</nav>' +
+        '<button class="pt-search" type="button" onclick="LV.toast(\'Поиск по видео скоро\')" aria-label="Поиск"><i class="fa-solid fa-magnifying-glass"></i></button>' +
+        '</header>' +
+        '<div class="pt-body">' + body + '</div>' +
+        '<footer class="pt-foot">© 2026 Поток · рекомендации работают на демо-данных</footer>' +
+        '</div>';
+    },
+    pages: {
+      index: function () {
+        var vids = [
+          ['Как за 10 минут собрать витрину в Лавке', '@lavka', '24,8 тыс.', '2:14', 'linear-gradient(150deg,#10b981,#0f172a)', 'fa-bag-shopping'],
+          ['Смена в ПВЗ: что реально происходит', '@job.daily', '58,1 тыс.', '3:02', 'linear-gradient(150deg,#0ea5e9,#312e81)', 'fa-box'],
+          ['Три ошибки в самокате по городу', '@ride', '12,4 тыс.', '1:38', 'linear-gradient(150deg,#f59e0b,#7c2d12)', 'fa-person-scooter'],
+          ['Кофе на 300 ₽ vs кофе на 1 200 ₽', '@taste', '31,6 тыс.', '4:12', 'linear-gradient(150deg,#b45309,#111827)', 'fa-mug-hot'],
+          ['Стрит-арт во дворах: прогулка', '@gorodok', '7,9 тыс.', '2:41', 'linear-gradient(150deg,#ec4899,#4c1d95)', 'fa-spray-can']
+        ];
+        return '<div class="pt-stories">' +
+          '<button class="pt-story add" type="button" onclick="LV.toast(\'Съёмка доступна в приложении Поток\')"><span>+</span>Снять</button>' +
+          ['@lavka', '@job.daily', '@ride', '@taste', '@gorodok'].map(function (a) {
+            return '<button class="pt-story" type="button" onclick="LV.toast(\'История ' + a + ' (демо)\')"><span>' + a.charAt(1).toUpperCase() + '</span>' + a + '</button>';
+          }).join('') + '</div>' +
+          '<div class="g24-sect-head"><h2>Для вас</h2><span>подобрано по интересам</span></div>' +
+          '<div class="pt-grid">' + vids.slice(0, 3).map(function (v) {
+            return '<button class="pt-card" type="button" style="background:' + v[4] + '" onclick="LV.toast(\'Видео «' + v[0] + '» (демо)\')">' +
+              '<span class="pt-play"><i class="fa-solid fa-play"></i></span>' +
+              '<span class="pt-dur">' + v[3] + '</span>' +
+              '<span class="pt-card-info"><b>' + v[0] + '</b><span>' + v[1] + ' · ' + v[2] + ' просмотров</span></span></button>';
+          }).join('') + '</div>' +
+          '<div class="web-ad-slot">' + W.ad('tile', 2) + '</div>' +
+          '<div class="g24-sect-head"><h2>Сейчас в трендах</h2></div>' +
+          '<div class="pt-grid">' + vids.slice(3).map(function (v) {
+            return '<button class="pt-card" type="button" style="background:' + v[4] + '" onclick="LV.toast(\'Видео «' + v[0] + '» (демо)\')">' +
+              '<span class="pt-play"><i class="fa-solid fa-play"></i></span>' +
+              '<span class="pt-dur">' + v[3] + '</span>' +
+              '<span class="pt-card-info"><b>' + v[0] + '</b><span>' + v[1] + ' · ' + v[2] + ' просмотров</span></span></button>';
+          }).join('') + '</div>';
+      },
+      trends: function () {
+        var tags = [['#лавка', '128 тыс. видео'], ['#смена', '74 тыс.'], ['#город', '62 тыс.'], ['#кофе', '41 тыс.'], ['#пвз', '28 тыс.'], ['#самокат', '19 тыс.']];
+        return '<div class="g24-sect-head"><h2>Тренды недели</h2><span>обновлено сегодня</span></div>' +
+          '<div class="pt-tags">' + tags.map(function (t) {
+            return '<button class="pt-tag" type="button" onclick="LV.toast(\'Лента ' + t[0] + ' (демо)\')">' + t[0] + '<span>' + t[1] + '</span></button>';
+          }).join('') + '</div>' +
+          '<div class="pt-chart"><b>Топ видео</b>' +
+          [['Смена в ПВЗ: что реально происходит', '58,1 тыс.'], ['Как собрать витрину за 10 минут', '24,8 тыс.'],
+            ['Кофе на 300 ₽ vs кофе на 1 200 ₽', '31,6 тыс.'], ['Три ошибки в самокате', '12,4 тыс.']].map(function (v, i) {
+              return '<div class="pt-chart-row"><em>' + (i + 1) + '</em><span>' + v[0] + '</span><b>' + v[1] + '</b></div>';
+            }).join('') + '</div>' +
+          '<div class="web-ad-slot">' + W.ad('split', 7) + '</div>';
+      },
+      profile: function () {
+        return '<div class="pt-profile"><div class="pt-ava">Л</div><div class="pt-profile-info">' +
+          '<b>' + (LV.state.user.name || 'Мой канал') + '</b><span>@my.channel · 12 подписчиков</span>' +
+          '<p>Показываю, как открыть точку и не сойти с ума. Новое видео — по вторникам.</p>' +
+          '<div class="pt-profile-stats"><div><b>6</b><span>видео</span></div><div><b>1 248</b><span>просмотров</span></div><div><b>12</b><span>подписчиков</span></div></div>' +
+          '</div><button class="pt-edit" type="button" onclick="LV.toast(\'Редактирование профиля (демо)\')">Редактировать</button></div>' +
+          '<div class="g24-sect-head"><h2>Мои видео</h2></div>' +
+          '<div class="pt-grid">' +
+          ['Первая смена: как это было', 'Считаем смету точки', 'Что взять в ПВЗ'].map(function (t, i) {
+            return '<button class="pt-card" type="button" style="background:linear-gradient(150deg,' + ['#10b981,#0f172a', '#6366f1,#111827', '#f59e0b,#7c2d12'][i] + ')" onclick="LV.toast(\'Видео «' + t + '» (демо)\')">' +
+              '<span class="pt-play"><i class="fa-solid fa-play"></i></span><span class="pt-dur">' + ['2:14', '3:02', '1:48'][i] + '</span>' +
+              '<span class="pt-card-info"><b>' + t + '</b><span>' + ['1,2 тыс.', '840', '610'][i] + ' просмотров</span></span></button>';
+          }).join('') + '</div>' +
+          '<div class="pt-empty"><i class="fa-solid fa-video"></i><b>Загрузите первое видео</b><span>Вертикальное, до 3 минут. Съёмка доступна в демо-режиме.</span>' +
+          '<button type="button" onclick="LV.toast(\'Загрузка видео (демо)\')">Загрузить</button></div>';
+      }
+    }
+  });
 })();

@@ -150,11 +150,31 @@
   // =====================================================
   // ПРОФИЛЬ
   // =====================================================
+  function achCount() {
+    var n = 0;
+    var orders = (S.orders || []).length;
+    if (orders >= 1) n++;
+    if (orders >= 5) n++;
+    if (orders >= 10) n++;
+    if ((S.fav || []).length >= 1) n++;
+    if ((S.fav || []).length >= 10) n++;
+    if (S.user && S.user.xid) n++;
+    if (Array.isArray(S.reminders) && S.reminders.length) n++;
+    if (Number(S.gameBest) > 0) n++;
+    if (Array.isArray(S.shots) && S.shots.length) n++;
+    if (Array.isArray(S.podPlayed) && S.podPlayed.length) n++;
+    return n;
+  }
+  function buyerRating() {
+    var o = (S.orders || []).length;
+    return (o ? Math.min(5, 4.7 + Math.min(0.3, o * 0.01)) : 4.5).toFixed(1);
+  }
   LV.registerApp({
     id: 'profile', name: 'Профиль', icon: 'fa-user', bg: 'linear-gradient(140deg,#6366f1,#8b5cf6)',
     page: 0, status: 'dark',
     mount: function (body) {
       var u = S.user;
+      var pp = u.passport || {};
       var ordersCount = S.orders.length;
       var favCount = S.fav.length;
       var hasXid = !!u.xid;
@@ -178,8 +198,8 @@
         '<div class="set-group-title" style="padding-left:4px">XPRODC ID</div>' +
         '<div class="prof-menu">' +
         '<button class="prof-link" type="button" onclick="XID.open()"><span class="set-ico" style="background:#059669"><i class="fa-solid fa-shield-halved"></i></span><b>XPRODC ID</b><small>' + (hasXid ? LV.esc(u.xid) : 'Войти') + '</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
-        '<button class="prof-link" type="button" onclick="XID.open()"><span class="set-ico" style="background:#10b981"><i class="fa-solid fa-medal"></i></span><b>Достижения</b><small>12 / 50</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
-        '<button class="prof-link" type="button" onclick="XID.open()"><span class="set-ico" style="background:#f59e0b"><i class="fa-solid fa-trophy"></i></span><b>Рейтинг</b><small>4.9</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
+        '<button class="prof-link" type="button" onclick="XID.achieve()"><span class="set-ico" style="background:#10b981"><i class="fa-solid fa-medal"></i></span><b>Достижения</b><small>' + achCount() + ' / 50</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
+        '<button class="prof-link" type="button" onclick="XID.rating()"><span class="set-ico" style="background:#f59e0b"><i class="fa-solid fa-trophy"></i></span><b>Рейтинг</b><small>' + buyerRating() + '</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
         '<button class="prof-link" type="button" onclick="XID.linkTg()"><span class="set-ico" style="background:#2AABEE"><i class="fa-brands fa-telegram"></i></span><b>Telegram</b><small id="prof-tg-status">' + (u.tg ? LV.esc(u.tg) : 'Привязать') + '</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
         '</div>' +
         '<div class="set-group-title" style="padding-left:4px">Покупки</div>' +
@@ -190,6 +210,7 @@
         '</div>' +
         '<div class="set-group-title" style="padding-left:4px">Аккаунт</div>' +
         '<div class="prof-menu">' +
+        '<button class="prof-link" type="button" onclick="Passport.open()"><span class="set-ico" style="background:#0ea5e9"><i class="fa-solid fa-id-card"></i></span><b>Паспорт игрока</b><small>' + (pp.surname ? LV.esc(u.name || (pp.surname + ' ' + pp.name)) : 'Заполнить') + '</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
         '<button class="prof-link" type="button" onclick="Profile.editName()"><span class="set-ico" style="background:#6366f1"><i class="fa-solid fa-pen"></i></span><b>Имя и аватар</b><i class="fa-solid fa-chevron-right chev"></i></button>' +
         '<button class="prof-link" type="button" onclick="Profile.addresses()"><span class="set-ico" style="background:#0ea5e9"><i class="fa-solid fa-location-dot"></i></span><b>Адреса доставки</b><small>1</small><i class="fa-solid fa-chevron-right chev"></i></button>' +
         '<button class="prof-link" type="button" onclick="Profile.payments()"><span class="set-ico" style="background:#f59e0b"><i class="fa-solid fa-credit-card"></i></span><b>Способы оплаты</b><i class="fa-solid fa-chevron-right chev"></i></button>' +
@@ -229,7 +250,21 @@
       var i = document.getElementById('prof-name-input');
       var v = i ? i.value.trim() : '';
       if (!v) { LV.toast('Введите имя'); return; }
-      S.user.name = v;
+      var p = S.user.passport || null;
+      var surname = p && p.surname ? String(p.surname).trim() : '';
+      if (p && surname) {
+        var tail = ' ' + surname;
+        if (v.toLowerCase().slice(-tail.length) === tail.toLowerCase()) {
+          p.name = v.slice(0, -tail.length).trim() || v;
+          S.user.name = v;
+        } else {
+          p.name = v;
+          S.user.name = v + ' ' + surname;
+        }
+      } else {
+        S.user.name = v;
+      }
+      S.user.nameOwn = true;
       LV.save();
       LV.updateHomeUser();
       Profile.closeSheet();
@@ -270,6 +305,7 @@
 
         '<div class="set-group-title">Данные</div>' +
         '<div class="set-group">' +
+          '<button class="set-row" type="button" onclick="Settings.replay()"><span class="set-ico" style="background:#6366f1"><i class="fa-solid fa-graduation-cap"></i></span><div class="set-lbl"><b>Обучение заново</b><span>Показать подсказки по телефону</span></div><i class="fa-solid fa-chevron-right chev"></i></button>' +
           '<button class="set-row" type="button" onclick="Settings.reset()"><span class="set-ico" style="background:#ef4444"><i class="fa-solid fa-arrow-rotate-left"></i></span><div class="set-lbl"><b>Сбросить прогресс</b><span>Корзина, заказы, избранное</span></div><i class="fa-solid fa-chevron-right chev"></i></button>' +
         '</div>' +
 
@@ -305,10 +341,17 @@
       setTimeout(function () { LV.startTutorial(); }, 380);
     },
     reset: function () {
-      if (window.confirm('Сбросить прогресс? Корзина, заказы и избранное будут удалены.')) {
+      if (!window.confirm('Сбросить прогресс? Корзина, заказы, избранное и данные приложений будут удалены, в том числе в облаке.')) return;
+      var done = function () { location.reload(); };
+      if (window.LV && LV.cloud && LV.cloud.clear) {
+        var p = LV.cloud.clear();
+        if (p && typeof p.then === 'function') { p.then(done, done); return; }
+      } else {
         try { localStorage.removeItem('lavka_state_v1'); } catch (e) {}
-        location.reload();
+        try { localStorage.removeItem('lavka_ts'); } catch (e) {}
+        try { localStorage.removeItem('lavka_owner_xid'); } catch (e) {}
       }
+      done();
     }
   };
 
@@ -518,8 +561,8 @@
     copy: function () {
       if (S.user.xid) LV.copyText(S.user.xid, 'XPRODC ID скопирован');
     },
-    achieve: function () { LV.toast('Открыто 12 из 50 достижений'); },
-    rating: function () { LV.toast('Рейтинг покупателя: 4.9 из 5'); }
+    achieve: function () { LV.toast('Открыто ' + achCount() + ' из 50 достижений'); },
+    rating: function () { LV.toast('Рейтинг покупателя: ' + buyerRating() + ' из 5 · заказов ' + (S.orders || []).length); }
   };
 
   // =====================================================
@@ -1111,6 +1154,10 @@
   function mailAll() {
     return MAIL.concat(window.BizSms ? window.BizSms() : []);
   }
+  function mailUnreadCount() {
+    return mailAll().filter(function (m, i) { return m.dyn ? m.unread : (m.unread && !mailRead[i]); }).length;
+  }
+  window.UnreadMail = mailUnreadCount;
 
   function mailListHTML() {
     return mailAll().map(function (m, i) {
@@ -1136,7 +1183,7 @@
 
   function renderMailList() {
     if (!mailHost) return;
-    var unread = mailAll().filter(function (m, i) { return m.dyn ? m.unread : (m.unread && !mailRead[i]); }).length;
+    var unread = mailUnreadCount();
     mailHost.innerHTML = LV.appbar({
       title: 'Почта', sub: unread ? unread + ' непрочитанных' : 'Всё прочитано',
       right: '<button class="ab-btn" type="button" onclick="Mail.compose()" aria-label="Написать"><i class="fa-solid fa-pen"></i></button>'
@@ -1152,6 +1199,7 @@
       } else {
         mailRead[i] = true;
       }
+      LV.renderApps();
       mailHost.innerHTML = '<div class="appbar"><button class="ab-btn" type="button" onclick="Mail.list()" aria-label="Назад"><i class="fa-solid fa-chevron-left"></i></button>' +
         '<div class="ab-title">Письмо</div><div class="ab-right"></div></div>' +
         '<div class="app-scroll pb">' +
@@ -1193,6 +1241,9 @@
   ];
   var msgHost = null;
   var msgChat = -1;
+  window.UnreadMessages = function () {
+    return CHATS.reduce(function (s, c) { return s + (Number(c.unread) || 0); }, 0);
+  };
 
   function msgListHTML() {
     return CHATS.map(function (c, i) {
@@ -1240,6 +1291,7 @@
       msgChat = i;
       CHATS[i].unread = 0;
       msgHost.innerHTML = msgChatHTML(i);
+      LV.renderApps();
       setTimeout(msgScrollBottom, 30);
     },
     list: function () {
@@ -1591,9 +1643,9 @@
             '<h3>Один ID — вся экосистема</h3><p>Лавка, банк, почта, кошелёк и браузер работают с единым аккаунтом.</p>' +
             '<button class="btn btn-white" type="button" onclick="Web.sitePage(\'xprodc\',\'id\')">Подробнее об ID</button></div>' +
             '<div class="web-h">Обновления</div>' +
-            webNews('u1', 'Версия 4.2: браузер Lackuun', 'Встроенный браузер получил стартовую страницу, категории и закладки.', 'Сегодня') +
-            webNews('u2', 'Лавка: 2100 товаров', 'Каталог расширен до 21 категории, добавлены отзывы и избранное.', '12 ноября') +
-            webNews('u3', 'LAVKA PAY: переводы по X ID', 'Переводы между аккаунтами без комиссии.', '8 ноября');
+            webNewsSite('xprodc', 'u1', 'Версия 4.2: браузер Lackuun', 'Встроенный браузер получил стартовую страницу, категории и закладки.', 'Сегодня') +
+            webNewsSite('xprodc', 'u2', 'Лавка: 2100 товаров', 'Каталог расширен до 21 категории, добавлены отзывы и избранное.', '12 ноября') +
+            webNewsSite('xprodc', 'u3', 'LAVKA PAY: переводы по X ID', 'Переводы между аккаунтами без комиссии.', '8 ноября');
         },
         id: function () {
           var on = !!S.user.xid;
@@ -1614,6 +1666,27 @@
              ['Браузер', 'fa-globe', '#38bdf8'], ['Заметки', 'fa-note-sticky', '#f59e0b'], ['XPRODC ID', 'fa-shield-halved', '#059669']].map(function (a) {
               return '<div class="web-app-row"><span class="web-app-ic" style="background:' + a[2] + '"><i class="fa-solid ' + a[1] + '"></i></span><b>' + a[0] + '</b><i class="fa-solid fa-arrow-up-right-from-square web-chev"></i></div>';
             }).join('');
+        },
+        u1: function () {
+          return '<div class="web-h">Обновление</div><h3 class="web-title">Версия 4.2: браузер Lackuun</h3>' +
+            '<p class="web-muted">Сегодня · XPRODC</p>' +
+            '<p class="web-text">Встроенный браузер получил стартовую страницу с поиском, категориями и закладками. Появились вкладки с собственной историей и рекламные блоки партнёров.</p>' +
+            '<p class="web-text">Обновление уже доступно на всех устройствах. Откройте браузер из магазина приложений.</p>' +
+            '<button class="btn btn-primary btn-block" type="button" onclick="Web.home()">Открыть браузер</button>';
+        },
+        u2: function () {
+          return '<div class="web-h">Обновление</div><h3 class="web-title">Лавка: 2100 товаров</h3>' +
+            '<p class="web-muted">12 ноября · XPRODC</p>' +
+            '<p class="web-text">Каталог расширен до 21 категории. Добавлены отзывы, избранное и сравнение характеристик. Доставка бесплатна от 3 000 ₽.</p>' +
+            '<p class="web-text">Продавцы могут выставлять товары через «Производство» — витрина обновляется автоматически.</p>' +
+            '<button class="btn btn-primary btn-block" type="button" onclick="Web.open(\'lavka\')">Перейти в Лавку</button>';
+        },
+        u3: function () {
+          return '<div class="web-h">Обновление</div><h3 class="web-title">LAVKA PAY: переводы по X ID</h3>' +
+            '<p class="web-muted">8 ноября · XPRODC</p>' +
+            '<p class="web-text">Теперь переводить деньги можно по X ID без комиссии. История платежей синхронизируется с BankFake и почтой.</p>' +
+            '<p class="web-text">Функция доступна всем владельцам XPRODC ID. Лимит — 100 000 ₽ в сутки.</p>' +
+            '<button class="btn btn-primary btn-block" type="button" onclick="Web.open(\'bankfake\')">Открыть BankFake</button>';
         }
       }
     },
@@ -1787,6 +1860,20 @@
           return '<div class="web-poster" style="background:linear-gradient(140deg,#334155,#0f172a)"><i class="fa-solid fa-box"></i></div>' +
             '<h3 class="web-title">Последний заказ</h3><p class="web-muted">2025 · триллер · 2 ч 02 мин</p>' +
             '<p class="web-text">Курьер получает посылку без адреса. Правила простые: не открывать и не опаздывать.</p>' +
+            '<button class="btn btn-primary btn-block" style="margin-top:10px" type="button" onclick="LV.toast(\'Плеер отключён в симуляторе\')">Смотреть</button>';
+        },
+        m3: function () {
+          return '<div class="web-poster" style="background:linear-gradient(140deg,#f59e0b,#7c2d12)"><i class="fa-solid fa-couch"></i></div>' +
+            '<h3 class="web-title">Тёплый дом</h3><p class="web-muted">2026 · комедия · 1 ч 36 мин</p>' +
+            '<p class="web-text">Семья переезжает в старую квартиру и находит в стене письмо, которое меняет их планы на ремонт.</p>' +
+            '<div class="web-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-regular fa-star"></i><b>4.3</b></div>' +
+            '<button class="btn btn-primary btn-block" style="margin-top:10px" type="button" onclick="LV.toast(\'Плеер отключён в симуляторе\')">Смотреть</button>';
+        },
+        m4: function () {
+          return '<div class="web-poster" style="background:linear-gradient(140deg,#6366f1,#1e1b4b)"><i class="fa-solid fa-moon"></i></div>' +
+            '<h3 class="web-title">Ночная смена</h3><p class="web-muted">2024 · детектив · 1 ч 52 мин</p>' +
+            '<p class="web-text">Ночной ПВЗ, странный клиент и посылка, которую никто не заказывал. Одна смена — одно расследование.</p>' +
+            '<div class="web-stars"><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i><b>4.6</b></div>' +
             '<button class="btn btn-primary btn-block" style="margin-top:10px" type="button" onclick="LV.toast(\'Плеер отключён в симуляторе\')">Смотреть</button>';
         }
       }
@@ -2099,6 +2186,10 @@
     return '<button class="web-news" type="button" onclick="Web.sitePage(\'vesti\',\'' + page + '\')">' +
       '<b>' + title + '</b><span>' + text + '</span><small>' + meta + '</small></button>';
   }
+  function webNewsSite(siteId, page, title, text, meta) {
+    return '<button class="web-news" type="button" onclick="Web.sitePage(\'' + siteId + '\',\'' + page + '\')">' +
+      '<b>' + title + '</b><span>' + text + '</span><small>' + meta + '</small></button>';
+  }
   function webArticle(title, kicker, lead, body) {
     return '<article class="web-article"><span class="web-kicker">' + kicker + '</span><h3>' + title + '</h3>' +
       '<p class="web-lead-p">' + lead + '</p>' + body + '</article>';
@@ -2172,6 +2263,278 @@
     }).join('') + '</div>';
   }
 
+  // ---------- реклама ----------
+  var WEB_ADS_MODERN = [
+    {
+      brand: 'LAVKA PAY', icon: 'fa-wallet', accent: '#10b981',
+      title: 'Кэшбэк 5% на всё',
+      text: 'Счёт для покупок и бизнеса. Обслуживание — 0 ₽, переводы без комиссии.',
+      cta: 'Открыть счёт', site: 'bankfake', badge: '0 ₽',
+      price: 'бесплатно', note: 'для бизнеса',
+      advertiser: 'ООО «ЛАВКА ФИНАНС»', erid: '2VfnxW9aK1'
+    },
+    {
+      brand: 'XPRODC ID', icon: 'fa-fingerprint', accent: '#6366f1',
+      title: 'Один ID для всех сервисов',
+      text: 'Вход без паролей, история заказов и бонусы в Лавке, BankFake и LAVKA PAY.',
+      cta: 'Подключить', site: 'bankfake', badge: '1 клик',
+      advertiser: 'XPRODC', erid: '2VfnxQ4mT7'
+    },
+    {
+      brand: 'Едок', icon: 'fa-burger', accent: '#f97316',
+      title: 'Ужин за 30 минут',
+      text: 'Пицца, бургеры и суши с доставкой. −25% на первый заказ по коду LAVKA25.',
+      cta: 'Заказать', site: 'edok', badge: '−25%',
+      price: 'от 490 ₽', old: '650 ₽', note: '30 мин',
+      advertiser: 'ООО «Едок»', erid: '2VfnxL2pR9'
+    },
+    {
+      brand: 'Квант', icon: 'fa-wand-magic-sparkles', accent: '#8b5cf6',
+      title: 'Спроси Кванта о чём угодно',
+      text: 'Поможет с текстом, таблицами и кодом. Первые 20 запросов бесплатно.',
+      cta: 'Попробовать', site: 'kvant', badge: '20 free',
+      duration: '0:42', views: '1,2 млн',
+      advertiser: 'ООО «Квант»', erid: '2VfnxK7dS5'
+    },
+    {
+      brand: 'Опт', icon: 'fa-truck-fast', accent: '#0f766e',
+      title: 'Товар для бизнеса со склада',
+      text: 'Поставки для ПВЗ, кофеен и магазинов. Доставка на точку за 1 день.',
+      cta: 'Перейти', site: 'opt', badge: 'B2B',
+      advertiser: 'ООО «Опт-Сервис»', erid: '2VfnxN4vB8'
+    },
+    {
+      brand: 'Авиатор', icon: 'fa-plane', accent: '#0e7490',
+      title: 'Билеты от 2 990 ₽',
+      text: 'Прямые рейсы по стране. Возврат без штрафа за 24 часа.',
+      cta: 'Найти билет', site: 'aviator', badge: '−30%',
+      price: 'от 2 990 ₽', old: '4 200 ₽',
+      advertiser: 'АО «Авиатор»', erid: '2VfnxZ2hJ6'
+    },
+    {
+      brand: 'ТехноМир', icon: 'fa-headphones', accent: '#0284c7',
+      title: 'Наушники недели',
+      text: 'Беспроводные, 40 часов работы и шумоподавление.',
+      cta: 'В каталог', site: 'techno', badge: '−33%',
+      price: '9 990 ₽', old: '14 990 ₽', note: 'осталось 12',
+      advertiser: 'ООО «ТехноМир»', erid: '2VfnxR3cV4'
+    },
+    {
+      brand: 'Кинозал', icon: 'fa-film', accent: '#b91c1c',
+      title: 'Премьера: «Ночная смена»',
+      text: 'История о ночном ПВЗ, которая пошла не по плану.',
+      cta: 'Смотреть', site: 'kino', badge: 'премьера',
+      duration: '2:14', views: '84 тыс.',
+      advertiser: 'ООО «Кинозал»', erid: '2VfnxG8yU2'
+    },
+    {
+      brand: 'Лавка', icon: 'fa-bag-shopping', accent: '#16a34a',
+      title: 'Скидки до 40% на технику',
+      text: 'Смартфоны, ноутбуки и аксессуары недели.',
+      cta: 'Смотреть', site: 'lavka', badge: '−40%',
+      price: 'от 299 ₽', old: '499 ₽',
+      advertiser: 'ООО «Лавка»', erid: '2VfnxT6wE2'
+    },
+    {
+      brand: 'LAVKA Бонусы', icon: 'fa-gift', accent: '#f59e0b',
+      title: '250 бонусов за покупку',
+      text: '1 бонус = 1 ₽ при оплате следующего заказа. Действуют 90 дней.',
+      cta: 'Забрать', site: 'lavka', badge: '+250',
+      advertiser: 'ООО «Лавка»', erid: '2VfnxB2nM5'
+    }
+  ];
+
+  var WEB_ADS_OLD = [
+    {
+      brand: 'Городок', title: 'НОВОСТИ ГОРОДА — КАЖДЫЙ ДЕНЬ',
+      text: 'Открытие «Северного», транспорт, погода и афиша',
+      site: 'gorodok', page: 'index',
+      advertiser: 'Городок.net', erid: '2VfnxH7bN3'
+    },
+    {
+      brand: 'Гостевая', title: 'ОСТАВЬ ЗАПИСЬ В ГОСТЕВОЙ КНИГЕ',
+      text: '2 481 запись · отвечает администратор',
+      site: 'gorodok', page: 'guestbook',
+      advertiser: 'Городок.net', erid: '2VfnxB5sD1'
+    },
+    {
+      brand: 'ICQ', title: 'СКАЧАЙ ICQ 2003b — ОБЩАЙСЯ БЕСПЛАТНО!',
+      text: 'Аська № 148-271-336 · звони, если что',
+      site: 'gorodok', page: 'links',
+      advertiser: 'Городок.net', erid: '2VfnxC8kF4'
+    },
+    {
+      brand: 'Афиша', title: 'АФИША НА НЕДЕЛЮ: КОНЦЕРТЫ И ВЫСТАВКИ',
+      text: 'Филармония, Дом культуры и кинотеатр «Луч»',
+      site: 'gorodok', page: 'afisha',
+      advertiser: 'Городок.net', erid: '2VfnxM3tY6'
+    },
+    {
+      brand: 'Конкурс', title: 'ФОТОКОНКУРС «ОСЕНЬ В ГОРОДЕ»',
+      text: 'Приз — принтер · снимки принимаем до 25 октября',
+      site: 'gorodok', page: 'news',
+      advertiser: 'Городок.net', erid: '2VfnxJ5rD7'
+    },
+    {
+      brand: 'Dial-up', title: 'БЕСПЛАТНЫЙ ИНТЕРНЕТ НА 30 ДНЕЙ!',
+      text: 'Карточка доступа в подарок · 56k · без абонплаты',
+      site: 'gorodok', page: 'links',
+      advertiser: 'ООО «Городской провайдер»', erid: '2VfnxY9sL2'
+    },
+    {
+      brand: 'Погода', title: 'ПОГОДА НА НЕДЕЛЮ: −7 °C, СНЕГ',
+      text: 'Курс доллара: 29,45 ₽ · пробки: 3 балла',
+      site: 'gorodok', page: 'index',
+      advertiser: 'Городок.net', erid: '2VfnxK1eP6'
+    }
+  ];
+
+  var WEB_ADS_TEXT = [
+    {
+      title: 'Доставка продуктов за час', host: 'lackuun.com',
+      text: 'Свежие продукты из Лавки — на дом и в офис. Бесплатно от 3 000 ₽.',
+      site: 'lavka', advertiser: 'ООО «Лавка»', erid: '2VfnxT6wE2'
+    },
+    {
+      title: 'Кредит на развитие бизнеса', host: 'bankfake.net',
+      text: 'Решение за 5 минут, ставка от 12% годовых. Без залога и поручителей.',
+      site: 'bankfake', advertiser: 'АО «BankFake»', erid: '2VfnxP1qA8'
+    }
+  ];
+
+  function webAdSeed(str, total) {
+    var h = 0, s = String(str || '');
+    for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 100003;
+    return total ? h % total : h;
+  }
+
+  function webAdLegal(ad) {
+    return '<small class="web-ad-legal">' + LV.esc(ad.advertiser) + ' · erid: ' + LV.esc(ad.erid) + '</small>';
+  }
+
+  function webAdHero(ad) {
+    return '<button class="web-ad web-ad-modern" type="button" style="--ad-accent:' + ad.accent + '" onclick="Web.open(\'' + ad.site + '\')">' +
+      '<span class="web-ad-row"><span class="web-ad-mark">Реклама</span>' +
+      '<span class="web-ad-brand"><i class="fa-solid ' + ad.icon + '"></i> ' + LV.esc(ad.brand) + '</span></span>' +
+      '<b class="web-ad-title">' + LV.esc(ad.title) + '</b>' +
+      '<span class="web-ad-text">' + LV.esc(ad.text) + '</span>' +
+      '<span class="web-ad-cta">' + LV.esc(ad.cta) + ' <i class="fa-solid fa-arrow-right"></i></span>' +
+      webAdLegal(ad) + '</button>';
+  }
+
+  function webAdTile(ad) {
+    return '<button class="web-ad web-ad-tile" type="button" style="--ad-accent:' + ad.accent + '" onclick="Web.open(\'' + ad.site + '\')">' +
+      '<span class="web-ad-tile-art"><i class="fa-solid ' + ad.icon + '"></i></span>' +
+      '<span class="web-ad-tile-body">' +
+      '<span class="web-ad-row"><span class="web-ad-mark">Реклама</span>' +
+      '<span class="web-ad-brand">' + LV.esc(ad.brand) + '</span></span>' +
+      '<b class="web-ad-tile-title">' + LV.esc(ad.title) + '</b>' +
+      (ad.price ? '<span class="web-ad-price">' + LV.esc(ad.price) + (ad.old ? ' <s>' + LV.esc(ad.old) + '</s>' : '') + '</span>' : '') +
+      '<span class="web-ad-text">' + LV.esc(ad.text) + '</span>' +
+      '<span class="web-ad-cta">' + LV.esc(ad.cta) + '</span>' +
+      '</span>' +
+      (ad.badge ? '<span class="web-ad-badge">' + LV.esc(ad.badge) + '</span>' : '') +
+      webAdLegal(ad) + '</button>';
+  }
+
+  function webAdVideo(ad) {
+    return '<button class="web-ad web-ad-video" type="button" style="--ad-accent:' + ad.accent + '" onclick="Web.open(\'' + ad.site + '\')">' +
+      '<span class="web-ad-video-art"><i class="fa-solid ' + ad.icon + ' web-ad-video-ico"></i>' +
+      '<span class="web-ad-play"><i class="fa-solid fa-play"></i></span>' +
+      (ad.duration ? '<span class="web-ad-dur">' + LV.esc(ad.duration) + '</span>' : '') + '</span>' +
+      '<span class="web-ad-video-body">' +
+      '<span class="web-ad-row"><span class="web-ad-mark">Реклама</span>' +
+      '<span class="web-ad-brand">' + LV.esc(ad.brand) + '</span></span>' +
+      '<b class="web-ad-video-title">' + LV.esc(ad.title) + '</b>' +
+      '<span class="web-ad-text">' + LV.esc(ad.text) + '</span>' +
+      '<span class="web-ad-meta">' + (ad.views ? LV.esc(ad.views) + ' просмотров · ' : '') + LV.esc(ad.cta) + '</span>' +
+      '</span>' + webAdLegal(ad) + '</button>';
+  }
+
+  function webAdSplit(ad) {
+    return '<button class="web-ad web-ad-split" type="button" style="--ad-accent:' + ad.accent + '" onclick="Web.open(\'' + ad.site + '\')">' +
+      '<span class="web-ad-split-body">' +
+      '<span class="web-ad-row"><span class="web-ad-mark">Реклама</span>' +
+      '<span class="web-ad-brand">' + LV.esc(ad.brand) + '</span></span>' +
+      '<b class="web-ad-split-title">' + LV.esc(ad.title) + '</b>' +
+      '<span class="web-ad-text">' + LV.esc(ad.text) + '</span>' +
+      (ad.badge ? '<span class="web-ad-badge inline">' + LV.esc(ad.badge) + '</span>' : '') +
+      '<span class="web-ad-cta ghost">' + LV.esc(ad.cta) + ' <i class="fa-solid fa-arrow-right"></i></span>' +
+      '</span>' +
+      '<span class="web-ad-split-art"><i class="fa-solid ' + ad.icon + '"></i><em></em><em></em></span>' +
+      webAdLegal(ad) + '</button>';
+  }
+
+  function webAdTicker(ad) {
+    var line = LV.esc(ad.brand + ' · ' + ad.title + ' · ' + ad.text + ' · ');
+    return '<button class="web-ad web-ad-ticker" type="button" onclick="Web.open(\'' + ad.site + '\')">' +
+      '<span class="web-ad-ticker-row"><span class="web-ad-mark">Реклама</span>' +
+      '<span class="web-ad-ticker-track"><span>' + line + line + '</span></span>' +
+      '<i class="fa-solid fa-arrow-right"></i></span>' + webAdLegal(ad) + '</button>';
+  }
+
+  function webAdOldBanner(ad) {
+    return '<button class="web-ad-old" type="button" onclick="Web.open(\'' + ad.site + '\'' + (ad.page ? ',\'' + ad.page + '\'' : '') + ')">' +
+      '<span class="web-ad-old-tag">РЕКЛАМА</span>' +
+      '<span class="web-ad-old-new">NEW!</span>' +
+      '<span class="web-ad-old-brand">' + LV.esc(ad.brand) + '</span>' +
+      '<span class="web-ad-old-title">' + LV.esc(ad.title) + '</span>' +
+      '<span class="web-ad-old-text">' + LV.esc(ad.text) + '</span>' +
+      webAdLegal(ad) + '</button>';
+  }
+
+  function webAdOldPair(ad) {
+    return '<button class="web-ad web-ad-oldpair" type="button" onclick="Web.open(\'' + ad.site + '\'' + (ad.page ? ',\'' + ad.page + '\'' : '') + ')">' +
+      '<span class="web-ad-oldpair-row">' +
+      '<span class="old-btn88"><b>' + LV.esc(ad.brand) + '</b><span>NET</span></span>' +
+      '<span class="old-btn88 alt2"><b>RU</b><span>TOP</span></span>' +
+      '<span class="web-ad-oldpair-text"><b>' + LV.esc(ad.title) + '</b><span>' + LV.esc(ad.text) + '</span></span>' +
+      '</span>' + webAdLegal(ad) + '</button>';
+  }
+
+  function webAdStrip(ad) {
+    return '<button class="web-ad web-ad-strip" type="button" onclick="Web.open(\'' + ad.site + '\')">' +
+      '<span class="web-ad-mark">Реклама</span>' +
+      '<span class="web-ad-strip-main"><b>' + LV.esc(ad.title) + '</b><span>' + LV.esc(ad.text) + '</span></span>' +
+      '<i class="fa-solid fa-chevron-right"></i>' + webAdLegal(ad) + '</button>';
+  }
+
+  function webAdText(ad) {
+    return '<button class="web-ad-text" type="button" onclick="Web.open(\'' + ad.site + '\')">' +
+      '<span class="web-ad-mark">Реклама</span>' +
+      '<b>' + LV.esc(ad.title) + '</b>' +
+      '<span class="web-ad-url">' + LV.esc(ad.host) + '</span>' +
+      '<span class="web-ad-text-line">' + LV.esc(ad.text) + '</span>' + webAdLegal(ad) + '</button>';
+  }
+
+  function webAd(style, i) {
+    if (style === 'old') return webAdOldBanner(WEB_ADS_OLD[i % WEB_ADS_OLD.length]);
+    if (style === 'oldpair') return webAdOldPair(WEB_ADS_OLD[i % WEB_ADS_OLD.length]);
+    if (style === 'text') return webAdText(WEB_ADS_TEXT[i % WEB_ADS_TEXT.length]);
+    var ad = WEB_ADS_MODERN[i % WEB_ADS_MODERN.length];
+    if (style === 'tile') return webAdTile(ad);
+    if (style === 'video') return webAdVideo(ad);
+    if (style === 'split') return webAdSplit(ad);
+    if (style === 'ticker') return webAdTicker(ad);
+    if (style === 'hero' || style === 'modern') return webAdHero(ad);
+    return webAdStrip(ad);
+  }
+
+  function webAdForSite(site, page) {
+    var seed = webAdSeed((site.id || '') + ':' + (page || 'index'));
+    if (site.era === 'old') return seed % 3 === 0 ? webAd('oldpair', seed) : webAd('old', seed);
+    var pool = ['hero', 'tile', 'video', 'split', 'ticker', 'strip'];
+    return webAd(pool[seed % pool.length], seed);
+  }
+
+  function webAdCarousel() {
+    return '<div class="web-ad-carousel">' +
+      '<div class="web-ad-carousel-head"><span class="web-ad-mark">Реклама</span><span>3 предложения</span></div>' +
+      '<div class="web-ad-carousel-track">' +
+      webAd('hero', 0) + webAd('tile', 2) + webAd('video', 3) +
+      '</div></div>';
+  }
+
   function webStart() {
     var letters = [['L', '#4285F4'], ['a', '#EA4335'], ['c', '#FBBC05'], ['k', '#4285F4'], ['u', '#34A853'], ['u', '#EA4335'], ['n', '#4285F4']];
     var favs = (S.webFav || []).map(webSite).filter(function (s) { return s && !s.hidden; });
@@ -2189,6 +2552,7 @@
         return '<button class="web-gchip" type="button" onclick="Web.cat(\'' + c.id + '\')"><i class="fa-solid ' + c.icon + '" style="color:' + c.color + '"></i>' + c.name + '</button>';
       }).join('') + '</div>' +
       '<div class="web-h web-h-center">Популярное</div>' + webShortcuts() +
+      '<div class="web-ad-slot">' + webAdCarousel() + '</div>' +
       (favs.length ? '<div class="web-h">Закладки</div>' + favs.map(webSiteCard).join('') : '') +
       '<div class="web-h">Сейчас в городе</div>' +
       webNews('a2', 'Городские службы перешли на зимний график', 'Техника вышла на улицы, работа идёт круглосуточно.', 'Сегодня, 09:05') +
@@ -2199,6 +2563,7 @@
   function webCatsPage() {
     return '<div class="web-page-head"><button class="web-back" type="button" onclick="Web.back()"><i class="fa-solid fa-chevron-left"></i></button>' +
       '<h3>Категории</h3></div>' +
+      '<div class="web-ad-slot">' + webAd('strip', 1) + '</div>' +
       WEB_CATS.map(function (c) {
         return '<div class="web-h">' + c.name + '</div>' + webSitesIn(c.id).map(webSiteCard).join('');
       }).join('');
@@ -2275,7 +2640,7 @@
     var words = query.split(' ').filter(Boolean);
     var found = words.length ? WEB_SITES.map(function (s) {
       return { s: s, sc: webScoreSite(s, words) };
-    }).filter(function (x) { return x.sc > 0; }).sort(function (a, b) {
+    }).filter(function (x) { return x.sc > 0 && !x.s.hidden; }).sort(function (a, b) {
       return b.sc - a.sc || a.s.name.localeCompare(b.s.name);
     }) : [];
     var letters = [['L', '#4285F4'], ['a', '#EA4335'], ['c', '#FBBC05'], ['k', '#4285F4'], ['u', '#34A853'], ['u', '#EA4335'], ['n', '#4285F4']];
@@ -2290,6 +2655,7 @@
         '<div class="web-h">Популярное</div>' + ['lavka', 'pulse', 'edok', 'bankfake'].map(function (id) { return webSiteCard(webSite(id)); }).join('');
     }
     return head + '<p class="web-res-count">Найдено ' + found.length + ' · запрос «' + LV.esc(q) + '»</p>' +
+      '<div class="web-ad-slot">' + webAd('text', 0) + '</div>' +
       found.map(function (x) {
         var s = x.s, cat = webCat(s.cat);
         var note = webMatchNote(s, query);
@@ -2319,7 +2685,9 @@
     if (site.custom) {
       var inner = fn();
       if (typeof site.chrome === 'function') inner = site.chrome(inner, page || 'index');
-      return '<div class="web-site web-site-custom">' + inner + '</div>';
+      var hasAd = inner.indexOf('web-ad') >= 0;
+      var customAd = hasAd ? '' : '<div class="web-ad-slot">' + webAdForSite(site, page) + '</div>';
+      return '<div class="web-site web-site-custom">' + inner + customAd + '</div>';
     }
     var nav = site.nav.map(function (n) {
       return '<button class="web-snav' + (n[0] === page ? ' on' : '') + '" type="button" onclick="Web.sitePage(\'' + site.id + '\',\'' + n[0] + '\')">' + n[1] + '</button>';
@@ -2330,6 +2698,7 @@
       '<div><b>' + LV.esc(site.name) + '</b><span>' + LV.esc(site.host) + '</span></div></div>' +
       '<p>' + LV.esc(site.slogan) + '</p></div>' +
       '<div class="web-site-nav">' + nav + '</div>' +
+      '<div class="web-ad-slot">' + webAdForSite(site, page) + '</div>' +
       '<div class="web-site-body">' + fn() + '</div>' +
       '<div class="web-site-foot">' + LV.esc(site.name) + ' · ' + LV.esc(site.host) + '</div></div>';
   }
@@ -2469,6 +2838,7 @@
   window.Web = {
     sites: WEB_SITES,
     categories: WEB_CATS,
+    ad: webAd,
     open: function (id, page) {
       var st = webSite(id);
       if (!st || st.hidden) { webPush({ kind: 'search', q: id }); return; }
@@ -2624,12 +2994,13 @@
     },
     menu: function () {
       sheet('<div class="sheet-grab"></div><h3>Lackuun</h3><p class="sub">Поиск, сайты и сервисы города</p>' +
-        '<button class="btn btn-block" type="button" onclick="closeSheet();Web.newTab()"><i class="fa-solid fa-plus"></i> Новая вкладка</button>' +
-        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="closeSheet();Web.showTabs()"><i class="fa-solid fa-clone"></i> Все вкладки · ' + webTabs.length + '</button>' +
-        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="closeSheet();Web.cats()"><i class="fa-solid fa-border-all"></i> Все категории</button>' +
-        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="closeSheet();Web.clearHistory()"><i class="fa-solid fa-broom"></i> Очистить историю вкладки</button>' +
+        '<button class="btn btn-block" type="button" onclick="Web.closeMenu();Web.newTab()"><i class="fa-solid fa-plus"></i> Новая вкладка</button>' +
+        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="Web.closeMenu();Web.showTabs()"><i class="fa-solid fa-clone"></i> Все вкладки · ' + webTabs.length + '</button>' +
+        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="Web.closeMenu();Web.cats()"><i class="fa-solid fa-border-all"></i> Все категории</button>' +
+        '<button class="btn btn-block" style="margin-top:8px" type="button" onclick="Web.closeMenu();Web.clearHistory()"><i class="fa-solid fa-broom"></i> Очистить историю вкладки</button>' +
         '<p class="center tiny muted" style="margin:14px 0 4px">Lackuun · 2026</p>');
     },
+    closeMenu: function () { closeSheet(); },
     clearHistory: function () {
       var t = webTab();
       if (t) { t.history = [{ kind: 'start' }]; t.index = 0; t.scroll = 0; }
