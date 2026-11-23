@@ -1,0 +1,51 @@
+name: Release Lavka Web
+
+on:
+  push:
+    tags: ['lavka-*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package site
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -qr dist/lavka-web.zip . \
+            -x '.git/*' \
+            -x 'BankFakeSwift/*' \
+            -x '.github/*' \
+            -x 'dist/*'
+          ls -lh dist/lavka-web.zip
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Лавка ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          files: dist/lavka-web.zip
+          draft: false
+          body: |
+            ## Лавка — веб-версия
+
+            Игра про развитие бизнеса: от ларька до сети точек.
+
+            **Что внутри**
+            - 26 сайтов в телефоне-браузере: опт, объявления, работа, доставка, городские сервисы
+            - смены, опт, кредиты, автоматизация, производство
+            - сюжет: ОПГ, налёт, 112, порт и финал
+            - ежедневные задания, достижения, налоги за точки
+            - страница-анонс Lavka Online (`online.lavka`) — выход в декабре 2026
+
+            **Как запустить**
+            Распакуйте архив и откройте `index.html` в браузере,
+            либо залейте содержимое на любой статический хостинг.
